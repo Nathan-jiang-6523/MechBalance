@@ -5,35 +5,54 @@ import { formatEngineeringValue } from '../../core/numeric'
 
 const props = defineProps<{ result: PlaneStressResult }>()
 
+interface LabelPlacement {
+  x: number
+  y: number
+  anchor: 'start' | 'middle' | 'end'
+}
+
 const geometry = computed(() => {
   const result = props.result
   const radius = result.mohrRadiusPa
-  let domainMinimum = Math.min(result.sigma2Pa, 0)
-  let domainMaximum = Math.max(result.sigma1Pa, 0)
-  if (domainMaximum === domainMinimum) {
-    domainMinimum -= 1
-    domainMaximum += 1
-  }
-  const span = domainMaximum - domainMinimum
-  const domainCenter = (domainMinimum + domainMaximum) / 2
-  const scale = Math.min(390 / (span * 1.16), radius > 0 ? 92 / radius : Number.POSITIVE_INFINITY)
-  const cy = 142
-  const mapX = (stressPa: number) => 260 + (stressPa - domainCenter) * scale
-  const cx = mapX(result.mohrCenterPa)
-  const plotRadius = radius * scale
+  const cx = 260
+  const cy = 146
+  const plotRadius = radius > 0 ? 94 : 0
+  const scale = radius > 0 ? plotRadius / radius : 0
+  const mapX = (stressPa: number) => cx + (stressPa - result.mohrCenterPa) * scale
   const pointAx = mapX(result.sigmaXPa)
   const pointAy = cy - result.tauXyPa * scale
   const pointBx = mapX(result.sigmaYPa)
   const pointBy = cy + result.tauXyPa * scale
+
+  const placePointLabel = (
+    x: number,
+    y: number,
+    point: 'A' | 'B',
+  ): LabelPlacement => {
+    const nearVerticalDiameter = Math.abs(x - cx) < 18
+    const leftSide = x < cx
+    const anchor = nearVerticalDiameter
+      ? point === 'A' ? 'start' : 'end'
+      : leftSide ? 'end' : 'start'
+    const labelX = x + (anchor === 'start' ? 9 : -9)
+    const nearStressAxis = Math.abs(y - cy) < 27
+    const labelY = nearStressAxis ? cy - 12 : y < cy ? y - 10 : y + 19
+    return { x: labelX, y: labelY, anchor }
+  }
+
+  const zeroX = radius > 0 ? mapX(0) : Number.NaN
   return {
     cx,
     cy,
     plotRadius,
-    zeroX: mapX(0),
+    zeroX,
+    zeroVisible: Number.isFinite(zeroX) && zeroX >= 38 && zeroX <= 482,
     pointAx,
     pointAy,
     pointBx,
     pointBy,
+    pointALabel: placePointLabel(pointAx, pointAy, 'A'),
+    pointBLabel: placePointLabel(pointBx, pointBy, 'B'),
     sigma1X: mapX(result.sigma1Pa),
     sigma2X: mapX(result.sigma2Pa),
   }
@@ -63,9 +82,17 @@ const doubledAngle = computed(() =>
         </marker>
       </defs>
       <line x1="30" :y1="geometry.cy" x2="495" :y2="geometry.cy" class="axis" marker-end="url(#stress-arrow)" />
-      <line :x1="geometry.zeroX" y1="260" :x2="geometry.zeroX" y2="24" class="axis axis-muted" marker-end="url(#stress-arrow)" />
-      <text x="492" :y="geometry.cy - 9" text-anchor="end" class="axis-label">σ</text>
-      <text :x="geometry.zeroX + 9" y="31" class="axis-label">τ（σ=0）</text>
+      <line
+        v-if="geometry.zeroVisible"
+        :x1="geometry.zeroX"
+        y1="260"
+        :x2="geometry.zeroX"
+        y2="24"
+        class="axis axis-muted"
+        marker-end="url(#stress-arrow)"
+      />
+      <text x="492" :y="geometry.cy - 9" text-anchor="end" class="axis-label" data-mohr-label>+σ</text>
+      <text x="38" y="31" class="axis-label" data-mohr-label>+τ（向上）</text>
 
       <circle
         v-if="result.mohrRadiusPa > 0"
@@ -74,7 +101,6 @@ const doubledAngle = computed(() =>
         :r="geometry.plotRadius"
         class="circle"
       />
-      <circle v-else :cx="geometry.cx" :cy="geometry.cy" r="5" class="degenerate" />
       <line
         v-if="result.mohrRadiusPa > 0"
         :x1="geometry.pointAx"
@@ -84,16 +110,35 @@ const doubledAngle = computed(() =>
         class="diameter"
       />
 
-      <circle :cx="geometry.pointAx" :cy="geometry.pointAy" r="5" class="point point-a" />
-      <circle :cx="geometry.pointBx" :cy="geometry.pointBy" r="5" class="point point-b" />
-      <text :x="geometry.pointAx + 9" :y="geometry.pointAy - 8" class="point-label">A(σx, τxy)</text>
-      <text :x="geometry.pointBx + 9" :y="geometry.pointBy + 18" class="point-label">B(σy, −τxy)</text>
+      <template v-if="result.mohrRadiusPa > 0">
+        <circle :cx="geometry.pointAx" :cy="geometry.pointAy" r="5" class="point point-a" />
+        <circle :cx="geometry.pointBx" :cy="geometry.pointBy" r="5" class="point point-b" />
+        <text
+          :x="geometry.pointALabel.x"
+          :y="geometry.pointALabel.y"
+          :text-anchor="geometry.pointALabel.anchor"
+          class="point-label"
+          data-mohr-label
+        >A(σx, τxy)</text>
+        <text
+          :x="geometry.pointBLabel.x"
+          :y="geometry.pointBLabel.y"
+          :text-anchor="geometry.pointBLabel.anchor"
+          class="point-label"
+          data-mohr-label
+        >B(σy, −τxy)</text>
 
-      <circle :cx="geometry.sigma2X" :cy="geometry.cy" r="4" class="principal" />
-      <circle :cx="geometry.sigma1X" :cy="geometry.cy" r="4" class="principal" />
-      <text :x="geometry.sigma2X" :y="geometry.cy + 19" text-anchor="middle" class="value-label">σ2 {{ mpa(result.sigma2Pa) }}</text>
-      <text :x="geometry.sigma1X" :y="geometry.cy + 19" text-anchor="middle" class="value-label">σ1 {{ mpa(result.sigma1Pa) }}</text>
-      <text :x="geometry.cx" y="282" text-anchor="middle" class="relation-label">
+        <circle :cx="geometry.sigma2X" :cy="geometry.cy" r="4" class="principal" />
+        <circle :cx="geometry.sigma1X" :cy="geometry.cy" r="4" class="principal" />
+        <text :x="geometry.sigma2X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label>σ2 {{ mpa(result.sigma2Pa) }}</text>
+        <text :x="geometry.sigma1X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label>σ1 {{ mpa(result.sigma1Pa) }}</text>
+      </template>
+      <template v-else>
+        <circle :cx="geometry.cx" :cy="geometry.cy" r="5" class="degenerate" />
+        <text :x="geometry.cx" :y="geometry.cy - 13" text-anchor="middle" class="point-label" data-mohr-label>A = B（σx = σy，τxy = 0）</text>
+        <text :x="geometry.cx" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label>σ1 = σ2 = {{ mpa(result.sigma1Pa) }} MPa</text>
+      </template>
+      <text :x="geometry.cx" y="282" text-anchor="middle" class="relation-label" data-mohr-label>
         C = {{ mpa(result.mohrCenterPa) }} MPa · R = {{ mpa(result.mohrRadiusPa) }} MPa · 2θp = {{ doubledAngle }}
       </text>
     </svg>

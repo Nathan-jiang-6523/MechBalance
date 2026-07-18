@@ -248,6 +248,9 @@ const criterionText = computed(() => {
       <summary>公式、角度与版本</summary>
       <ul>
         <li>σavg=(σx+σy)/2，R=√[((σx−σy)/2)²+τxy²]，σ1,2=σavg±R。</li>
+        <li>莫尔圆方程：(σ−σavg)²+τ²=R²；τmax,in=R，对应法向应力 σ=σavg。</li>
+        <li>σx′=σavg+(σx−σy)cos(2θ)/2+τxy sin(2θ)。</li>
+        <li>τx′y′=−(σx−σy)sin(2θ)/2+τxy cos(2θ)；θs=θp+45°。</li>
         <li>θp=½ atan2(2τxy, σx−σy)；莫尔圆转角与物理转角大小为 2 倍、方向相反。</li>
         <li>σVM=√(σx²−σxσy+σy²+3τxy²)；Tresca 使用三主应力（含 σ3=0）的最大差值。</li>
         <li>版本：P1-STRESS-PLANE-v1 / P1-STRESS-BT-v1。</li>

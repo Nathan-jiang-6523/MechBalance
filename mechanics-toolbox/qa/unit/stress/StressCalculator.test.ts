@@ -30,6 +30,9 @@ describe('StressCalculator', () => {
     await inputs[2]!.setValue('0')
     await wrapper.get('button.calculate').trigger('click')
     expect(wrapper.text()).toContain('θp = 任意')
+    expect(wrapper.text()).toContain('A = B（σx = σy，τxy = 0）')
+    expect(wrapper.text()).toContain('σ1 = σ2 = 80.000 MPa')
+    expect(wrapper.text()).not.toContain('A(σx, τxy)')
     expect(wrapper.text()).not.toContain('NaN')
   })
 

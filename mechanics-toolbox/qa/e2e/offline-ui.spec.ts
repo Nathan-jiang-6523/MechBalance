@@ -164,7 +164,40 @@ test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, 
   await page.getByRole('button', { name: '计算', exact: true }).click()
   await expect(page.getByText('σ1 = 100.000')).toBeVisible()
   await expect(page.getByText('σVM = 100.000')).toBeVisible()
-  await expect(page.getByRole('img', { name: '平面应力莫尔圆与原始应力点' })).toBeVisible()
+  const mohrCircle = page.getByRole('img', { name: '平面应力莫尔圆与原始应力点' })
+  await expect(mohrCircle).toBeVisible()
+
+  const expectNoLabelOverlap = async (): Promise<void> => {
+    const overlaps = await mohrCircle.evaluate((svg) => {
+      const labels = [...svg.querySelectorAll<SVGGraphicsElement>('[data-mohr-label]')]
+        .map((element) => ({ text: element.textContent?.trim() ?? '', box: element.getBoundingClientRect() }))
+        .filter(({ text, box }) => text !== '' && box.width > 0 && box.height > 0)
+      const collisions: string[] = []
+      for (let first = 0; first < labels.length; first += 1) {
+        for (let second = first + 1; second < labels.length; second += 1) {
+          const a = labels[first]!
+          const b = labels[second]!
+          const intersects = a.box.left < b.box.right - 1
+            && a.box.right > b.box.left + 1
+            && a.box.top < b.box.bottom - 1
+            && a.box.bottom > b.box.top + 1
+          if (intersects) collisions.push(`${a.text} <> ${b.text}`)
+        }
+      }
+      return collisions
+    })
+    expect(overlaps).toEqual([])
+  }
+
+  await expectNoLabelOverlap()
+  const planeInputs = page.locator('.input-panel .field-grid input')
+  for (const [sigmaX, sigmaY, tauXy] of [['0', '0', '50'], ['80', '80', '0']]) {
+    await planeInputs.nth(0).fill(sigmaX)
+    await planeInputs.nth(1).fill(sigmaY)
+    await planeInputs.nth(2).fill(tauXy)
+    await page.getByRole('button', { name: '计算', exact: true }).click()
+    await expectNoLabelOverlap()
+  }
 
   await page.getByRole('button', { name: '圆轴弯扭组合' }).click()
   await page.getByRole('button', { name: '计算', exact: true }).click()
