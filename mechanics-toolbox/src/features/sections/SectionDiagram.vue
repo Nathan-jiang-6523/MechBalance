@@ -33,40 +33,40 @@ defineProps<{ kind: SectionKind }>()
       </template>
     </g>
 
-    <line class="axis" x1="32" y1="95" x2="250" y2="95" marker-end="url(#axis-arrow)" />
-    <line class="axis" x1="140" y1="174" x2="140" y2="14" marker-end="url(#axis-arrow)" />
-    <text x="254" y="100">x</text>
-    <text x="146" y="17">y</text>
+    <line class="axis axis-x" x1="32" y1="95" x2="250" y2="95" marker-end="url(#axis-arrow)" />
+    <line class="axis axis-y" x1="140" y1="174" x2="140" y2="14" marker-end="url(#axis-arrow)" />
+    <text class="axis-label axis-label-x" x="258" y="87">x</text>
+    <text class="axis-label axis-label-y" x="148" y="18">y</text>
 
     <template v-if="kind === 'rectangle'">
       <line class="witness" x1="70" y1="155" x2="70" y2="176" />
       <line class="witness" x1="210" y1="155" x2="210" y2="176" />
       <line class="dimension-line" x1="74" y1="172" x2="206" y2="172" />
-      <text class="dimension" x="137" y="187">b</text>
+      <text class="dimension" data-dimension="width" x="137" y="187">b</text>
       <line class="witness" x1="210" y1="35" x2="231" y2="35" />
       <line class="witness" x1="210" y1="155" x2="231" y2="155" />
       <line class="dimension-line" x1="227" y1="39" x2="227" y2="151" />
-      <text class="dimension" x="234" y="99">h</text>
+      <text class="dimension" data-dimension="height" x="233" y="67">h</text>
     </template>
     <template v-else-if="kind === 'hollowRectangle'">
       <line class="witness" x1="55" y1="160" x2="55" y2="178" />
       <line class="witness" x1="225" y1="160" x2="225" y2="178" />
       <line class="dimension-line" x1="59" y1="174" x2="221" y2="174" />
-      <text class="dimension" x="132" y="188">B / b</text>
+      <text class="dimension" data-dimension="width" x="132" y="188">B / b</text>
       <line class="witness" x1="225" y1="30" x2="246" y2="30" />
       <line class="witness" x1="225" y1="160" x2="246" y2="160" />
       <line class="dimension-line" x1="242" y1="34" x2="242" y2="156" />
-      <text class="dimension" x="248" y="99">H / h</text>
+      <text class="dimension" data-dimension="height" x="247" y="62">H / h</text>
     </template>
     <template v-else-if="kind === 'solidCircle'">
       <line class="dimension-line" x1="96" y1="51" x2="184" y2="139" />
-      <text class="dimension" x="166" y="73">d</text>
+      <text class="dimension" data-dimension="diameter" x="166" y="73">d</text>
     </template>
     <template v-else>
       <line class="dimension-line" x1="93" y1="48" x2="187" y2="142" />
       <line class="dimension-line inner" x1="109" y1="64" x2="171" y2="126" />
-      <text class="dimension" x="174" y="71">D</text>
-      <text class="dimension" x="151" y="111">d</text>
+      <text class="dimension" data-dimension="outer-diameter" x="174" y="71">D</text>
+      <text class="dimension" data-dimension="inner-diameter" x="151" y="111">d</text>
     </template>
   </svg>
 </template>
@@ -97,6 +97,10 @@ text {
 
 .dimension {
   fill: #9a5a18;
+  paint-order: stroke;
+  stroke: #f1f6f6;
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 
 .dimension-line {

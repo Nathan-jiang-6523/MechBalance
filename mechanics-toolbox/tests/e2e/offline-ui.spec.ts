@@ -20,6 +20,31 @@ test('截面计算、材料覆盖和恢复可用', async ({ page }) => {
   await expect(page.getByText('使用预设值')).toBeVisible()
 })
 
+test('矩形高度标注不与 x 坐标轴遮挡', async ({ page }) => {
+  for (const shape of ['矩形', '空心矩形']) {
+    await page.getByRole('tab', { name: shape, exact: true }).click()
+    const collisions = await page.locator('.section-diagram').evaluate((diagram) => {
+      const heightLabel = diagram.querySelector<SVGGraphicsElement>('[data-dimension="height"]')
+      const xAxis = diagram.querySelector<SVGGraphicsElement>('.axis-x')
+      const xLabel = diagram.querySelector<SVGGraphicsElement>('.axis-label-x')
+      if (!heightLabel || !xAxis || !xLabel) return ['missing-element']
+
+      const heightBox = heightLabel.getBoundingClientRect()
+      const overlaps = (target: DOMRect): boolean =>
+        heightBox.left < target.right &&
+        heightBox.right > target.left &&
+        heightBox.top < target.bottom + 2 &&
+        heightBox.bottom > target.top - 2
+
+      return [
+        overlaps(xAxis.getBoundingClientRect()) ? 'x-axis' : '',
+        overlaps(xLabel.getBoundingClientRect()) ? 'x-label' : '',
+      ].filter(Boolean)
+    })
+    expect(collisions, `${shape}高度标注发生遮挡`).toEqual([])
+  }
+})
+
 test('单位换算与切换清空规则可用', async ({ page }) => {
   await page.getByRole('button', { name: /单位换算/ }).click()
   await page.getByLabel('原单位').selectOption('m')
