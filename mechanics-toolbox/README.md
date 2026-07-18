@@ -31,6 +31,7 @@
 - `qa-results/`：截图、Playwright 产物及 JSON 报告；由 Git 忽略。
 - `release/`：本机生成的工程师交付入口；HTML 隐藏，只显示快捷方式；由 Git 忽略。
 - `docs/formulas/`：公式 ID、版本、符号、边界和来源记录。
+- `docs/P1开发流程总结.md`：从首次需求确认到 P1 落地、修正和验证的完整时间线。
 - `dist/index.html`：构建生成的离线单文件，不纳入 Git。
 
 ## 开发验证
