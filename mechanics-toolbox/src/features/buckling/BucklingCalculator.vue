@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import MathFormula from '../../components/MathFormula.vue'
 import {
   calculateEulerBuckling,
   COLUMN_END_CONDITIONS,
@@ -12,6 +13,11 @@ import {
 } from '../../core/sections'
 import { formatEngineeringValue } from '../../core/numeric'
 import { normalizeToSI, convertFromSI, QUANTITY_CATALOG, type UnitId } from '../../core/units'
+
+const BUCKLING_FORMULAS = [
+  String.raw`i=\sqrt{\frac{I}{A}},\qquad \lambda=\frac{KL}{i}`,
+  String.raw`P_{\mathrm{cr}}=\frac{\pi^2EI}{(KL)^2},\qquad \sigma_{\mathrm{cr}}=\frac{P_{\mathrm{cr}}}{A}`,
+]
 
 const elasticModulus = ref('200000')
 const elasticModulusUnit = ref<UnitId>('MPa')
@@ -150,7 +156,11 @@ function calculate(): void { submitted.value = true }
         <article><span>控制回转半径 i</span><strong>{{ formatEngineeringValue(convertFromSI(result.controllingRadiusM, 'length', 'mm')) }} mm</strong></article>
       </div>
       <div class="warning">欧拉解仅适用于理想直杆、轴心受压、线弹性和小挠度屈曲。初弯曲、偏心、残余应力、材料屈服及规范折减未计入。</div>
-      <details><summary>公式与版本</summary><p>i=√(I/A)，λ=KL/i，Pcr=π²EI/(KL)²，σcr=Pcr/A。版本：P1-BUCKLING-EULER-v1。</p></details>
+      <details>
+        <summary>公式与版本</summary>
+        <MathFormula v-for="formula in BUCKLING_FORMULAS" :key="formula" :formula="formula" />
+        <p>版本：P1-BUCKLING-EULER-v1。</p>
+      </details>
     </section>
   </section>
 </template>

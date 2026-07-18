@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import MathFormula from '../../components/MathFormula.vue'
 import { formatEngineeringValue } from '../../core/numeric'
 import { normalizeToSI, QUANTITY_CATALOG, type UnitId } from '../../core/units'
 import {
@@ -9,6 +10,15 @@ import {
   type PlaneStressResult,
 } from '../../core/stress'
 import MohrCircle from './MohrCircle.vue'
+
+const STRESS_FORMULAS = [
+  String.raw`\sigma_{\mathrm{avg}}=\frac{\sigma_x+\sigma_y}{2},\qquad R=\sqrt{\left(\frac{\sigma_x-\sigma_y}{2}\right)^2+\tau_{xy}^2}`,
+  String.raw`\sigma_{1,2}=\sigma_{\mathrm{avg}}\pm R,\qquad \left(\sigma-\sigma_{\mathrm{avg}}\right)^2+\tau^2=R^2`,
+  String.raw`\sigma_{x'}=\sigma_{\mathrm{avg}}+\frac{\sigma_x-\sigma_y}{2}\cos 2\theta+\tau_{xy}\sin 2\theta`,
+  String.raw`\tau_{x'y'}=-\frac{\sigma_x-\sigma_y}{2}\sin 2\theta+\tau_{xy}\cos 2\theta`,
+  String.raw`\theta_p=\frac{1}{2}\operatorname{atan2}\!\left(2\tau_{xy},\sigma_x-\sigma_y\right),\qquad \theta_s=\theta_p+45^\circ`,
+  String.raw`\sigma_{\mathrm{VM}}=\sqrt{\sigma_x^2-\sigma_x\sigma_y+\sigma_y^2+3\tau_{xy}^2}`,
+]
 
 type Mode = 'plane' | 'bending-torsion'
 type RoundKind = 'solid-circle' | 'circular-tube'
@@ -246,13 +256,12 @@ const criterionText = computed(() => {
 
     <details class="formula-panel">
       <summary>公式、角度与版本</summary>
+      <div class="formula-list">
+        <MathFormula v-for="formula in STRESS_FORMULAS" :key="formula" :formula="formula" />
+      </div>
       <ul>
-        <li>σavg=(σx+σy)/2，R=√[((σx−σy)/2)²+τxy²]，σ1,2=σavg±R。</li>
-        <li>莫尔圆方程：(σ−σavg)²+τ²=R²；τmax,in=R，对应法向应力 σ=σavg。</li>
-        <li>σx′=σavg+(σx−σy)cos(2θ)/2+τxy sin(2θ)。</li>
-        <li>τx′y′=−(σx−σy)sin(2θ)/2+τxy cos(2θ)；θs=θp+45°。</li>
-        <li>θp=½ atan2(2τxy, σx−σy)；莫尔圆转角与物理转角大小为 2 倍、方向相反。</li>
-        <li>σVM=√(σx²−σxσy+σy²+3τxy²)；Tresca 使用三主应力（含 σ3=0）的最大差值。</li>
+        <li>莫尔圆转角与物理转角大小为 2 倍、方向相反。</li>
+        <li>Tresca 使用三主应力（含 σ3=0）的最大差值。</li>
         <li>版本：P1-STRESS-PLANE-v1 / P1-STRESS-BT-v1。</li>
       </ul>
     </details>
@@ -297,6 +306,7 @@ input:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px rgb(18 106
 .formula-panel { margin-top: 16px; border-left: 3px solid var(--color-brand); color: #53636e; background: #f3f8f8; }
 .formula-panel summary { padding: 12px 14px; cursor: pointer; font-size: 12px; font-weight: 800; }
 .formula-panel ul { display: grid; gap: 5px; margin: 0; padding: 0 18px 14px 32px; font-size: 11px; line-height: 1.55; }
+.formula-list { display: grid; gap: 3px; padding: 0 14px 8px; font-size: 12px; }
 .empty { min-height: 440px; display: grid; place-content: center; gap: 7px; color: var(--color-muted); text-align: center; font-size: 12px; }
 @media (max-width: 1050px) { .stress-workspace { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .panel-header { flex-direction: column; } .field-grid, .result-grid { grid-template-columns: 1fr; } .input-panel, .result-panel { padding: 13px; } }

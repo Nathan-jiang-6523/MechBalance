@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import MathFormula from '../../components/MathFormula.vue'
 import type { AxialAnalysisResult } from '../../core/axial'
 import type { QuantityId, UnitId } from '../../core/units'
 import {
@@ -18,6 +19,13 @@ const errors = ref<string[]>([])
 const hasCalculated = ref(false)
 let nextSegmentId = 2
 let recalculateTimer: ReturnType<typeof setTimeout> | undefined
+
+const AXIAL_FORMULAS = [
+  String.raw`\sigma_i=\frac{N}{A_i}`,
+  String.raw`\Delta L_m=\sum_i\frac{N L_i}{E_iA_i}`,
+  String.raw`\Delta L_t=\sum_i\alpha_i\,\Delta T_i\,L_i`,
+  String.raw`N^{c}=-\frac{\Delta L_t}{\displaystyle\sum_i L_i/(E_iA_i)}`,
+]
 
 const boundaryNote = computed(() => draft.value.boundary === 'free'
   ? '端部允许变形：总变形 = 轴力引起的机械变形 + 自由温度变形。'
@@ -387,8 +395,7 @@ function segmentValue(segment: AxialSegmentDraft, field: SegmentUnitField): Axia
       <details class="formula-details">
         <summary>公式、符号与适用范围</summary>
         <div>
-          <p>各段应力：σᵢ = N / Aᵢ；机械变形：ΔLₘ = Σ[N·Lᵢ/(EᵢAᵢ)]。</p>
-          <p>自由温变：ΔLₜ = Σ(αᵢΔTᵢLᵢ)；完全约束：Nᶜ = −ΔLₜ / Σ[Lᵢ/(EᵢAᵢ)]。</p>
+          <MathFormula v-for="formula in AXIAL_FORMULAS" :key="formula" :formula="formula" />
           <p>假设：直杆、同轴载荷、小变形、线弹性、各杆段内 A/E/α/ΔT 均匀；忽略自重、应力集中、局部连接变形与屈曲。</p>
         </div>
       </details>

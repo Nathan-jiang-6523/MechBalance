@@ -73,6 +73,9 @@ test('梁综合计算默认算例、自动重算和失效保护可用', async ({
     page.getByTestId('stress-row').filter({ hasText: '最大弯曲正应力绝对值' }),
   ).toContainText('15.000')
   await expect(page.locator('.chart-canvas canvas')).toHaveCount(2)
+  await expect(page.getByTestId('math-formula')).toHaveCount(5)
+  await expect(page.locator('.assumption-panel .katex').first()).toBeVisible()
+  await expect(page.locator('.assumption-panel math').first()).toBeAttached()
 
   await page.getByTestId('second-chart-select').selectOption('deflectionM')
   await expect(page.getByTestId('second-chart-select')).toHaveValue('deflectionM')

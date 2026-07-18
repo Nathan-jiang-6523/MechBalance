@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { BeamExtrema, BeamSamplePoint, BeamSolution } from '../../../core/beam'
 import { formatEngineeringValue, formatExtremaPosition } from '../../../core/numeric'
 import { convertFromSI } from '../../../core/units'
+import MathFormula from '../../../components/MathFormula.vue'
 import BeamChart from './BeamChart.vue'
 import BeamWarnings from './BeamWarnings.vue'
 import {
@@ -28,6 +29,14 @@ const props = withDefaults(
 
 const firstChartField = ref<BeamChartField>('shearN')
 const secondChartField = ref<BeamChartField>('momentNm')
+
+const BEAM_FORMULAS = [
+  String.raw`EI\,\frac{\mathrm d^4 v}{\mathrm d x^4}=w(x)`,
+  String.raw`\theta=\frac{\mathrm d v}{\mathrm d x},\qquad EI\,\frac{\mathrm d^2 v}{\mathrm d x^2}=M`,
+  String.raw`\frac{\mathrm dM}{\mathrm dx}=V,\qquad \frac{\mathrm dV}{\mathrm dx}=w`,
+  String.raw`\Delta V=F,\qquad \Delta M=-C`,
+  String.raw`\sigma_x(x,y)=-\frac{M(x)y}{I_x},\qquad \tau_{\max,\mathrm{rect}}=\frac{3V}{2A}`,
+]
 
 const reactionRows = computed(() => buildReactionRows(props.solution.reactions))
 const extremaRows = computed(() => buildExtremaRows(props.extrema))
@@ -167,6 +176,9 @@ const stressRows = computed(() => {
 
     <details class="assumption-panel" open>
       <summary>模型假设与公式版本</summary>
+      <div class="formula-list">
+        <MathFormula v-for="formula in BEAM_FORMULAS" :key="formula" :formula="formula" />
+      </div>
       <ul>
         <li>Euler–Bernoulli 梁，小变形、线弹性。</li>
         <li>梁长范围内 E、I 为常数，不计剪切变形。</li>
@@ -371,6 +383,12 @@ const stressRows = computed(() => {
   padding: 0 18px 14px 32px;
   font-size: 11px;
   line-height: 1.5;
+}
+
+.formula-list {
+  display: grid;
+  gap: 4px;
+  padding: 0 14px 8px;
 }
 
 @media (max-width: 1050px) {

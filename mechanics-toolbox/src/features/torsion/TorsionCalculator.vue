@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import MathFormula from '../../components/MathFormula.vue'
 import { formatEngineeringValue } from '../../core/numeric'
 import { TorsionCalculationError, type PowerSolveMode } from '../../core/torsion'
 import { QUANTITY_CATALOG, convertFromSI, type QuantityId, type UnitId } from '../../core/units'
@@ -13,6 +14,17 @@ import {
   type ElasticConstantInputMode,
   type NumericFieldDraft,
 } from './adapter'
+
+const TORSION_FORMULAS = [
+  String.raw`J_t=\frac{\pi d^4}{32}\quad\text{（实心圆）}`,
+  String.raw`J_t=\frac{\pi\left(D^4-d^4\right)}{32}\quad\text{（圆管）}`,
+  String.raw`G=\frac{E}{2(1+\nu)}`,
+  String.raw`\tau_{\max}=\frac{Tr}{J_t},\qquad \theta=\frac{TL}{GJ_t}`,
+]
+
+const POWER_FORMULAS = [
+  String.raw`P=T\omega,\qquad \omega=2\pi n`,
+]
 
 const shaft = ref(createDefaultCircularShaftDraft())
 const power = ref(createDefaultPowerTransmissionDraft())
@@ -314,9 +326,9 @@ function selectPowerMode(mode: PowerSolveMode): void {
 
         <details class="assumptions">
           <summary>公式与适用范围</summary>
-          <p>Jt = πd⁴/32（实心）；Jt = π(D⁴−d⁴)/32（圆管）。</p>
-          <p>材料输入二选一：直接给定 G，或对各向同性线弹性材料由 E、ν 按 G = E/[2(1+ν)] 换算。</p>
-          <p>τmax = T·r/Jt；θ = T·L/(G·Jt)。适用于等截面、线弹性、小变形、Saint-Venant 扭转；不含应力集中与翘曲约束。</p>
+          <MathFormula v-for="formula in TORSION_FORMULAS" :key="formula" :formula="formula" />
+          <p>材料输入二选一：直接给定 G，或由各向同性线弹性材料的 E、ν 换算。</p>
+          <p>适用于等截面、线弹性、小变形、Saint-Venant 扭转；不含应力集中与翘曲约束。</p>
         </details>
       </article>
 
@@ -382,7 +394,8 @@ function selectPowerMode(mode: PowerSolveMode): void {
 
         <details class="assumptions">
           <summary>公式与符号</summary>
-          <p>P = T·ω，ω = 2πn。n 为非负转速大小；T 为有符号扭矩，P 的符号随 T。</p>
+          <MathFormula v-for="formula in POWER_FORMULAS" :key="formula" :formula="formula" />
+          <p>n 为非负转速大小；T 为有符号扭矩，P 的符号随 T。</p>
           <p>不计传动效率与损耗。反求扭矩时 n 不能为 0；反求转速时 T 不能为 0。</p>
         </details>
       </article>
