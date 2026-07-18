@@ -128,6 +128,57 @@ test('梁多载荷及载荷单位切换可回归', async ({ page }) => {
   ).toContainText('8000.000')
 })
 
+test('轴向拉压与完全约束温变可计算', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /轴向与温变/ }).click()
+  await expect(page.getByRole('heading', { name: '轴向拉压、伸长与温度变形' })).toBeVisible()
+  await page.getByRole('button', { name: '计算轴向响应' }).click()
+  await expect(page.getByTestId('total-deformation')).toContainText('0.65 mm')
+
+  await page.getByLabel('端部边界', { exact: true }).selectOption('fullyRestrained')
+  await expect(page.getByLabel('轴向力')).toHaveCount(0)
+  await expect(page.getByText(/外加轴力输入已停用/)).toBeVisible()
+  await page.getByRole('button', { name: '计算轴向响应' }).click()
+  await expect(page.getByTestId('constraint-force')).toContainText('-120000 N')
+  await page.screenshot({ path: testInfo.outputPath('axial-thermal.png'), fullPage: true })
+})
+
+test('圆轴扭转与功率转矩转速关系可计算', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /圆轴扭转/ }).click()
+  await expect(page.getByRole('heading', { name: '圆轴扭转与传动功率' })).toBeVisible()
+  await page.getByRole('button', { name: '计算圆轴扭转' }).click()
+  await expect(page.getByTestId('shaft-results')).toContainText('40.744')
+
+  await page.getByRole('button', { name: '求解传动关系' }).click()
+  await expect(page.getByTestId('power-results')).toContainText('63661.977')
+  await expect(page.getByTestId('power-results')).toContainText('1500.000')
+  await page.screenshot({ path: testInfo.outputPath('torsion-power.png'), fullPage: true })
+})
+
+test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /应力与莫尔圆/ }).click()
+  await expect(page.getByRole('heading', { name: '平面应力与弯扭组合' })).toBeVisible()
+  await page.getByRole('button', { name: '计算', exact: true }).click()
+  await expect(page.getByText('σ1 = 100.000')).toBeVisible()
+  await expect(page.getByText('σVM = 100.000')).toBeVisible()
+  await expect(page.getByRole('img', { name: '平面应力莫尔圆与原始应力点' })).toBeVisible()
+
+  await page.getByRole('button', { name: '圆轴弯扭组合' }).click()
+  await page.getByRole('button', { name: '计算', exact: true }).click()
+  await expect(page.getByText('选定外缘弯曲正应力')).toBeVisible()
+  await expect(page.getByText('Tresca 等效应力')).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('stress-mohr.png'), fullPage: true })
+})
+
+test('欧拉压杆按显式边界和弱轴输出结果', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /压杆稳定/ }).click()
+  await expect(page.getByRole('heading', { name: '欧拉压杆稳定及长细比' })).toBeVisible()
+  await page.getByRole('button', { name: '计算稳定性' }).click()
+  await expect(page.getByText('y 轴')).toBeVisible()
+  await expect(page.getByText('66.620 kN')).toBeVisible()
+  await expect(page.getByText(/未配置项目\/规范长细比阈值/)).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('buckling.png'), fullPage: true })
+})
+
 test('file 页面无网络请求且视口无横向溢出', async ({ page }) => {
   const networkRequests: string[] = []
   page.on('request', (request) => {

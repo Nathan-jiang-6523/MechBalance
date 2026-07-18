@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import AxialCalculator from './features/axial/AxialCalculator.vue'
 import MaterialPresetEditor from './features/materials/MaterialPresetEditor.vue'
 import BeamCalculator from './features/beam/BeamCalculator.vue'
+import BucklingCalculator from './features/buckling/BucklingCalculator.vue'
 import SectionCalculator from './features/sections/SectionCalculator.vue'
+import StressCalculator from './features/stress/StressCalculator.vue'
+import TorsionCalculator from './features/torsion/TorsionCalculator.vue'
 import UnitConverter from './features/unit-converter/UnitConverter.vue'
 
-type ViewId = 'sections' | 'units' | 'beam'
+type ViewId = 'sections' | 'units' | 'beam' | 'axial' | 'torsion' | 'stress' | 'buckling'
 
 const activeView = ref<ViewId>('sections')
 
@@ -13,12 +17,20 @@ const navigation = [
   { index: '01', id: 'sections', label: '截面性质', status: '可用' },
   { index: '02', id: 'units', label: '单位换算', status: '可用' },
   { index: '03', id: 'beam', label: '梁综合计算', status: '可用' },
+  { index: '04', id: 'axial', label: '轴向与温变', status: '可用' },
+  { index: '05', id: 'torsion', label: '圆轴扭转', status: '可用' },
+  { index: '06', id: 'stress', label: '应力与莫尔圆', status: '可用' },
+  { index: '07', id: 'buckling', label: '压杆稳定', status: '可用' },
 ] as const
 
 const pageTitle = computed(() => ({
   sections: '截面性质工作台',
   units: '常用单位换算',
   beam: '梁综合计算工作台',
+  axial: '轴向拉压与温度变形',
+  torsion: '圆轴扭转与功率换算',
+  stress: '平面应力与强度准则',
+  buckling: '欧拉压杆稳定工作台',
 })[activeView.value])
 
 function selectView(id: ViewId | null): void {
@@ -86,7 +98,11 @@ function selectView(id: ViewId | null): void {
         <MaterialPresetEditor />
       </div>
       <UnitConverter v-else-if="activeView === 'units'" />
-      <BeamCalculator v-else />
+      <BeamCalculator v-else-if="activeView === 'beam'" />
+      <AxialCalculator v-else-if="activeView === 'axial'" />
+      <TorsionCalculator v-else-if="activeView === 'torsion'" />
+      <StressCalculator v-else-if="activeView === 'stress'" />
+      <BucklingCalculator v-else />
     </main>
   </div>
 </template>
