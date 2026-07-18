@@ -8,13 +8,16 @@ import {
   calculatePowerTransmissionDraft,
   createDefaultCircularShaftDraft,
   createDefaultPowerTransmissionDraft,
+  resolveCircularShaftShearModulusPa,
   TorsionDraftError,
+  type ElasticConstantInputMode,
   type NumericFieldDraft,
 } from './adapter'
 
 const shaft = ref(createDefaultCircularShaftDraft())
 const power = ref(createDefaultPowerTransmissionDraft())
 const shaftResult = ref<ReturnType<typeof calculateCircularShaftDraft> | null>(null)
+const shaftShearModulusPa = ref<number | null>(null)
 const powerResult = ref<ReturnType<typeof calculatePowerTransmissionDraft> | null>(null)
 const shaftError = ref('')
 const powerError = ref('')
@@ -29,6 +32,7 @@ const shaftRows = computed(() => {
   const result = shaftResult.value
   if (!result) return []
   return [
+    row('采用的剪切模量', 'G', shaftShearModulusPa.value!, 'elasticModulus', 'MPa', 'MPa'),
     row('扭转常数', 'Jt', result.torsionConstantM4, 'secondMomentOfArea', 'mm4', 'mm⁴'),
     row('最大剪应力（有符号）', 'τmax', result.maximumShearStressPa, 'stress', 'MPa', 'MPa'),
     row('最大剪应力绝对值', '|τ|max', result.maximumAbsoluteShearStressPa, 'stress', 'MPa', 'MPa'),
@@ -76,12 +80,27 @@ function clearField(field: NumericFieldDraft): void {
 
 function calculateShaft(): void {
   try {
+    shaftShearModulusPa.value = resolveCircularShaftShearModulusPa(shaft.value)
     shaftResult.value = calculateCircularShaftDraft(shaft.value)
     shaftError.value = ''
   } catch (error) {
     shaftResult.value = null
+    shaftShearModulusPa.value = null
     shaftError.value = message(error)
   }
+}
+
+function selectElasticConstantMode(mode: ElasticConstantInputMode): void {
+  shaft.value.elasticConstantInputMode = mode
+  if (mode === 'youngPoisson') {
+    clearField(shaft.value.shearModulus)
+  } else {
+    clearField(shaft.value.youngModulus)
+    shaft.value.poissonRatio = ''
+  }
+  shaftResult.value = null
+  shaftShearModulusPa.value = null
+  shaftError.value = ''
 }
 
 function calculatePower(): void {
@@ -197,11 +216,77 @@ function selectPowerMode(mode: PowerSolveMode): void {
               </select>
             </span>
           </label>
-          <label class="field">
+          <div class="material-input-mode wide">
+            <div class="solve-modes" aria-label="弹性常数输入方式">
+              <label>
+                <input
+                  type="radio"
+                  name="shaft-elastic-constant-mode"
+                  value="youngPoisson"
+                  :checked="shaft.elasticConstantInputMode === 'youngPoisson'"
+                  @change="selectElasticConstantMode('youngPoisson')"
+                />
+                输入 E + ν
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="shaft-elastic-constant-mode"
+                  value="shearModulus"
+                  :checked="shaft.elasticConstantInputMode === 'shearModulus'"
+                  @change="selectElasticConstantMode('shearModulus')"
+                />
+                直接输入 G
+              </label>
+            </div>
+            <small>各向同性线弹性材料按 G = E / [2(1 + ν)] 换算。</small>
+          </div>
+          <label class="field" :class="{ target: shaft.elasticConstantInputMode !== 'youngPoisson' }">
+            <span>杨氏模量 E</span>
+            <span class="input-unit">
+              <input
+                v-model="shaft.youngModulus.value"
+                aria-label="杨氏模量"
+                inputmode="decimal"
+                :disabled="shaft.elasticConstantInputMode !== 'youngPoisson'"
+              />
+              <select
+                v-model="shaft.youngModulus.unit"
+                aria-label="杨氏模量单位"
+                :disabled="shaft.elasticConstantInputMode !== 'youngPoisson'"
+                @change="clearField(shaft.youngModulus)"
+              >
+                <option v-for="unit in stressUnits" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
+              </select>
+            </span>
+          </label>
+          <label class="field" :class="{ target: shaft.elasticConstantInputMode !== 'youngPoisson' }">
+            <span>泊松比 ν</span>
+            <span class="input-unit">
+              <input
+                v-model="shaft.poissonRatio"
+                aria-label="泊松比"
+                inputmode="decimal"
+                :disabled="shaft.elasticConstantInputMode !== 'youngPoisson'"
+              />
+              <span class="unit-text">—</span>
+            </span>
+          </label>
+          <label class="field wide" :class="{ target: shaft.elasticConstantInputMode !== 'shearModulus' }">
             <span>剪切模量 G</span>
             <span class="input-unit">
-              <input v-model="shaft.shearModulus.value" aria-label="剪切模量" inputmode="decimal" />
-              <select v-model="shaft.shearModulus.unit" aria-label="剪切模量单位" @change="clearField(shaft.shearModulus)">
+              <input
+                v-model="shaft.shearModulus.value"
+                aria-label="剪切模量"
+                inputmode="decimal"
+                :disabled="shaft.elasticConstantInputMode !== 'shearModulus'"
+              />
+              <select
+                v-model="shaft.shearModulus.unit"
+                aria-label="剪切模量单位"
+                :disabled="shaft.elasticConstantInputMode !== 'shearModulus'"
+                @change="clearField(shaft.shearModulus)"
+              >
                 <option v-for="unit in stressUnits" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
               </select>
             </span>
@@ -230,6 +315,7 @@ function selectPowerMode(mode: PowerSolveMode): void {
         <details class="assumptions">
           <summary>公式与适用范围</summary>
           <p>Jt = πd⁴/32（实心）；Jt = π(D⁴−d⁴)/32（圆管）。</p>
+          <p>材料输入二选一：直接给定 G，或对各向同性线弹性材料由 E、ν 按 G = E/[2(1+ν)] 换算。</p>
           <p>τmax = T·r/Jt；θ = T·L/(G·Jt)。适用于等截面、线弹性、小变形、Saint-Venant 扭转；不含应力集中与翘曲约束。</p>
         </details>
       </article>
@@ -333,6 +419,8 @@ function selectPowerMode(mode: PowerSolveMode): void {
 .stacked { flex-direction: column; }
 .solve-modes { display: flex; flex-wrap: wrap; gap: 7px; }
 .solve-modes label { padding: 7px 9px; border-radius: 7px; background: #edf4f4; color: #40545a; font-size: 12px; font-weight: 700; cursor: pointer; }
+.material-input-mode { grid-column: 1 / -1; display: grid; gap: 7px; padding-top: 4px; }
+.material-input-mode small { color: var(--color-muted); font-size: 11px; line-height: 1.5; }
 .input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .power-fields { grid-template-columns: 1fr; }
 .field { display: grid; gap: 6px; color: #53636e; font-size: 12px; font-weight: 700; }
@@ -342,12 +430,14 @@ function selectPowerMode(mode: PowerSolveMode): void {
 .input-unit:focus-within { border-color: var(--color-brand); box-shadow: 0 0 0 3px rgb(18 106 115 / 10%); }
 .input-unit input { min-width: 0; width: 100%; min-height: 41px; padding: 0 10px; border: 0; outline: 0; }
 .input-unit select { border: 0; border-left: 1px solid #e2e7e9; padding: 0 7px; color: var(--color-muted); background: #f7f9fa; }
+.unit-text { display: grid; min-width: 42px; place-items: center; border-left: 1px solid #e2e7e9; color: var(--color-muted); background: #f7f9fa; }
 .input-unit input:disabled, .input-unit select:disabled { background: #e9edef; cursor: not-allowed; }
 .calculate { width: 100%; min-height: 43px; margin-top: 16px; border: 0; border-radius: 8px; color: #fff; background: var(--color-brand); font-weight: 800; cursor: pointer; }
 .calculate:hover { background: var(--color-brand-deep); }
 .error { margin: 14px 0 0; padding: 10px 12px; border-radius: 8px; color: #8f342d; background: #fff0ed; font-size: 12px; }
 .results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; margin-top: 16px; border: 1px solid var(--color-line); border-radius: 9px; background: var(--color-line); }
 .result-row { padding: 11px; background: #fff; }
+.result-row:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .result-row > span { display: block; margin-bottom: 5px; color: var(--color-muted); font-size: 10px; }
 .result-row strong { overflow-wrap: anywhere; font-size: 13px; }
 .result-row small { color: var(--color-muted); font-size: 10px; }

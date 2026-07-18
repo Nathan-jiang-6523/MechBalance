@@ -9,7 +9,29 @@ describe('TorsionCalculator', () => {
     const results = wrapper.get('[data-testid="shaft-results"]')
     expect(results.text()).toContain('τmax')
     expect(results.text()).toContain('40.744')
-    expect(results.text()).toContain('1.167')
+    expect(results.text()).toContain('1.214')
+    expect(results.text()).toContain('76923.077')
+  })
+
+  it('enforces mutually exclusive elastic constant input modes', async () => {
+    const wrapper = mount(TorsionCalculator)
+    const youngModulus = wrapper.get('input[aria-label="杨氏模量"]')
+    const poissonRatio = wrapper.get('input[aria-label="泊松比"]')
+    const shearModulus = wrapper.get('input[aria-label="剪切模量"]')
+    expect(youngModulus.attributes('disabled')).toBeUndefined()
+    expect(poissonRatio.attributes('disabled')).toBeUndefined()
+    expect(shearModulus.attributes('disabled')).toBeDefined()
+
+    await wrapper.get('input[value="shearModulus"]').setValue(true)
+    expect(youngModulus.attributes('disabled')).toBeDefined()
+    expect(poissonRatio.attributes('disabled')).toBeDefined()
+    expect(shearModulus.attributes('disabled')).toBeUndefined()
+    expect(youngModulus.element.value).toBe('')
+    expect(poissonRatio.element.value).toBe('')
+
+    await shearModulus.setValue('80000')
+    await wrapper.findAll('button.calculate')[0]!.trigger('click')
+    expect(wrapper.get('[data-testid="shaft-results"]').text()).toContain('1.167')
   })
 
   it('enforces mutually exclusive power solve fields', async () => {

@@ -145,8 +145,12 @@ test('轴向拉压与完全约束温变可计算', async ({ page }, testInfo) =>
 test('圆轴扭转与功率转矩转速关系可计算', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /圆轴扭转/ }).click()
   await expect(page.getByRole('heading', { name: '圆轴扭转与传动功率' })).toBeVisible()
+  await expect(page.getByLabel('杨氏模量', { exact: true })).toBeEnabled()
+  await expect(page.getByLabel('泊松比', { exact: true })).toBeEnabled()
+  await expect(page.getByLabel('剪切模量', { exact: true })).toBeDisabled()
   await page.getByRole('button', { name: '计算圆轴扭转' }).click()
   await expect(page.getByTestId('shaft-results')).toContainText('40.744')
+  await expect(page.getByTestId('shaft-results')).toContainText('76923.077')
 
   await page.getByRole('button', { name: '求解传动关系' }).click()
   await expect(page.getByTestId('power-results')).toContainText('63661.977')

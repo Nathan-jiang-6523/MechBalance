@@ -15,12 +15,17 @@ export interface NumericFieldDraft {
   unit: UnitId
 }
 
+export type ElasticConstantInputMode = 'youngPoisson' | 'shearModulus'
+
 export interface CircularShaftDraft {
   kind: CircularShaftKind
   diameter: NumericFieldDraft
   outerDiameter: NumericFieldDraft
   innerDiameter: NumericFieldDraft
   length: NumericFieldDraft
+  elasticConstantInputMode: ElasticConstantInputMode
+  youngModulus: NumericFieldDraft
+  poissonRatio: string
   shearModulus: NumericFieldDraft
   torque: NumericFieldDraft
 }
@@ -49,7 +54,10 @@ export function createDefaultCircularShaftDraft(): CircularShaftDraft {
     outerDiameter: { value: '60', unit: 'mm' },
     innerDiameter: { value: '40', unit: 'mm' },
     length: { value: '1000', unit: 'mm' },
-    shearModulus: { value: '80000', unit: 'MPa' },
+    elasticConstantInputMode: 'youngPoisson',
+    youngModulus: { value: '200000', unit: 'MPa' },
+    poissonRatio: '0.3',
+    shearModulus: { value: '', unit: 'MPa' },
     torque: { value: '1000000', unit: 'N_mm' },
   }
 }
@@ -81,10 +89,40 @@ function numberToSI(
   }
 }
 
+function positiveModulusToSI(
+  field: NumericFieldDraft,
+  fieldName: string,
+  fieldLabel: string,
+): number {
+  const valuePa = numberToSI(field, 'elasticModulus', fieldName)
+  if (valuePa <= 0) throw new TorsionDraftError(fieldName, `${fieldLabel}必须大于 0`)
+  return valuePa
+}
+
+export function resolveCircularShaftShearModulusPa(draft: CircularShaftDraft): number {
+  if (draft.elasticConstantInputMode === 'shearModulus') {
+    return positiveModulusToSI(draft.shearModulus, 'shearModulus', '剪切模量 G')
+  }
+
+  const youngModulusPa = positiveModulusToSI(
+    draft.youngModulus,
+    'youngModulus',
+    '杨氏模量 E',
+  )
+  const poissonRatio = Number(draft.poissonRatio)
+  if (draft.poissonRatio.trim() === '' || !Number.isFinite(poissonRatio)) {
+    throw new TorsionDraftError('poissonRatio', '请输入有限的泊松比 ν')
+  }
+  if (poissonRatio <= -1 || poissonRatio >= 0.5) {
+    throw new TorsionDraftError('poissonRatio', '泊松比 ν 必须满足 -1 < ν < 0.5')
+  }
+  return youngModulusPa / (2 * (1 + poissonRatio))
+}
+
 export function buildCircularShaftInput(draft: CircularShaftDraft): CircularShaftInput {
   const common = {
     lengthM: numberToSI(draft.length, 'length', 'length'),
-    shearModulusPa: numberToSI(draft.shearModulus, 'stress', 'shearModulus'),
+    shearModulusPa: resolveCircularShaftShearModulusPa(draft),
     torqueNm: numberToSI(draft.torque, 'torque', 'torque'),
   }
   return draft.kind === 'solid'
