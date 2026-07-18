@@ -1,4 +1,5 @@
 import type { BeamLoad, BeamModel } from '../../../core/beam'
+import { evaluateNumericExpression } from '../../../core/numeric'
 import {
   calculateSectionProperties,
   type SectionInput,
@@ -33,13 +34,15 @@ function parseUnitValue(
   label: string,
   errors: BeamInputError[],
 ): number | null {
-  if (!draft || draft.value.trim() === '') {
+  if (!draft) {
     errors.push({ field, message: `${label}不能为空` })
     return null
   }
-  const value = Number(draft.value)
-  if (!Number.isFinite(value)) {
-    errors.push({ field, message: `${label}必须为有限数值` })
+  let value: number
+  try {
+    value = evaluateNumericExpression(draft.value)
+  } catch (error) {
+    errors.push({ field, message: `${label}：${error instanceof Error ? error.message : '请输入数值或算式'}` })
     return null
   }
   try {

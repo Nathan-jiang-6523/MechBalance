@@ -1,4 +1,5 @@
 import type { BeamSupport } from '../../../core/beam'
+import { tryEvaluateNumericExpression } from '../../../core/numeric'
 import type { SectionKind } from '../../../core/sections'
 import type { UnitId } from '../../../core/units'
 
@@ -173,8 +174,8 @@ export function changeDirectionMode(
 ): BeamInputDraft {
   if (draft.directionMode === directionMode) return draft
   const loads = draft.loads.map((load): BeamLoadDraft => {
-    const parsed = Number(load.magnitude.value)
-    if (!Number.isFinite(parsed) || load.magnitude.value.trim() === '') return { ...load }
+    const parsed = tryEvaluateNumericExpression(load.magnitude.value)
+    if (parsed === null) return { ...load }
     if (directionMode === 'signed') {
       const sign = load.type === 'pointMoment'
         ? load.direction === 'counterClockwise' ? 1 : -1

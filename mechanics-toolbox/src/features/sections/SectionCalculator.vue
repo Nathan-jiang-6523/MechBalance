@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { formatEngineeringValue } from '../../core/numeric'
+import { evaluateNumericExpression, formatEngineeringValue } from '../../core/numeric'
 import {
   calculateSectionProperties,
   type SectionInput,
@@ -144,12 +144,13 @@ function display(
 
 function lengthToSI(key: string): number {
   const raw = fieldValues.value[key]
-  if (raw?.trim() === '' || raw === undefined) {
-    throw new InputFieldError(key, '请输入有限数值')
+  if (raw === undefined) throw new InputFieldError(key, '请输入数值或算式')
+  let parsed: number
+  try {
+    parsed = evaluateNumericExpression(raw)
+  } catch (error) {
+    throw new InputFieldError(key, error instanceof Error ? error.message : '请输入数值或算式')
   }
-
-  const parsed = Number(raw)
-  if (!Number.isFinite(parsed)) throw new InputFieldError(key, '请输入有限数值')
   return normalizeToSI(parsed, 'length', fieldUnits.value[key] ?? 'mm')
 }
 

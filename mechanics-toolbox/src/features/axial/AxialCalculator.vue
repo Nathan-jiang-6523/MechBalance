@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import MathFormula from '../../components/MathFormula.vue'
 import type { AxialAnalysisResult } from '../../core/axial'
+import { tryEvaluateNumericExpression } from '../../core/numeric'
 import type { QuantityId, UnitId } from '../../core/units'
 import {
   axialCompatibleUnits,
@@ -30,6 +31,8 @@ const AXIAL_FORMULAS = [
 const boundaryNote = computed(() => draft.value.boundary === 'free'
   ? '端部允许变形：总变形 = 轴力引起的机械变形 + 自由温度变形。'
   : '两端完全约束：不叠加外加端力，由 ΣΔL = 0 求温度约束力。')
+const axialForceForDiagram = computed(() =>
+  tryEvaluateNumericExpression(draft.value.axialForce.value))
 
 function calculate(): void {
   const calculated = calculateAxialDraft(draft.value)
@@ -162,22 +165,22 @@ function segmentValue(segment: AxialSegmentDraft, field: SegmentUnitField): Axia
         </g>
         <template v-if="draft.boundary === 'free'">
           <line
-            v-if="Number(draft.axialForce.value) >= 0"
+            v-if="axialForceForDiagram !== null && axialForceForDiagram >= 0"
             x1="140" y1="91" x2="78" y2="91"
             class="force" marker-end="url(#axial-force-arrow)"
           />
           <line
-            v-if="Number(draft.axialForce.value) >= 0"
+            v-if="axialForceForDiagram !== null && axialForceForDiagram >= 0"
             x1="680" y1="91" x2="742" y2="91"
             class="force" marker-end="url(#axial-force-arrow)"
           />
           <line
-            v-if="Number(draft.axialForce.value) < 0"
+            v-if="axialForceForDiagram !== null && axialForceForDiagram < 0"
             x1="78" y1="91" x2="134" y2="91"
             class="force" marker-end="url(#axial-force-arrow)"
           />
           <line
-            v-if="Number(draft.axialForce.value) < 0"
+            v-if="axialForceForDiagram !== null && axialForceForDiagram < 0"
             x1="742" y1="91" x2="686" y2="91"
             class="force" marker-end="url(#axial-force-arrow)"
           />

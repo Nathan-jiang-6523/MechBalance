@@ -5,6 +5,7 @@ import {
   listMaterialPresets,
   type MaterialPresetId,
 } from '../../core/materials'
+import { evaluateNumericExpression } from '../../core/numeric'
 import { convertFromSI, normalizeToSI } from '../../core/units'
 
 const presets = listMaterialPresets()
@@ -15,10 +16,9 @@ const density = ref('')
 const selectedPreset = computed(() => getMaterialPreset(selectedId.value))
 
 const parsedValues = computed(() => {
-  const eValue = elasticModulus.value.trim() === '' ? Number.NaN : Number(elasticModulus.value)
-  const densityValue = density.value.trim() === '' ? Number.NaN : Number(density.value)
-
   try {
+    const eValue = evaluateNumericExpression(elasticModulus.value)
+    const densityValue = evaluateNumericExpression(density.value)
     const elasticModulusPa = normalizeToSI(eValue, 'elasticModulus', 'MPa')
     const densityKgM3 = normalizeToSI(densityValue, 'density', 't_per_mm3')
     if (elasticModulusPa <= 0 || densityKgM3 <= 0) throw new Error('材料参数必须大于 0')

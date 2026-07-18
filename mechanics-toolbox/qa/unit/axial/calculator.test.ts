@@ -17,6 +17,14 @@ describe('AxialCalculator', () => {
     expect(wrapper.get('details').attributes('open')).toBeUndefined()
   })
 
+  it('accepts arithmetic expressions in axial inputs', async () => {
+    const wrapper = mount(AxialCalculator)
+    await wrapper.get('input[aria-label="轴向力"]').setValue('0.5*20000')
+    await wrapper.get('input[aria-label="杆段 1 温差"]').setValue('100*(1-50%)')
+    await wrapper.get('button.calculate-button').trigger('click')
+    expect(wrapper.get('[data-testid="total-deformation"]').text()).toBe('0.65 mm')
+  })
+
   it('makes free and fully restrained boundary inputs mutually exclusive', async () => {
     const wrapper = mount(AxialCalculator)
     expect(wrapper.find('input[aria-label="轴向力"]').exists()).toBe(true)
@@ -49,7 +57,7 @@ describe('AxialCalculator', () => {
     expect((wrapper.get('input[aria-label="杆段 1 长度"]').element as HTMLInputElement).value).toBe('')
 
     await wrapper.get('button.calculate-button').trigger('click')
-    expect(wrapper.text()).toContain('第 1 段长度 L不能为空')
+    expect(wrapper.text()).toContain('第 1 段长度 L：请输入数值或算式')
     expect(wrapper.find('[data-testid="total-deformation"]').exists()).toBe(false)
 
     await wrapper.get('input[aria-label="杆段 1 长度"]').setValue('-1')

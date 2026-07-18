@@ -350,13 +350,14 @@ function selectPowerMode(mode: PowerSolveMode): void {
               求{{ mode === 'power' ? '功率 P' : mode === 'torque' ? '扭矩 T' : '转速 n' }}
             </label>
           </div>
+          <p class="expression-hint">数值框支持算式：0.6*100、100*(1-5%)。</p>
         </div>
 
         <div class="input-grid power-fields">
           <label class="field" :class="{ target: power.solveFor === 'power' }">
             <span>功率 P</span>
             <span class="input-unit">
-              <input v-model="power.power.value" aria-label="功率" inputmode="decimal" :disabled="power.solveFor === 'power'" :placeholder="power.solveFor === 'power' ? '待求' : ''" />
+              <input v-model="power.power.value" aria-label="功率" inputmode="text" :disabled="power.solveFor === 'power'" :placeholder="power.solveFor === 'power' ? '待求' : ''" />
               <select v-model="power.power.unit" aria-label="功率单位" :disabled="power.solveFor === 'power'" @change="clearField(power.power)">
                 <option v-for="unit in powerUnits" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
               </select>
@@ -365,7 +366,7 @@ function selectPowerMode(mode: PowerSolveMode): void {
           <label class="field" :class="{ target: power.solveFor === 'torque' }">
             <span>扭矩 T（有符号）</span>
             <span class="input-unit">
-              <input v-model="power.torque.value" aria-label="传动扭矩" inputmode="decimal" :disabled="power.solveFor === 'torque'" :placeholder="power.solveFor === 'torque' ? '待求' : ''" />
+              <input v-model="power.torque.value" aria-label="传动扭矩" inputmode="text" :disabled="power.solveFor === 'torque'" :placeholder="power.solveFor === 'torque' ? '待求' : ''" />
               <select v-model="power.torque.unit" aria-label="传动扭矩单位" :disabled="power.solveFor === 'torque'" @change="clearField(power.torque)">
                 <option v-for="unit in torqueUnits" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
               </select>
@@ -374,7 +375,7 @@ function selectPowerMode(mode: PowerSolveMode): void {
           <label class="field" :class="{ target: power.solveFor === 'speed' }">
             <span>转速 n（非负大小）</span>
             <span class="input-unit">
-              <input v-model="power.speed.value" aria-label="转速" inputmode="decimal" :disabled="power.solveFor === 'speed'" :placeholder="power.solveFor === 'speed' ? '待求' : ''" />
+              <input v-model="power.speed.value" aria-label="转速" inputmode="text" :disabled="power.solveFor === 'speed'" :placeholder="power.solveFor === 'speed' ? '待求' : ''" />
               <select v-model="power.speed.unit" aria-label="转速单位" :disabled="power.solveFor === 'speed'" @change="clearField(power.speed)">
                 <option v-for="unit in speedUnits" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
               </select>
@@ -434,6 +435,7 @@ function selectPowerMode(mode: PowerSolveMode): void {
 .solve-modes label { padding: 7px 9px; border-radius: 7px; background: #edf4f4; color: #40545a; font-size: 12px; font-weight: 700; cursor: pointer; }
 .material-input-mode { grid-column: 1 / -1; display: grid; gap: 7px; padding-top: 4px; }
 .material-input-mode small { color: var(--color-muted); font-size: 11px; line-height: 1.5; }
+.expression-hint { margin: 0; color: var(--color-muted); font-size: 11px; line-height: 1.5; }
 .input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .power-fields { grid-template-columns: 1fr; }
 .field { display: grid; gap: 6px; color: #53636e; font-size: 12px; font-weight: 700; }

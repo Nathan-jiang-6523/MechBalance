@@ -1,4 +1,5 @@
 import { calculateAxialResponse, type AxialAnalysisResult } from '../../core/axial'
+import { evaluateNumericExpression } from '../../core/numeric'
 import { normalizeToSI, QUANTITY_CATALOG, type QuantityId, type UnitId } from '../../core/units'
 
 export interface AxialValueDraft {
@@ -57,13 +58,11 @@ function parseValue(
   label: string,
   errors: AxialInputError[],
 ): number | null {
-  if (draft.value.trim() === '') {
-    errors.push({ field, message: `${label}不能为空` })
-    return null
-  }
-  const value = Number(draft.value)
-  if (!Number.isFinite(value)) {
-    errors.push({ field, message: `${label}必须为有限数值` })
+  let value: number
+  try {
+    value = evaluateNumericExpression(draft.value)
+  } catch (error) {
+    errors.push({ field, message: `${label}：${error instanceof Error ? error.message : '请输入数值或算式'}` })
     return null
   }
   try {
@@ -80,13 +79,11 @@ function parseAlpha(
   label: string,
   errors: AxialInputError[],
 ): number | null {
-  if (value.trim() === '') {
-    errors.push({ field, message: `${label}不能为空` })
-    return null
-  }
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed)) {
-    errors.push({ field, message: `${label}必须为有限数值` })
+  let parsed: number
+  try {
+    parsed = evaluateNumericExpression(value)
+  } catch (error) {
+    errors.push({ field, message: `${label}：${error instanceof Error ? error.message : '请输入数值或算式'}` })
     return null
   }
   return parsed * 1e-6

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { formatEngineeringValue } from '../../core/numeric'
+import { evaluateNumericExpression, formatEngineeringValue } from '../../core/numeric'
 import {
   QUANTITY_CATALOG,
   convertUnitDetailed,
@@ -19,12 +19,8 @@ const definition = computed(() => QUANTITY_CATALOG[quantity.value])
 const conversion = computed(() => {
   if (inputValue.value.trim() === '') return { state: 'empty' as const }
 
-  const parsed = Number(inputValue.value)
-  if (!Number.isFinite(parsed)) {
-    return { state: 'error' as const, message: '请输入有限数值' }
-  }
-
   try {
+    const parsed = evaluateNumericExpression(inputValue.value)
     return {
       state: 'ready' as const,
       value: convertUnitDetailed(parsed, quantity.value, fromUnit.value, toUnit.value),
@@ -32,7 +28,7 @@ const conversion = computed(() => {
   } catch (error) {
     return {
       state: 'error' as const,
-      message: error instanceof Error ? error.message : '单位换算失败',
+      message: error instanceof Error ? error.message : '请输入数值或算式',
     }
   }
 })

@@ -29,6 +29,18 @@ describe('beam input adapter', () => {
     expect(value.loads).toEqual([{ type: 'pointForce', positionM: 0.4, forceN: -10_000 }])
   })
 
+  it('accepts arithmetic expressions in model and load fields', () => {
+    const draft = createDefaultBeamInputDraft()
+    draft.length.value = '500*2'
+    draft.elasticModulus.value = '200*1000'
+    draft.section.dimensions.width!.value = '48*2'
+    draft.loads[0]!.magnitude.value = '20000*(1-50%)'
+    const value = built(draft)
+    expect(value.lengthM).toBeCloseTo(1, 14)
+    expect(value.elasticModulusPa).toBeCloseTo(200e9, 3)
+    expect(value.loads[0]).toMatchObject({ forceN: -10_000 })
+  })
+
   it('merges coincident entries only after validating raw count', () => {
     const draft = createDefaultBeamInputDraft()
     const second: PointForceDraft = {

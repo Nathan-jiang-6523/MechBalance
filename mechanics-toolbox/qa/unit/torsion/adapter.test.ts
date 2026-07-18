@@ -48,6 +48,16 @@ describe('torsion UI adapters', () => {
     })
   })
 
+  it('accepts arithmetic expressions in transmission fields', () => {
+    const draft = createDefaultPowerTransmissionDraft()
+    draft.solveFor = 'power'
+    draft.torque.value = '0.6*100'
+    draft.speed.value = '10'
+    expect(buildPowerTransmissionInput(draft)).toEqual({
+      solveFor: 'power', torqueNm: 0.06, rotationalSpeedRps: 1 / 6,
+    })
+  })
+
   it('normalizes rpm/kW/N·mm and returns engineering benchmark', () => {
     const result = calculatePowerTransmissionDraft(createDefaultPowerTransmissionDraft())
     expect(result.torqueNm * 1000).toBeCloseTo(63661.9772368, 6)

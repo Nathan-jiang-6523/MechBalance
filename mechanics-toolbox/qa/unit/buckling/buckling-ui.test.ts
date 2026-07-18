@@ -20,6 +20,17 @@ describe('BucklingCalculator', () => {
     expect(wrapper.text()).toContain('K = 2')
   })
 
+  it('accepts arithmetic expressions in buckling inputs', async () => {
+    const wrapper = mount(BucklingCalculator)
+    const inputs = wrapper.findAll('.input-panel input')
+    await inputs[0]!.setValue('1000*2')
+    await inputs[1]!.setValue('200*1000')
+    await inputs[2]!.setValue('60/2')
+    await inputs[3]!.setValue('30*2')
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.text()).toContain('66.620 kN')
+  })
+
   it('clears changed units and reproduces the engineering-unit result in SI-sized inputs', async () => {
     const wrapper = mount(BucklingCalculator)
     const selects = wrapper.findAll('select')

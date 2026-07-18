@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import MathFormula from '../../components/MathFormula.vue'
-import { formatEngineeringValue } from '../../core/numeric'
+import { evaluateNumericExpression, formatEngineeringValue } from '../../core/numeric'
 import { normalizeToSI, QUANTITY_CATALOG, type UnitId } from '../../core/units'
 import {
   solveBendingTorsion,
@@ -44,10 +44,11 @@ const bendingResult = ref<BendingTorsionResult | null>(null)
 const error = ref('')
 
 function parseFinite(raw: string, label: string): number {
-  if (raw.trim() === '') throw new RangeError(`${label}不能为空`)
-  const value = Number(raw)
-  if (!Number.isFinite(value)) throw new RangeError(`${label}必须是有限数值`)
-  return value
+  try {
+    return evaluateNumericExpression(raw)
+  } catch (error) {
+    throw new RangeError(`${label}：${error instanceof Error ? error.message : '请输入数值或算式'}`)
+  }
 }
 
 function optionalStrengthPa(): number | undefined {

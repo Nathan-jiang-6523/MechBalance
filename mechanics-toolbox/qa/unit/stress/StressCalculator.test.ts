@@ -15,6 +15,16 @@ describe('StressCalculator', () => {
     expect(wrapper.find('svg').exists()).toBe(true)
   })
 
+  it('accepts arithmetic expressions in stress fields', async () => {
+    const wrapper = mount(StressCalculator)
+    const inputs = wrapper.findAll('.field-grid input')
+    await inputs[0]!.setValue('200*(1-50%)')
+    await inputs[1]!.setValue('20-20')
+    await inputs[2]!.setValue('5*0')
+    await wrapper.get('button.calculate').trigger('click')
+    expect(wrapper.text()).toContain('σ1 = 100.000 MPa')
+  })
+
   it('switches to bending-torsion and reports selected-fibre recovery', async () => {
     const wrapper = mount(StressCalculator)
     await wrapper.get('.mode-tabs button:nth-child(2)').trigger('click')

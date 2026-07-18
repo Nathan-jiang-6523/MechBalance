@@ -10,11 +10,12 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('截面计算、材料覆盖和恢复可用', async ({ page }) => {
+  await page.locator('.section-workspace .field-grid input').first().fill('48*2')
   await page.getByRole('button', { name: '计算截面性质' }).click()
   await expect(page.getByText('已计算')).toBeVisible()
   await expect(page.getByText(/Jt =/)).toBeVisible()
 
-  await page.getByLabel('弹性模量 E').fill('70000')
+  await page.getByLabel('弹性模量 E').fill('35000*2')
   await expect(page.getByText('已覆盖预设值')).toBeVisible()
   await page.getByRole('button', { name: '恢复预设' }).click()
   await expect(page.getByText('使用预设值')).toBeVisible()
@@ -49,8 +50,8 @@ test('单位换算与切换清空规则可用', async ({ page }) => {
   await page.getByRole('button', { name: /单位换算/ }).click()
   await page.getByLabel('原单位').selectOption('m')
   await page.getByLabel('目标单位').selectOption('mm')
-  await page.getByLabel('输入数值').fill('1.25')
-  await expect(page.getByText('1250.000')).toBeVisible()
+  await page.getByLabel('输入数值').fill('1.25*2')
+  await expect(page.getByText('2500.000')).toBeVisible()
 
   await page.getByLabel('目标单位').selectOption('cm')
   await expect(page.getByLabel('输入数值')).toHaveValue('')
@@ -82,7 +83,7 @@ test('梁综合计算默认算例、自动重算和失效保护可用', async ({
   await page.screenshot({ path: testInfo.outputPath('beam-calculator.png'), fullPage: true })
 
   const firstLoad = page.locator('.load-card[data-load-index="0"]')
-  await firstLoad.locator('.field').filter({ hasText: '非负幅值' }).locator('input').fill('20000')
+  await firstLoad.locator('.field').filter({ hasText: '非负幅值' }).locator('input').fill('0.5*40000')
   await expect(
     page.getByTestId('reaction-row').filter({ hasText: '左端竖向反力' }),
   ).toContainText('12000.000')
@@ -134,6 +135,7 @@ test('梁多载荷及载荷单位切换可回归', async ({ page }) => {
 test('轴向拉压与完全约束温变可计算', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /轴向与温变/ }).click()
   await expect(page.getByRole('heading', { name: '轴向拉压、伸长与温度变形' })).toBeVisible()
+  await page.getByLabel('轴向力', { exact: true }).fill('0.5*20000')
   await page.getByRole('button', { name: '计算轴向响应' }).click()
   await expect(page.getByTestId('total-deformation')).toContainText('0.65 mm')
 
@@ -158,12 +160,20 @@ test('圆轴扭转与功率转矩转速关系可计算', async ({ page }, testIn
   await page.getByRole('button', { name: '求解传动关系' }).click()
   await expect(page.getByTestId('power-results')).toContainText('63661.977')
   await expect(page.getByTestId('power-results')).toContainText('1500.000')
+
+  await page.getByRole('radio', { name: '求功率 P' }).check()
+  await page.getByLabel('传动扭矩', { exact: true }).fill('0.6*100')
+  await page.getByLabel('转速', { exact: true }).fill('10')
+  await page.getByRole('button', { name: '求解传动关系' }).click()
+  await expect(page.getByTestId('power-results')).toContainText('6.28319e-5')
+  await expect(page.getByTestId('power-results')).toContainText('T = 60.000 N·mm')
   await page.screenshot({ path: testInfo.outputPath('torsion-power.png'), fullPage: true })
 })
 
 test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /应力与莫尔圆/ }).click()
   await expect(page.getByRole('heading', { name: '平面应力与弯扭组合' })).toBeVisible()
+  await page.locator('.input-panel .field-grid input').nth(0).fill('200*(1-50%)')
   await page.getByRole('button', { name: '计算', exact: true }).click()
   await expect(page.getByText('σ1 = 100.000 MPa', { exact: true })).toBeVisible()
   await expect(page.getByText('σVM = 100.000')).toBeVisible()
@@ -221,6 +231,7 @@ test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, 
 test('欧拉压杆按显式边界和弱轴输出结果', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /压杆稳定/ }).click()
   await expect(page.getByRole('heading', { name: '欧拉压杆稳定及长细比' })).toBeVisible()
+  await page.locator('.buckling-calculator .input-panel input').nth(0).fill('1000*2')
   await page.getByRole('button', { name: '计算稳定性' }).click()
   await expect(page.getByText('y 轴')).toBeVisible()
   await expect(page.getByText('66.620 kN')).toBeVisible()

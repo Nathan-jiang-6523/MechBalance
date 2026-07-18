@@ -11,7 +11,7 @@ import {
   type SectionInput,
   type SectionKind,
 } from '../../core/sections'
-import { formatEngineeringValue } from '../../core/numeric'
+import { evaluateNumericExpression, formatEngineeringValue } from '../../core/numeric'
 import { normalizeToSI, convertFromSI, QUANTITY_CATALOG, type UnitId } from '../../core/units'
 
 const BUCKLING_FORMULAS = [
@@ -63,7 +63,11 @@ function changeDimensionUnit(): void {
 }
 
 function dimensionMetres(key: string): number {
-  return normalizeToSI(Number(dimensions.value[key]), 'length', dimensionUnit.value)
+  return normalizeToSI(
+    evaluateNumericExpression(dimensions.value[key] ?? ''),
+    'length',
+    dimensionUnit.value,
+  )
 }
 
 function sectionInput(): SectionInput {
@@ -77,18 +81,33 @@ function sectionInput(): SectionInput {
 }
 
 const calculation = computed(() => {
-  const section = calculateSectionProperties(sectionInput())
-  if (!section.ok) return { ok: false as const, errors: section.errors.map(({ message }) => message) }
-  const limitText = slendernessLimit.value.trim()
-  return calculateEulerBuckling({
-    elasticModulusPa: normalizeToSI(Number(elasticModulus.value), 'elasticModulus', elasticModulusUnit.value),
-    lengthM: normalizeToSI(Number(length.value), 'length', lengthUnit.value),
-    areaM2: section.value.areaM2,
-    ixM4: section.value.ixM4,
-    iyM4: section.value.iyM4,
-    endCondition: endCondition.value,
-    ...(limitText ? { slendernessLimit: Number(limitText) } : {}),
-  })
+  try {
+    const section = calculateSectionProperties(sectionInput())
+    if (!section.ok) return { ok: false as const, errors: section.errors.map(({ message }) => message) }
+    const limitText = slendernessLimit.value.trim()
+    return calculateEulerBuckling({
+      elasticModulusPa: normalizeToSI(
+        evaluateNumericExpression(elasticModulus.value),
+        'elasticModulus',
+        elasticModulusUnit.value,
+      ),
+      lengthM: normalizeToSI(
+        evaluateNumericExpression(length.value),
+        'length',
+        lengthUnit.value,
+      ),
+      areaM2: section.value.areaM2,
+      ixM4: section.value.ixM4,
+      iyM4: section.value.iyM4,
+      endCondition: endCondition.value,
+      ...(limitText ? { slendernessLimit: evaluateNumericExpression(limitText) } : {}),
+    })
+  } catch (error) {
+    return {
+      ok: false as const,
+      errors: [error instanceof Error ? error.message : '请输入数值或算式'],
+    }
+  }
 })
 
 const result = computed(() => submitted.value && calculation.value.ok ? calculation.value.value : null)

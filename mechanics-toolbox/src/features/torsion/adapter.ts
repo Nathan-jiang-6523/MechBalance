@@ -8,6 +8,7 @@ import {
   type PowerTransmissionInput,
   type PowerTransmissionResult,
 } from '../../core/torsion'
+import { evaluateNumericExpression } from '../../core/numeric'
 import { normalizeToSI, type QuantityId, type UnitId } from '../../core/units'
 
 export interface NumericFieldDraft {
@@ -76,9 +77,15 @@ function numberToSI(
   quantity: QuantityId,
   fieldName: string,
 ): number {
-  if (field.value.trim() === '') throw new TorsionDraftError(fieldName, '请输入有限数值')
-  const value = Number(field.value)
-  if (!Number.isFinite(value)) throw new TorsionDraftError(fieldName, '请输入有限数值')
+  let value: number
+  try {
+    value = evaluateNumericExpression(field.value)
+  } catch (error) {
+    throw new TorsionDraftError(
+      fieldName,
+      error instanceof Error ? error.message : '请输入数值或算式',
+    )
+  }
   try {
     return normalizeToSI(value, quantity, field.unit)
   } catch (error) {
@@ -109,9 +116,14 @@ export function resolveCircularShaftShearModulusPa(draft: CircularShaftDraft): n
     'youngModulus',
     '杨氏模量 E',
   )
-  const poissonRatio = Number(draft.poissonRatio)
-  if (draft.poissonRatio.trim() === '' || !Number.isFinite(poissonRatio)) {
-    throw new TorsionDraftError('poissonRatio', '请输入有限的泊松比 ν')
+  let poissonRatio: number
+  try {
+    poissonRatio = evaluateNumericExpression(draft.poissonRatio)
+  } catch (error) {
+    throw new TorsionDraftError(
+      'poissonRatio',
+      error instanceof Error ? error.message : '请输入数值或算式',
+    )
   }
   if (poissonRatio <= -1 || poissonRatio >= 0.5) {
     throw new TorsionDraftError('poissonRatio', '泊松比 ν 必须满足 -1 < ν < 0.5')
