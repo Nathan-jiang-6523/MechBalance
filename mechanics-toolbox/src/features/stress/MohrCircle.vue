@@ -23,6 +23,13 @@ const geometry = computed(() => {
   const pointAy = cy - result.tauXyPa * scale
   const pointBx = mapX(result.sigmaYPa)
   const pointBy = cy + result.tauXyPa * scale
+  const stressScale = Math.max(
+    Math.abs(result.sigmaXPa),
+    Math.abs(result.sigmaYPa),
+    radius,
+    1,
+  )
+  const axisAligned = radius > 0 && Math.abs(result.tauXyPa) <= 1e-12 * stressScale
 
   const placePointLabel = (
     x: number,
@@ -51,6 +58,9 @@ const geometry = computed(() => {
     pointAy,
     pointBx,
     pointBy,
+    axisAligned,
+    sigma1PointName: result.sigmaXPa >= result.sigmaYPa ? 'A' : 'B',
+    sigma2PointName: result.sigmaXPa >= result.sigmaYPa ? 'B' : 'A',
     pointALabel: placePointLabel(pointAx, pointAy, 'A'),
     pointBLabel: placePointLabel(pointBx, pointBy, 'B'),
     sigma1X: mapX(result.sigma1Pa),
@@ -111,27 +121,51 @@ const doubledAngle = computed(() =>
       />
 
       <template v-if="result.mohrRadiusPa > 0">
-        <circle :cx="geometry.pointAx" :cy="geometry.pointAy" r="5" class="point point-a" />
-        <circle :cx="geometry.pointBx" :cy="geometry.pointBy" r="5" class="point point-b" />
-        <text
-          :x="geometry.pointALabel.x"
-          :y="geometry.pointALabel.y"
-          :text-anchor="geometry.pointALabel.anchor"
-          class="point-label"
-          data-mohr-label
-        >A(σx, τxy)</text>
-        <text
-          :x="geometry.pointBLabel.x"
-          :y="geometry.pointBLabel.y"
-          :text-anchor="geometry.pointBLabel.anchor"
-          class="point-label"
-          data-mohr-label
-        >B(σy, −τxy)</text>
+        <template v-if="geometry.axisAligned">
+          <circle :cx="geometry.sigma2X" :cy="geometry.cy" r="5" class="principal" />
+          <circle :cx="geometry.sigma1X" :cy="geometry.cy" r="5" class="principal" />
+          <text
+            :x="geometry.sigma2X - 12"
+            :y="geometry.cy - 11"
+            text-anchor="end"
+            class="combined-label"
+            data-mohr-label
+            data-mohr-combined
+          >{{ geometry.sigma2PointName }} = σ2 = {{ mpa(result.sigma2Pa) }} MPa</text>
+          <text
+            :x="geometry.sigma1X + 12"
+            :y="geometry.cy - 11"
+            text-anchor="start"
+            class="combined-label"
+            data-mohr-label
+            data-mohr-combined
+          >{{ geometry.sigma1PointName }} = σ1 = {{ mpa(result.sigma1Pa) }} MPa</text>
+        </template>
+        <template v-else>
+          <circle :cx="geometry.pointAx" :cy="geometry.pointAy" r="5" class="point point-a" />
+          <circle :cx="geometry.pointBx" :cy="geometry.pointBy" r="5" class="point point-b" />
+          <text
+            :x="geometry.pointALabel.x"
+            :y="geometry.pointALabel.y"
+            :text-anchor="geometry.pointALabel.anchor"
+            class="point-label"
+            data-mohr-label
+            data-mohr-point-label
+          >A(σx, τxy)</text>
+          <text
+            :x="geometry.pointBLabel.x"
+            :y="geometry.pointBLabel.y"
+            :text-anchor="geometry.pointBLabel.anchor"
+            class="point-label"
+            data-mohr-label
+            data-mohr-point-label
+          >B(σy, −τxy)</text>
 
-        <circle :cx="geometry.sigma2X" :cy="geometry.cy" r="4" class="principal" />
-        <circle :cx="geometry.sigma1X" :cy="geometry.cy" r="4" class="principal" />
-        <text :x="geometry.sigma2X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label>σ2 {{ mpa(result.sigma2Pa) }}</text>
-        <text :x="geometry.sigma1X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label>σ1 {{ mpa(result.sigma1Pa) }}</text>
+          <circle :cx="geometry.sigma2X" :cy="geometry.cy" r="4" class="principal" />
+          <circle :cx="geometry.sigma1X" :cy="geometry.cy" r="4" class="principal" />
+          <text :x="geometry.sigma2X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label data-mohr-principal-label>σ2 {{ mpa(result.sigma2Pa) }}</text>
+          <text :x="geometry.sigma1X" :y="geometry.cy + 22" text-anchor="middle" class="value-label" data-mohr-label data-mohr-principal-label>σ1 {{ mpa(result.sigma1Pa) }}</text>
+        </template>
       </template>
       <template v-else>
         <circle :cx="geometry.cx" :cy="geometry.cy" r="5" class="degenerate" />
@@ -174,6 +208,7 @@ svg { width: 100%; min-width: 420px; display: block; }
 .point-b { fill: #416f9c; }
 .principal, .degenerate { fill: var(--color-brand-deep); }
 .point-label { fill: #4d5c64; font-size: 10px; font-weight: 700; }
+.combined-label { fill: #34444c; font-size: 10px; font-weight: 800; }
 .value-label { fill: #34444c; font-size: 10px; font-weight: 700; }
 .relation-label { fill: #566a72; font-size: 10px; }
 

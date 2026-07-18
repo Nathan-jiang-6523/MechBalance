@@ -165,7 +165,7 @@ test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, 
   await page.getByRole('button', { name: /应力与莫尔圆/ }).click()
   await expect(page.getByRole('heading', { name: '平面应力与弯扭组合' })).toBeVisible()
   await page.getByRole('button', { name: '计算', exact: true }).click()
-  await expect(page.getByText('σ1 = 100.000')).toBeVisible()
+  await expect(page.getByText('σ1 = 100.000 MPa', { exact: true })).toBeVisible()
   await expect(page.getByText('σVM = 100.000')).toBeVisible()
   const mohrCircle = page.getByRole('img', { name: '平面应力莫尔圆与原始应力点' })
   await expect(mohrCircle).toBeVisible()
@@ -193,6 +193,10 @@ test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, 
   }
 
   await expectNoLabelOverlap()
+  await expect(mohrCircle.locator('[data-mohr-combined]')).toHaveCount(2)
+  await expect(mohrCircle.locator('[data-mohr-point-label]')).toHaveCount(0)
+  await expect(mohrCircle.locator('[data-mohr-principal-label]')).toHaveCount(0)
+  await mohrCircle.screenshot({ path: testInfo.outputPath('mohr-axis-aligned.png') })
   const planeInputs = page.locator('.input-panel .field-grid input')
   for (const [sigmaX, sigmaY, tauXy] of [['0', '0', '50'], ['80', '80', '0']]) {
     await planeInputs.nth(0).fill(sigmaX)
@@ -200,6 +204,11 @@ test('平面应力莫尔圆与弯扭组合共享强度准则', async ({ page }, 
     await planeInputs.nth(2).fill(tauXy)
     await page.getByRole('button', { name: '计算', exact: true }).click()
     await expectNoLabelOverlap()
+    if (tauXy !== '0') {
+      await expect(mohrCircle.locator('[data-mohr-combined]')).toHaveCount(0)
+      await expect(mohrCircle.locator('[data-mohr-point-label]')).toHaveCount(2)
+      await expect(mohrCircle.locator('[data-mohr-principal-label]')).toHaveCount(2)
+    }
   }
 
   await page.getByRole('button', { name: '圆轴弯扭组合' }).click()

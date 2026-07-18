@@ -8,7 +8,9 @@ describe('StressCalculator', () => {
     await wrapper.get('button.calculate').trigger('click')
     expect(wrapper.text()).toContain('σ1 = 100.000 MPa')
     expect(wrapper.text()).toContain('von Mises 等效应力')
-    expect(wrapper.text()).toContain('A(σx, τxy)')
+    expect(wrapper.text()).toContain('A = σ1 = 100.000 MPa')
+    expect(wrapper.text()).toContain('B = σ2 = 0.000 MPa')
+    expect(wrapper.text()).not.toContain('A(σx, τxy)')
     expect(wrapper.text()).toContain('物理逆时针 θ → 圆上顺时针 2θ')
     expect(wrapper.find('svg').exists()).toBe(true)
   })
@@ -19,6 +21,7 @@ describe('StressCalculator', () => {
     await wrapper.get('button.calculate').trigger('click')
     expect(wrapper.text()).toContain('选定外缘弯曲正应力')
     expect(wrapper.text()).toContain('选定外缘扭转剪应力')
+    expect(wrapper.text()).toContain('A(σx, τxy)')
     expect(wrapper.text()).toContain('圆截面采用')
   })
 
