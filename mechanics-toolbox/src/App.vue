@@ -1,22 +1,25 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import MaterialPresetEditor from './features/materials/MaterialPresetEditor.vue'
+import BeamCalculator from './features/beam/BeamCalculator.vue'
 import SectionCalculator from './features/sections/SectionCalculator.vue'
 import UnitConverter from './features/unit-converter/UnitConverter.vue'
 
-type ViewId = 'sections' | 'units'
+type ViewId = 'sections' | 'units' | 'beam'
 
 const activeView = ref<ViewId>('sections')
 
 const navigation = [
   { index: '01', id: 'sections', label: '截面性质', status: '可用' },
   { index: '02', id: 'units', label: '单位换算', status: '可用' },
-  { index: '03', id: null, label: '梁综合计算', status: '开发中' },
+  { index: '03', id: 'beam', label: '梁综合计算', status: '可用' },
 ] as const
 
-const pageTitle = computed(() =>
-  activeView.value === 'sections' ? '截面性质工作台' : '常用单位换算',
-)
+const pageTitle = computed(() => ({
+  sections: '截面性质工作台',
+  units: '常用单位换算',
+  beam: '梁综合计算工作台',
+})[activeView.value])
 
 function selectView(id: ViewId | null): void {
   if (id) activeView.value = id
@@ -82,7 +85,8 @@ function selectView(id: ViewId | null): void {
         <SectionCalculator />
         <MaterialPresetEditor />
       </div>
-      <UnitConverter v-else />
+      <UnitConverter v-else-if="activeView === 'units'" />
+      <BeamCalculator v-else />
     </main>
   </div>
 </template>

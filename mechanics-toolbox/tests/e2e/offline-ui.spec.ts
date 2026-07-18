@@ -56,6 +56,54 @@ test('单位换算与切换清空规则可用', async ({ page }) => {
   await expect(page.getByLabel('输入数值')).toHaveValue('')
 })
 
+test('梁综合计算默认算例、自动重算和失效保护可用', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: /梁综合计算/ }).click()
+  await expect(page.getByRole('heading', { name: '梁与载荷输入' })).toBeVisible()
+  await expect(page.locator('.beam-diagram')).toBeVisible()
+
+  await page.getByRole('button', { name: '计算梁响应' }).click()
+  await expect(page.getByRole('heading', { name: '反力、内力、变形与应力' })).toBeVisible()
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '左端竖向反力' }),
+  ).toContainText('6000.000')
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '右端竖向反力' }),
+  ).toContainText('4000.000')
+  await expect(
+    page.getByTestId('stress-row').filter({ hasText: '最大弯曲正应力绝对值' }),
+  ).toContainText('15.000')
+  await expect(page.locator('.chart-canvas canvas')).toHaveCount(2)
+
+  await page.getByTestId('second-chart-select').selectOption('deflectionM')
+  await expect(page.getByTestId('second-chart-select')).toHaveValue('deflectionM')
+  await page.screenshot({ path: testInfo.outputPath('beam-calculator.png'), fullPage: true })
+
+  const firstLoad = page.locator('.load-card[data-load-index="0"]')
+  await firstLoad.locator('.field').filter({ hasText: '非负幅值' }).locator('input').fill('20000')
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '左端竖向反力' }),
+  ).toContainText('12000.000')
+
+  await page.locator('.beam-input-panel .field').filter({ hasText: '梁长 L' }).locator('input').fill('')
+  await expect(page.getByRole('heading', { name: '反力、内力、变形与应力' })).toHaveCount(0)
+  await expect(page.getByRole('alert').first()).toContainText('请检查输入')
+})
+
+test('梁载荷方向输入模式互斥且页面不产生横向溢出', async ({ page }) => {
+  await page.getByRole('button', { name: /梁综合计算/ }).click()
+  const mode = page.locator('.beam-input-panel .field').filter({ hasText: '载荷方向输入' }).locator('select')
+  await expect(page.getByLabel('载荷方向', { exact: true })).toBeVisible()
+  await mode.selectOption('signed')
+  await expect(page.getByLabel('载荷方向', { exact: true })).toHaveCount(0)
+  await expect(page.locator('.load-card').getByText('带符号数值')).toBeVisible()
+
+  const viewport = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }))
+  expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth)
+})
+
 test('file 页面无网络请求且视口无横向溢出', async ({ page }) => {
   const networkRequests: string[] = []
   page.on('request', (request) => {
