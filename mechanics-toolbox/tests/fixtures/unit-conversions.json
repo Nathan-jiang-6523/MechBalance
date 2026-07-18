@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "E. 常用单位换算器",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "UNIT-01",
+      "title": "长度、面积、体积",
+      "purpose": "验证长度及其幂次量纲换算，防止线性比例误用于面积/体积。",
+      "inputs": "长度 `1.25 m → mm`；面积 `2.5 m² → mm²`；体积 `0.003 m³ → mm³`。",
+      "expected": "长度 `1250 mm`；面积 `2500000 mm²`；体积 `3000000 mm³`。",
+      "signConvention": "不适用。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "往返必须恢复原值；`0` 在任意同量纲单位间仍为 `0`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-02",
+      "title": "截面模量、截面二次矩",
+      "purpose": "验证三次方、四次方长度量纲换算。",
+      "inputs": "截面模量 `12 cm³ → mm³`；截面二次矩 `3 cm⁴ → mm⁴`。",
+      "expected": "截面模量 `12000 mm³`；截面二次矩 `30000 mm⁴`。",
+      "signConvention": "不适用。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "往返分别恢复 `12 cm³`、`3 cm⁴`；比例必须取长度比例的三次方、四次方。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-03",
+      "title": "力、质量",
+      "purpose": "验证力和质量分别换算，确保 `t` 只表示质量吨。",
+      "inputs": "力 `2.5 kN → N`；质量 `1.2 t → kg`。",
+      "expected": "力 `2500 N`；质量 `1200 kg`。",
+      "signConvention": "负值只换比例并保留负号。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "`t` 仅为质量吨；不得显示或隐式换成 `tf`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-04",
+      "title": "应力/压力、弹性模量",
+      "purpose": "验证同量纲物理量的合法换算及 UI 分类。",
+      "inputs": "应力 `-125 MPa → N/mm²`；弹性模量 `210 GPa → MPa`。",
+      "expected": "应力 `-125 N/mm²`；弹性模量 `210000 MPa`。",
+      "signConvention": "拉正压负，换算保留符号。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "应力、压力、弹性模量同量纲，但 UI 分类名称保持输入物理量类别。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-05",
+      "title": "力矩/转矩、线载荷",
+      "purpose": "验证 `N·mm`、`N·m` 等力矩单位及线载荷换算。",
+      "inputs": "力矩 `-2.5 kN·m → N·mm`；线载荷 `-3 kN/m → N/mm`。",
+      "expected": "力矩 `-2500000 N·mm`；线载荷 `-3 N/mm`。",
+      "signConvention": "旋向、载荷方向负号均保留。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "中点号/乘号只影响显示，不改变单位量纲。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-06",
+      "title": "密度",
+      "purpose": "验证默认 `t/mm³` 与常用质量密度单位换算。",
+      "inputs": "密度 `7850 kg/m³ → t/mm³`。",
+      "expected": "`7.85×10⁻⁹ t/mm³`。",
+      "signConvention": "不适用。",
+      "tolerance": "相对误差 `≤1×10⁻¹²`。",
+      "boundaryNotes": "往返恢复 `7850 kg/m³`；结果必须显示科学计数法，防止误读数量级。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-07",
+      "title": "温度、温差、角度",
+      "purpose": "分别验证带偏置温标、温差比例换算及角度换算。",
+      "inputs": "绝对温度 `25 °C → °F`；温差 `20 °C → °F`；角度 `180° → rad`。",
+      "expected": "绝对温度 `77 °F`；温差 `36 °F`；角度 `π rad = 3.141592653589793 rad`。",
+      "signConvention": "逆时针角为正，换算保留正负号。",
+      "tolerance": "温度/温差绝对误差 `≤1×10⁻¹²`；角度 `≤1×10⁻¹² rad`。",
+      "boundaryNotes": "绝对温度用偏置 `F=1.8C+32`；温差只用比例 `ΔF=1.8ΔC`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "UNIT-08",
+      "title": "功率、转速及跨单位等价",
+      "purpose": "验证功率、转速换算，并验证同一力学问题切换单位后物理结果不变。",
+      "inputs": "功率 `15 kW → W`；转速 `1500 r/min → r/s`；跨单位复算引用 `AXIAL-01`，改用 `L=2 m`、`A=0.0005 m²`、`E=200 GPa`、`N=50 kN`。",
+      "expected": "功率 `15000 W`；转速 `25 r/s`；跨单位结果 `σ=100 MPa`、`ΔL=0.001 m=1 mm`，与 `AXIAL-01` 相同。",
+      "signConvention": "转速正负号保留。",
+      "tolerance": "换算相对误差 `≤1×10⁻¹²`；跨单位物理结果相对误差 `≤1×10⁻⁹`。",
+      "boundaryNotes": "`r` 表示转数，角速度换算另用 `rad/s`。",
+      "status": "已确认（三轮复算）。"
+    }
+  ]
+}

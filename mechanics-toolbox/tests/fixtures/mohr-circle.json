@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "H. 平面应力与莫尔圆",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "MOHR-01",
+      "title": "单轴应力状态",
+      "purpose": "验证单轴状态下的应力变换、主应力、最大面内剪应力及角度。",
+      "inputs": "`σx=100 MPa`；`σy=0 MPa`；`τxy=0 MPa`；目标物理角 `θ=30°`。",
+      "expected": "`σx'=75 MPa`、`σy'=25 MPa`、`τx'y'=-43.301270189 MPa`；`σ1=100 MPa`、`σ2=0 MPa`；主方向 `θp1=0°`、`θp2=90°`；最大正面内剪应力 `+50 MPa @ θ=-45°`，最小 `-50 MPa @ θ=45°`；圆心 `C=50 MPa`、半径 `R=50 MPa`。",
+      "signConvention": "拉应力为正；`τxy>0` 表示 `+x` 面沿 `+y`；物理角从 `x` 轴逆时针为正；莫尔圆应力点随物理正角转 `-2θ`。",
+      "tolerance": "应力绝对误差 `≤1×10⁻⁶ MPa`；角度 `≤1×10⁻⁶°`。",
+      "boundaryNotes": "方向按 `180°` 等价；最大剪应力方向按 `90°` 等价。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "MOHR-02",
+      "title": "纯剪应力状态",
+      "purpose": "验证纯剪状态、双角关系及主应力方向。",
+      "inputs": "`σx=0 MPa`；`σy=0 MPa`；`τxy=+60 MPa`；`θ=45°`。",
+      "expected": "`σx'=60 MPa`、`σy'=-60 MPa`、`τx'y'=0 MPa`；`σ1=60 MPa @ θ=45°`、`σ2=-60 MPa @ θ=135°`；最大正剪应力 `+60 MPa @ θ=0°`、最小 `-60 MPa @ θ=90°`；圆心 `0 MPa`、半径 `60 MPa`。",
+      "signConvention": "同 `MOHR-01`。",
+      "tolerance": "应力 `≤1×10⁻⁶ MPa`；角度 `≤1×10⁻⁶°`。",
+      "boundaryNotes": "验证物理角与莫尔圆角双角关系。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "MOHR-03",
+      "title": "一般双轴应力状态",
+      "purpose": "验证一般平面应力及张量不变量检查。",
+      "inputs": "`σx=80 MPa`、`σy=20 MPa`、`τxy=30 MPa`、`θ=30°`。",
+      "expected": "`σx'=90.980762114 MPa`、`σy'=9.019237886 MPa`、`τx'y'=-10.980762114 MPa`；`σ1=92.426406871 MPa @ θ=22.5°`、`σ2=7.573593129 MPa @ θ=112.5°`；最大正剪应力 `42.426406871 MPa @ θ=-22.5°`、最小值在 `67.5°`；圆心 `50 MPa`、半径 `42.426406871 MPa`；不变量：迹 `σx+σy=100 MPa`、行列式 `σxσy-τxy²=700 MPa²`，变换前后相同。",
+      "signConvention": "同 `MOHR-01`。",
+      "tolerance": "应力 `≤1×10⁻⁶ MPa`；不变量 `≤1×10⁻⁵ MPa²`；角度 `≤1×10⁻⁶°`。",
+      "boundaryNotes": "主方向按 `180°` 等价；应力排序 `σ1≥σ2`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "MOHR-04",
+      "title": "等双轴/退化应力状态",
+      "purpose": "验证圆半径为零或主方向不唯一时不产生不稳定角度。",
+      "inputs": "`σx=50 MPa`、`σy=50 MPa`、`τxy=0 MPa`、`θ=37°`。",
+      "expected": "任意角均为 `σx'=σy'=50 MPa`、`τx'y'=0`；`σ1=σ2=50 MPa`；主方向显示 `不唯一`，不返回任意数值角；最大面内剪应力 `0 MPa`；圆心 `50 MPa`、半径 `0 MPa`。",
+      "signConvention": "同 `MOHR-01`。",
+      "tolerance": "应力绝对误差 `≤1×10⁻⁹ MPa`；半径 `≤1×10⁻⁹ MPa`；方向按规则文本判定。",
+      "boundaryNotes": "退化状态 UI 文案：`等双轴应力：主方向不唯一`。",
+      "status": "已确认（三轮复算）。"
+    }
+  ]
+}

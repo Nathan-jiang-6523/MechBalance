@@ -1,0 +1,6 @@
+export { recoverBeamShearStressPa, recoverBendingStressPa } from './stress'
+export { findBeamExtrema, findBeamFieldExtrema } from './extrema'
+export { DEFAULT_BEAM_BASE_SAMPLE_COUNT, sampleBeamSolution } from './sampling'
+export { solveBeam } from './solver'
+export type { ShearStressResult } from './stress'
+export type * from './types'

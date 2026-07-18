@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "I. 弯扭组合、主应力与强度准则",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "COMB-01",
+      "title": "纯弯曲基线",
+      "purpose": "验证纯弯时的控制点应力、主应力、von Mises、Tresca 和利用率。",
+      "inputs": "实心圆截面 `d=40 mm`，控制点下缘 `y=-20 mm`；`M=+628318.530718 N·mm`；`T=0`；许用等效应力 `[σ]=150 MPa`。",
+      "expected": "`σx=+100 MPa`、`τ=0`；三主应力 `100/0/0 MPa`；von Mises `100 MPa`；Tresca 等效应力 `100 MPa`；两准则并列，利用率 `0.666666667`，不超限。",
+      "signConvention": "正弯矩使下缘受拉；`y` 向上；拉应力为正。",
+      "tolerance": "应力绝对误差 `≤1×10⁻⁶ MPa`；利用率 `≤1×10⁻⁹`。",
+      "boundaryNotes": "von Mises 与 `[σ]` 比；Tresca 比较量定义为 `max(|σi-σj|)`，亦与 `[σ]` 比。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "COMB-02",
+      "title": "纯扭转基线",
+      "purpose": "验证纯扭时的应力状态及两种强度准则。",
+      "inputs": "实心圆截面 `d=40 mm`，外表面 `r=20 mm`；`M=0`；`T=+628318.530718 N·mm`；`[σ]=150 MPa`。",
+      "expected": "`σx=0`、`τ=+50 MPa`；三主应力 `50/0/-50 MPa`；von Mises `86.602540378 MPa`；Tresca 等效应力 `100 MPa`；Tresca 控制，利用率 `0.666666667`，不超限。",
+      "signConvention": "转矩及剪应力正号同 `TORSION-01`；外表面半径为正。",
+      "tolerance": "同 `COMB-01`。",
+      "boundaryNotes": "整个外圆周等效应力相同。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "COMB-03",
+      "title": "弯扭组合",
+      "purpose": "验证组合载荷控制位置、主应力和强度准则结果。",
+      "inputs": "实心圆 `d=40 mm`；控制点下缘 `y=-20 mm`；`M=+628318.530718 N·mm`、`T=+628318.530718 N·mm`、附加轴向应力 `0 MPa`；`[σ]=150 MPa`。",
+      "expected": "下缘 `σx=+100 MPa`、`τ=+50 MPa`；三主应力 `120.710678119/0/-20.710678119 MPa`；von Mises `132.287565553 MPa`；Tresca `141.421356237 MPa`；上下缘均为等效应力控制位置，Tresca 控制，利用率 `0.942809042`；不超限。",
+      "signConvention": "弯矩/正应力同 `COMB-01`；转矩/剪应力同 `COMB-02`。",
+      "tolerance": "应力 `≤1×10⁻⁶ MPa`；利用率 `≤1×10⁻⁹`；控制位置 `≤1×10⁻⁶ mm`。",
+      "boundaryNotes": "上缘正应力为 `-100 MPa`，等效值相同；主应力符号/次序相应改变。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "COMB-04",
+      "title": "载荷符号反转",
+      "purpose": "验证弯矩或转矩反向后，应力分量方向改变且不变量按预期保持或变化。",
+      "inputs": "基准 `COMB-03`；仅反转弯矩；反转后 `M=-628318.530718 N·mm`、`T=+628318.530718 N·mm`，仍检查下缘 `y=-20 mm`。",
+      "expected": "下缘 `σx=-100 MPa`、`τ=+50 MPa`；三主应力 `20.710678119/0/-120.710678119 MPa`；von Mises `132.287565553 MPa`；Tresca `141.421356237 MPa`；控制位置仍为上下缘，拉压侧互换。",
+      "signConvention": "反转定义为 `M→-M`，转矩不变。",
+      "tolerance": "同 `COMB-03`。",
+      "boundaryNotes": "与基准相比正应力反号；剪应力不变；von Mises、Tresca、利用率保持不变。",
+      "status": "已确认（三轮复算）。"
+    }
+  ]
+}

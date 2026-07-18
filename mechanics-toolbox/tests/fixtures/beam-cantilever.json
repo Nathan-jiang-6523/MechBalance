@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "C. 悬臂梁",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "BEAM-CF-P-01",
+      "title": "自由端集中力",
+      "purpose": "验证悬臂梁端力工况、固定端反力/反矩及自由端变形。",
+      "inputs": "`L=1000 mm`；`E=200000 MPa`；`I=8000000 mm⁴`；自由端向下 `P=10000 N`。",
+      "expected": "固定端 `Ry=10000 N`、反力矩 `MA=10000000 N·mm`（逆时针）；`x=0+`：`V/M/θ/v=10000 N / -10000000 N·mm / 0 / 0`；`x=1000-`：`V/M/θ/v=10000 N / 0 / -0.003125 rad / -2.083333333 mm`。`Vmax=min=10000 N`（梁内）；`Mmin=-10000000 N·mm @0`、`Mmax=0 @1000`；`θmin=-0.003125 rad @1000`、`θmax=0 @0`；`vmin=-2.083333333 mm @1000`、`vmax=0 @0`。",
+      "signConvention": "外力向上为正，外力矩逆时针为正；内力及变形同 `BEAM-SS-P-01`。",
+      "tolerance": "同 `BEAM-SS-P-01`。",
+      "boundaryNotes": "固定端严格满足 `θ(0)=v(0)=0`；自由端力作用点之后剪力跳至零。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "BEAM-CF-Q-01",
+      "title": "全跨均布载荷",
+      "purpose": "验证悬臂梁全跨均布载荷的反力、内力和变形。",
+      "inputs": "`L=1000 mm`；`E=200000 MPa`；`I=8000000 mm⁴`；向下 `q=10 N/mm`；区间 `[0,1000] mm`。",
+      "expected": "固定端 `Ry=10000 N`、`MA=5000000 N·mm`（逆时针）；`x=0`：`V/M/θ/v=10000 N / -5000000 N·mm / 0 / 0`；`x=500`：`5000 N / -1250000 N·mm / -9.114583333×10⁻⁴ rad / -0.2766927083 mm`；`x=1000`：`0 / 0 / -0.001041666667 rad / -0.781250 mm`。`Vmax=10000 N @0`、`Vmin=0 @1000`；`Mmin=-5000000 N·mm @0`、`Mmax=0 @1000`；`θmin=-0.001041666667 rad @1000`、`θmax=0 @0`；`vmin=-0.781250 mm @1000`、`vmax=0 @0`。",
+      "signConvention": "同 `BEAM-CF-P-01`。",
+      "tolerance": "同 `BEAM-SS-P-01`。",
+      "boundaryNotes": "`θ(0)=v(0)=0`；自由端 `V(L)=M(L)=0`；`V` 线性、`M` 抛物线。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "BEAM-CF-Q-02",
+      "title": "分段均布载荷",
+      "purpose": "验证悬臂梁局部分布载荷及区间边界处理。",
+      "inputs": "`L=1000 mm`；`E=200000 MPa`；`I=8000000 mm⁴`；向下 `q=10 N/mm`；`a=500 mm`；`b=1000 mm`。",
+      "expected": "固定端 `Ry=5000 N`、`MA=3750000 N·mm`（逆时针）；`x=0`：`V/M/θ/v=5000 N / -3750000 N·mm / 0 / 0`；`x=500±`：`5000 N / -1250000 N·mm / -7.812500×10⁻⁴ rad / -0.2278645833 mm`；`x=1000`：`0 / 0 / -9.114583333×10⁻⁴ rad / -0.6673177083 mm`。`Vmax=5000 N`（`0≤x≤500`）、`Vmin=0 @1000`；`Mmin=-3750000 N·mm @0`、`Mmax=0 @1000`；`θmin=-9.114583333×10⁻⁴ rad @1000`、`θmax=0 @0`；`vmin=-0.6673177083 mm @1000`、`vmax=0 @0`。",
+      "signConvention": "同 `BEAM-CF-P-01`。",
+      "tolerance": "同 `BEAM-SS-P-01`。",
+      "boundaryNotes": "载荷作用于闭区间 `[a,b]`；`V/M/θ/v` 在 `a` 连续，`V` 斜率由 `0` 改为 `-q`；自由端 `V=M=0`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "BEAM-CF-M-01",
+      "title": "自由端集中力矩",
+      "purpose": "验证悬臂梁端矩工况及固定端反矩、转角、挠度。",
+      "inputs": "`L=1000 mm`；`E=200000 MPa`；`I=8000000 mm⁴`；自由端顺时针端矩 `M0=1000000 N·mm`。",
+      "expected": "固定端 `Ry=0`、`MA=1000000 N·mm`（逆时针）；全跨 `V=0`、`M=-1000000 N·mm`；`x=0`：`θ=v=0`；`x=1000`：`θ=-6.250000×10⁻⁴ rad`、`v=-0.312500 mm`。`Mmax=min=-1000000 N·mm`；`θmin=-6.25×10⁻⁴ rad @1000`、`θmax=0 @0`；`vmin=-0.3125 mm @1000`、`vmax=0 @0`。",
+      "signConvention": "外力矩逆时针为正，本例输入为顺时针；其余同 `BEAM-CF-P-01`。",
+      "tolerance": "同 `BEAM-SS-P-01`。",
+      "boundaryNotes": "端点集中力矩处内弯矩从 `-1000000 N·mm` 跳至 `0`；固定端 `θ=v=0`。",
+      "status": "已确认（三轮复算）。"
+    }
+  ]
+}

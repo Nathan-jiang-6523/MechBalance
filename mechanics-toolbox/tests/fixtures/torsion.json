@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "G. 圆轴扭转、扭转角及功率关系",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "TORSION-01",
+      "title": "实心圆轴扭转",
+      "purpose": "验证实心圆轴扭转剪应力、最大剪应力和扭转角。",
+      "inputs": "`d=40 mm`、`L=1000 mm`、`G=80000 MPa`、`T=+1000000 N·mm`。",
+      "expected": "`Jt=251327.412287 mm⁴`；`τ(r=10 mm)=39.788735773 MPa`；`τmax=79.577471546 MPa @ r=20 mm`；扭转角 `φ=0.049735919716 rad = 2.849658290°`。",
+      "signConvention": "沿 `+x` 观察按右手定则的正转矩、正剪应力和正扭转角一致。",
+      "tolerance": "数值相对误差 `≤1×10⁻⁶`；半径位置 `≤1×10⁻⁶ mm`；角度绝对误差 `≤1×10⁻⁹ rad`。",
+      "boundaryNotes": "均匀实心圆轴、线弹性 Saint-Venant 扭转。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "TORSION-02",
+      "title": "空心圆轴扭转",
+      "purpose": "验证圆管内外径、剪应力分布及扭转角。",
+      "inputs": "`D=60 mm`、`d=40 mm`、`L=1000 mm`、`G=80000 MPa`、`T=+2000000 N·mm`。",
+      "expected": "`Jt=1021017.612417 mm⁴`；内表面 `τ(r=20)=39.176601376 MPa`；外表面及最大值 `τmax=58.764902065 MPa @ r=30 mm`；`φ=0.024485375860 rad = 1.402908697°`。",
+      "signConvention": "同 `TORSION-01`。",
+      "tolerance": "同 `TORSION-01`。",
+      "boundaryNotes": "同心空心圆轴；材料和截面沿长度不变。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "TORSION-03",
+      "title": "功率—转矩—转速",
+      "purpose": "验证已知任意两个量求第三个量及跨单位一致性。",
+      "inputs": "已知功率 `P=10 kW`；已知转速 `n=1500 r/min`；待求转矩 `T`。",
+      "expected": "`ω=2πn/60=157.079632679 rad/s`；`T=P/ω=63.661977237 N·m = 63661.977237 N·mm`。",
+      "signConvention": "正功率表示沿正旋转方向输出；本例 `P,n,T` 均为正。",
+      "tolerance": "相对误差 `≤1×10⁻⁹`。",
+      "boundaryNotes": "转速采用 `r/min`；关系式 `P=Tω`，不能把 `n` 直接当 `ω`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "TORSION-04",
+      "title": "零转速或非法圆轴输入",
+      "purpose": "验证除零风险、内外径错误及非正材料参数的拦截。",
+      "inputs": "功率 `P=10 kW`、转速 `n=0 r/min`，待求转矩。",
+      "expected": "错误字段：`n`；提示：`求转矩时转速必须大于 0`；阻止计算，不返回 `Infinity/NaN`。",
+      "signConvention": "不适用。",
+      "tolerance": "不适用；字段校验失败且无数值结果时通过。",
+      "boundaryNotes": "只验收零转速除零条件；不在本算例叠加圆轴几何错误。",
+      "status": "已确认（三轮复核）。"
+    }
+  ]
+}

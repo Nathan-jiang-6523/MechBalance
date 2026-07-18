@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "A. 四种截面性质",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "SEC-RECT-01",
+      "title": "矩形截面正常算例",
+      "purpose": "验证矩形截面的面积、形心、惯性矩、截面模量、极惯性矩及扭转常数。",
+      "inputs": "宽度 `b = 80 mm`；高度 `h = 120 mm`。",
+      "expected": "`A = 9600 mm²`；形心 `(x̄, ȳ) = (0, 0) mm`；`Ix = 11520000 mm⁴`；`Iy = 5120000 mm⁴`；`Ixy = 0 mm⁴`；`Wx+/Wx-/Wy+/Wy- = 192000/192000/128000/128000 mm³`；`Jp = 16640000 mm⁴`；`Jt = 12018641.6461 mm⁴`。",
+      "signConvention": "原点在截面几何中心（与形心重合）；`x` 向右、`y` 向上；外边界为 `x = ±40 mm`、`y = ±60 mm`；`Ix/Iy` 为过原点的形心轴。",
+      "tolerance": "数值相对误差 `≤ 1×10⁻⁶`；形心绝对误差 `≤ 1×10⁻⁶ mm`。",
+      "boundaryNotes": "`Jp = Ix + Iy`；`Jt` 采用矩形 Saint-Venant 工程近似式（短边/长边 `= 2/3`），不是 `Jp`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "SEC-RECT-02",
+      "title": "矩形截面非法几何",
+      "purpose": "验证零值、负值或缺失尺寸不会进入计算。",
+      "inputs": "`b = 0 mm`；`h = 120 mm`。",
+      "expected": "错误字段：`b`；提示：`宽度 b 必须大于 0`；阻止计算，不返回截面性质。",
+      "signConvention": "不适用。",
+      "tolerance": "不适用；仅当校验失败、结果区不产生数值时通过。",
+      "boundaryNotes": "只验收零宽度条件。",
+      "status": "已确认（三轮复核）。"
+    },
+    {
+      "id": "SEC-HRECT-01",
+      "title": "空心矩形截面正常算例",
+      "purpose": "验证空心矩形截面性质及内外尺寸约束。",
+      "inputs": "外宽 `B = 100 mm`；外高 `H = 140 mm`；内宽 `b = 80 mm`；内高 `h = 120 mm`。",
+      "expected": "`A = 4400 mm²`；形心 `(x̄, ȳ) = (0, 0) mm`；`Ix = 11346666.6667 mm⁴`；`Iy = 6546666.6667 mm⁴`；`Ixy = 0 mm⁴`；`Wx+/Wx-/Wy+/Wy- = 162095.2381/162095.2381/130933.3333/130933.3333 mm³`；`Jp = 17893333.3333 mm⁴`；`Jt = 12444545.4545 mm⁴`。",
+      "signConvention": "原点在截面几何中心（与形心重合）；`x` 向右、`y` 向上；外边界为 `x = ±50 mm`、`y = ±70 mm`，内边界为 `x = ±40 mm`、`y = ±60 mm`；内孔同心。",
+      "tolerance": "数值相对误差 `≤ 1×10⁻⁶`；形心绝对误差 `≤ 1×10⁻⁶ mm`。",
+      "boundaryNotes": "四壁等厚 `t = 10 mm`；`Jt = 4A_m²/∮(ds/t)`，按中线尺寸 `90 mm × 130 mm` 的薄壁闭口近似；不得与精确弹性解或 `Jp` 混用。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "SEC-HRECT-02",
+      "title": "空心矩形截面非法几何",
+      "purpose": "验证内尺寸不小于外尺寸、非正尺寸等非法输入。",
+      "inputs": "`B = 100 mm`；`H = 140 mm`；`b = 100 mm`；`h = 80 mm`。",
+      "expected": "错误字段：`b`；提示：`内宽 b 必须小于外宽 B`；阻止计算。",
+      "signConvention": "不适用。",
+      "tolerance": "不适用；字段校验失败且无数值结果时通过。",
+      "boundaryNotes": "只验收 `b = B` 条件。",
+      "status": "已确认（三轮复核）。"
+    },
+    {
+      "id": "SEC-CIRCLE-01",
+      "title": "实心圆截面正常算例",
+      "purpose": "验证实心圆截面性质及圆轴相关属性。",
+      "inputs": "直径 `d = 100 mm`。",
+      "expected": "`A = 7853.981634 mm²`；形心 `(x̄, ȳ) = (0, 0) mm`；`Ix = Iy = 4908738.521234 mm⁴`；`Ixy = 0 mm⁴`；`Wx = Wy = 98174.770425 mm³`；`Jp = Jt = 9817477.042468 mm⁴`。",
+      "signConvention": "原点在圆心（与形心、截面几何中心重合）；`x` 向右、`y` 向上；外边界满足 `x² + y² = 50² mm²`。",
+      "tolerance": "数值相对误差 `≤ 1×10⁻⁶`；形心绝对误差 `≤ 1×10⁻⁶ mm`。",
+      "boundaryNotes": "实心圆轴 `Jt = Jp = Ix + Iy`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "SEC-CIRCLE-02",
+      "title": "实心圆截面非法几何",
+      "purpose": "验证直径为零、负值或缺失时的拦截。",
+      "inputs": "`d = 0 mm`。",
+      "expected": "错误字段：`d`；提示：`直径 d 必须大于 0`；阻止计算。",
+      "signConvention": "不适用。",
+      "tolerance": "不适用；字段校验失败且无数值结果时通过。",
+      "boundaryNotes": "只验收零直径条件。",
+      "status": "已确认（三轮复核）。"
+    },
+    {
+      "id": "SEC-TUBE-01",
+      "title": "圆管截面正常算例",
+      "purpose": "验证圆管截面性质、内外径约束及圆轴属性。",
+      "inputs": "外径 `D = 120 mm`；内径 `d = 80 mm`。",
+      "expected": "`A = 6283.185307 mm²`；形心 `(x̄, ȳ) = (0, 0) mm`；`Ix = Iy = 8168140.899333 mm⁴`；`Ixy = 0 mm⁴`；`Wx = Wy = 136135.681656 mm³`；`Jp = Jt = 16336281.798667 mm⁴`。",
+      "signConvention": "原点在内外圆共同圆心（与形心、截面几何中心重合）；`x` 向右、`y` 向上；外半径 `60 mm`、内半径 `40 mm`。",
+      "tolerance": "数值相对误差 `≤ 1×10⁻⁶`；形心绝对误差 `≤ 1×10⁻⁶ mm`。",
+      "boundaryNotes": "同心圆管；圆轴 `Jt = Jp`。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "SEC-TUBE-02",
+      "title": "圆管截面非法几何",
+      "purpose": "验证内径不小于外径、非正外径等非法输入。",
+      "inputs": "`D = 100 mm`；`d = 100 mm`。",
+      "expected": "错误字段：`d`；提示：`内径 d 必须小于外径 D`；阻止计算。",
+      "signConvention": "不适用。",
+      "tolerance": "不适用；字段校验失败且无数值结果时通过。",
+      "boundaryNotes": "只验收 `d = D` 条件。",
+      "status": "已确认（三轮复核）。"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p1-acceptance-cases-form.md",
+  "sourceSection": "F. 轴向拉压、伸长与温度变形",
+  "valueEncoding": "verbatim Markdown strings; units remain inline in inputs and expected",
+  "cases": [
+    {
+      "id": "AXIAL-01",
+      "title": "等截面轴向拉压",
+      "purpose": "验证轴力、正应力、弹性伸长/缩短及方向。",
+      "inputs": "`L=2000 mm`；`A=500 mm²`；`E=200000 MPa`；右端轴向载荷 `N=+50000 N`。",
+      "expected": "轴力 `+50000 N`；应力 `+100 MPa`；总变形 `+1.000000 mm`；伸长。",
+      "signConvention": "轴线 `+x` 向右；拉力、拉应力、伸长和右向位移为正。",
+      "tolerance": "力 `≤1×10⁻³ N`；应力/变形相对误差 `≤1×10⁻⁶` 或绝对误差 `≤1×10⁻⁶ MPa/mm`。",
+      "boundaryNotes": "左端固定、右端受拉；线弹性、小变形、均匀等截面。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "AXIAL-02",
+      "title": "分段轴杆",
+      "purpose": "验证分段长度、面积、材料或载荷条件下的分段结果与总变形。",
+      "inputs": "段 1：`L1=1000 mm`、`A1=600 mm²`、`E1=200000 MPa`、`N1=+60000 N`；段 2：`L2=500 mm`、`A2=300 mm²`、`E2=100000 MPa`、`N2=+60000 N`；左端固定、右端受拉 `60000 N`。",
+      "expected": "段 1：`N1=60000 N`、`σ1=100 MPa`、`ΔL1=0.500000 mm`；段 2：`N2=60000 N`、`σ2=200 MPa`、`ΔL2=1.000000 mm`；总变形 `1.500000 mm`；固定端反力 `-60000 N`。",
+      "signConvention": "同 `AXIAL-01`；反力负号表示向左。",
+      "tolerance": "分段值相对误差 `≤1×10⁻⁶`；合计绝对误差 `≤1×10⁻⁶ mm`。",
+      "boundaryNotes": "首版只验收串联、各段常截面/常材料、节点无中间外力的两段轴杆。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "AXIAL-TEMP-01",
+      "title": "自由温度变形",
+      "purpose": "验证自由升温/降温的温度变形及正负方向。",
+      "inputs": "`L=2000 mm`；`α=12×10⁻⁶ /°C`；`ΔT=+50 °C`。",
+      "expected": "温度变形 `ΔL=+1.200000 mm`；应力 `0 MPa`；反力 `0 N`。",
+      "signConvention": "升温、伸长和自由端向右位移为正。",
+      "tolerance": "变形绝对误差 `≤1×10⁻⁶ mm`；应力 `≤1×10⁻⁹ MPa`；反力 `≤1×10⁻⁶ N`。",
+      "boundaryNotes": "左端仅消除刚体位移，右端轴向自由；不施加机械载荷。",
+      "status": "已确认（三轮复算）。"
+    },
+    {
+      "id": "AXIAL-TEMP-02",
+      "title": "受约束温度变形",
+      "purpose": "验证明确约束条件下的温度应力、反力与变形。",
+      "inputs": "`L=2000 mm`、`A=500 mm²`、`E=200000 MPa`、`α=12×10⁻⁶ /°C`、`ΔT=+50 °C`；两端完全固定。",
+      "expected": "总长度变化 `0 mm`；机械变形 `-1.200000 mm` 抵消自由温伸长；应力 `-120 MPa`（压）；左/右约束对杆反力分别 `+60000 N/-60000 N`。",
+      "signConvention": "升温为正；拉应力/伸长/向右为正；压应力为负。",
+      "tolerance": "应力/反力相对误差 `≤1×10⁻⁶`；总变形绝对误差 `≤1×10⁻⁹ mm`。",
+      "boundaryNotes": "两端轴向位移均为零；不得将“受约束”默认成单端固定、另一端自由。",
+      "status": "已确认（三轮复算）。"
+    }
+  ]
+}
