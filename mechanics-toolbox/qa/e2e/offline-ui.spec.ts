@@ -104,6 +104,30 @@ test('梁载荷方向输入模式互斥且页面不产生横向溢出', async ({
   expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth)
 })
 
+test('梁多载荷及载荷单位切换可回归', async ({ page }) => {
+  await page.getByRole('button', { name: /梁综合计算/ }).click()
+  await page.getByRole('button', { name: '＋集中力' }).click()
+
+  const secondLoad = page.locator('.load-card[data-load-index="1"]')
+  await secondLoad.locator('.field').filter({ hasText: '位置 a' }).locator('input').fill('600')
+  await secondLoad.locator('.field').filter({ hasText: '非负幅值' }).locator('input').fill('5000')
+  await page.getByRole('button', { name: '计算梁响应' }).click()
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '左端竖向反力' }),
+  ).toContainText('8000.000')
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '右端竖向反力' }),
+  ).toContainText('7000.000')
+
+  await secondLoad.getByLabel('位置单位').selectOption('cm')
+  await expect(secondLoad.locator('.field').filter({ hasText: '位置 a' }).locator('input')).toHaveValue('')
+  await expect(page.getByRole('heading', { name: '反力、内力、变形与应力' })).toHaveCount(0)
+  await secondLoad.locator('.field').filter({ hasText: '位置 a' }).locator('input').fill('60')
+  await expect(
+    page.getByTestId('reaction-row').filter({ hasText: '左端竖向反力' }),
+  ).toContainText('8000.000')
+})
+
 test('file 页面无网络请求且视口无横向溢出', async ({ page }) => {
   const networkRequests: string[] = []
   page.on('request', (request) => {

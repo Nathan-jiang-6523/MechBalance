@@ -3,6 +3,4 @@
 /referance/
 /mechanics-toolbox/node_modules/
 /mechanics-toolbox/dist/
-/mechanics-toolbox/test-results/
-/mechanics-toolbox/playwright-report/
-/mechanics-toolbox/public/qa-screenshots/
+/mechanics-toolbox/qa-results/
