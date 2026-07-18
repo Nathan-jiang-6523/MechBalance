@@ -42,6 +42,19 @@ describe('梁曲线采样', () => {
     expect(jump[1]!.shearN - jump[0]!.shearN).toBeCloseTo(-10_000, 9)
   })
 
+  it('端点载荷只采样梁内侧，避免绘制梁外虚假弯矩跳变', () => {
+    const solution = solve({
+      ...pointLoadModel,
+      support: 'cantileverLeft',
+      loads: [{ type: 'pointMoment', positionM: 0, momentNm: 1_000 }],
+    })
+    const samples = sampleBeamSolution(solution)
+    const atLeftEnd = samples.filter((sample) => sample.xM === 0)
+
+    expect(atLeftEnd.map((sample) => sample.side)).toEqual(['right'])
+    expect(atLeftEnd[0]!.momentNm).toBeCloseTo(0, 12)
+  })
+
   it('强制包含解析极值点', () => {
     const solution = solve({ ...pointLoadModel, loads: [{ ...pointLoadModel.loads[0]!, positionM: 0.4 }] })
     const extrema = findBeamExtrema(solution)

@@ -1,6 +1,6 @@
 # P1 截面性质 + 简支/悬臂梁综合计算器公式登记
 
-- 文档版本：`1.0.0`
+- 文档版本：`1.0.1`
 - 登记日期：`2026-07-18`
 - 适用模块：P1 首款综合计算器
 - 验收优先级：用户确认的坐标、正负号、验收算例及容差高于公式资料；若冲突，停止对应实现并由用户裁决。
@@ -227,7 +227,7 @@ R_L=-Q,\qquad C_L=-S_0-R_LL
 \]
 
 - 集中力允许作用于自由端；固定端载荷归入支反力。
-- 点载荷/点矩所在端点的梁内左、右值必须与梁外零值及该载荷跳变共同解释；不得静默把端点跳变抹平。
+- 场求值仍可区分端点载荷跳变的两侧；结果曲线只绘制物理梁域内侧（`x=0+`、`x=L-`），不把梁外侧值连入梁内曲线。端点外载与支反力由输入示意和反力摘要表达。
 
 ### 5.3 `P1-BEAM-BC-001` 积分常数
 
@@ -267,7 +267,7 @@ M_R(x)=M_L(L-x),\quad V_R(x)=-V_L(L-x)
 - `v` 极值：端点 + 每段内部 `θ(x)=0` 的实根。
 - 只接受落在当前分段闭区间内的有限实根；重复根去重，保留物理位置。
 - 极值由分段多项式求根得到，不依赖绘图采样。
-- 绘图使用 401 个基础采样点并自适应加点，强制加入端点、载荷点、跳变左右点和解析极值点。
+- 绘图使用 401 个基础采样点并自适应加点，强制加入解析极值点；内部载荷点保留左右值，端点只保留物理梁域内侧值，避免产生梁外虚假竖跳。
 
 ## 7. 应力恢复
 
@@ -309,6 +309,9 @@ M_R(x)=M_L(L-x),\quad V_R(x)=-V_L(L-x)
 | `USR-P1-SIGN-20260718` | 用户确认文档 | `ai/memory-bank/site-setup.md`、`p1-confirmation-form.md` | 范围、坐标、正负号、边界、单位、警告 |
 | `USR-P1-ACCEPT-20260718` | 用户验收真值 | `ai/memory-bank/p1-acceptance-cases-form.md` | 48 个算例；本公式登记对应首款相关算例 |
 | `INT-EB-DERIVATION-20260718` | 模型知识与内部推导 | Euler–Bernoulli 四阶方程、静力平衡、奇异函数积分、分段多项式极值 | 梁公式主体；按用户符号重新推导 |
+| `WEB-MECH-CALC-BEAM-20260718` | 公开在线公式表 | [MechaniCalc Beam Analysis](https://mechanicalc.com/reference/beam-analysis)，访问日期 `2026-07-18` | 10 个简支/悬臂弯矩公开公式门禁及正弯矩约定 |
+| `OSS-INDETERMINATE-BEAM-4D504DF` | 公开开源对照 | [JesseBonanno/IndeterminateBeam](https://github.com/JesseBonanno/IndeterminateBeam)，固定对照提交 `4d504df` | 10 个公开公式算例的第二独立执行器；不复制其源码到产品 |
+| `WEB-SYMPY-BEAM-20260718` | 官方开源文档 | [SymPy Beam](https://docs.sympy.org/latest/modules/physics/continuum_mechanics/beam.html)，访问日期 `2026-07-18` | 奇异函数和混合载荷表达式交叉核查 |
 | `WEB-RECT-JT-PILKEY-20260718` | 公开在线 PDF | [矩形 Saint-Venant 扭转常数：精确级数式(25)及五次项近似式(26)，PDF 第 40 页](https://upload.wikimedia.org/wikipedia/commons/4/42/Analytic_expression_of_the_buckling_loads_for_stiffened_plates_with_bulb-flat_flanges_%28IA_analyticexpressi109459863%29.pdf)，访问日期 `2026-07-18` | 锁定 `P1-SEC-RECT-001` 的 `0.63/0.052r⁵` 形式 |
 | `WEB-ABAQUS-SV-20260718` | 公开在线文档镜像 | [Abaqus 梁截面说明：圆截面无翘曲；实心非圆截面按 Saint-Venant 应力函数处理](https://ceae-server.colorado.edu/v2016/books/stm/ch03s05ath74.html)，访问日期 `2026-07-18` | 交叉核对 `Jp` 与非圆截面 `Jt` 不混用 |
 

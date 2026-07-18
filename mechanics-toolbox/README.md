@@ -12,6 +12,7 @@
 - `V/M/θ/v` 场值、跳变左右值、平衡残差、解析极值、绘图采样。
 - 梁弯曲正应力；实心矩形剪应力。
 - 梁综合 Web UI：载荷编辑、支承/载荷示意、反力与极值、应力、`V/M/θ/v` 曲线和适用范围警告。
+- 10 个公开梁弯矩公式门禁，并与固定版本 `IndeterminateBeam@4d504df` 逐点交叉验证。
 - 用户确认的 48 个验收算例 JSON 及首款公式登记。
 
 ## 目录
@@ -31,7 +32,10 @@
 npm install
 npm run typecheck
 npm run test
+npm run test:reference
 npm run build
 ```
+
+`npm run test:reference` 读取相邻的 `referance/IndeterminateBeam`，结果写入被 Git 忽略的 `qa-results/`；生产源程序不依赖 Python 或该参考项目。
 
 不读取或依赖仓库外的本地参考书/PDF。公式与用户验收真值冲突时，停止对应实现并提交用户裁决。

@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "P1 梁弯矩公开公式 10 项门禁",
+  "source": {
+    "name": "MechaniCalc Beam Analysis",
+    "url": "https://mechanicalc.com/reference/beam-analysis",
+    "signConvention": "正弯矩使上缘受压、下缘受拉；本项目外力向上为正、外力矩逆时针为正。",
+    "sections": [
+      "Cantilever: End Load, Intermediate Load, Uniform Distributed Load, End Moment",
+      "Simply Supported: Intermediate Load, Center Load, Two Equal Loads, Uniform Distributed Load, Moment at One Support, Center Moment"
+    ]
+  },
+  "comparison": {
+    "kernelToleranceNm": 1e-8,
+    "publishedDisplayDecimals": 2,
+    "rule": "内核值满足绝对误差不大于 1e-8 N·m，且四舍五入到公开对照精度 0.01 N·m 后字符串完全相同。"
+  },
+  "cases": [
+    {
+      "id": "PUB-M-01",
+      "title": "左固支悬臂梁自由端集中力",
+      "support": "cantileverLeft",
+      "lengthM": 2,
+      "loads": [{ "type": "pointForce", "positionM": 2, "forceN": -3000 }],
+      "probes": [
+        { "xM": 0, "side": "right", "expectedMomentNm": -6000 },
+        { "xM": 1, "side": "right", "expectedMomentNm": -3000 },
+        { "xM": 2, "side": "left", "expectedMomentNm": 0 }
+      ],
+      "expectedExtrema": { "maximumNm": 0, "minimumNm": -6000 }
+    },
+    {
+      "id": "PUB-M-02",
+      "title": "左固支悬臂梁中间集中力",
+      "support": "cantileverLeft",
+      "lengthM": 2,
+      "loads": [{ "type": "pointForce", "positionM": 1.2, "forceN": -3000 }],
+      "probes": [
+        { "xM": 0, "side": "right", "expectedMomentNm": -3600 },
+        { "xM": 0.6, "side": "right", "expectedMomentNm": -1800 },
+        { "xM": 1.5, "side": "right", "expectedMomentNm": 0 }
+      ],
+      "expectedExtrema": { "maximumNm": 0, "minimumNm": -3600 }
+    },
+    {
+      "id": "PUB-M-03",
+      "title": "左固支悬臂梁全跨均布载荷",
+      "support": "cantileverLeft",
+      "lengthM": 2.4,
+      "loads": [{ "type": "uniformLoad", "startM": 0, "endM": 2.4, "intensityNPerM": -2500 }],
+      "probes": [
+        { "xM": 0, "side": "right", "expectedMomentNm": -7200 },
+        { "xM": 1.2, "side": "right", "expectedMomentNm": -1800 },
+        { "xM": 2.4, "side": "left", "expectedMomentNm": 0 }
+      ],
+      "expectedExtrema": { "maximumNm": 0, "minimumNm": -7200 }
+    },
+    {
+      "id": "PUB-M-04",
+      "title": "左固支悬臂梁自由端顺时针力矩",
+      "support": "cantileverLeft",
+      "lengthM": 2,
+      "loads": [{ "type": "pointMoment", "positionM": 2, "momentNm": -4000 }],
+      "probes": [
+        { "xM": 0, "side": "right", "expectedMomentNm": -4000 },
+        { "xM": 1, "side": "right", "expectedMomentNm": -4000 },
+        { "xM": 2, "side": "left", "expectedMomentNm": -4000 }
+      ],
+      "expectedExtrema": { "maximumNm": -4000, "minimumNm": -4000 }
+    },
+    {
+      "id": "PUB-M-05",
+      "title": "简支梁偏心集中力",
+      "support": "simplySupported",
+      "lengthM": 3,
+      "loads": [{ "type": "pointForce", "positionM": 0.8, "forceN": -9000 }],
+      "probes": [
+        { "xM": 0.8, "side": "left", "expectedMomentNm": 5280 },
+        { "xM": 1.9, "side": "right", "expectedMomentNm": 2640 },
+        { "xM": 3, "side": "left", "expectedMomentNm": 0 }
+      ],
+      "expectedExtrema": { "maximumNm": 5280, "minimumNm": 0 }
+    },
+    {
+      "id": "PUB-M-06",
+      "title": "简支梁跨中集中力",
+      "support": "simplySupported",
+      "lengthM": 4,
+      "loads": [{ "type": "pointForce", "positionM": 2, "forceN": -12000 }],
+      "probes": [
+        { "xM": 1, "side": "right", "expectedMomentNm": 6000 },
+        { "xM": 2, "side": "left", "expectedMomentNm": 12000 },
+        { "xM": 3, "side": "right", "expectedMomentNm": 6000 }
+      ],
+      "expectedExtrema": { "maximumNm": 12000, "minimumNm": 0 }
+    },
+    {
+      "id": "PUB-M-07",
+      "title": "简支梁对称双集中力",
+      "support": "simplySupported",
+      "lengthM": 4,
+      "loads": [
+        { "type": "pointForce", "positionM": 1, "forceN": -5000 },
+        { "type": "pointForce", "positionM": 3, "forceN": -5000 }
+      ],
+      "probes": [
+        { "xM": 0.5, "side": "right", "expectedMomentNm": 2500 },
+        { "xM": 2, "side": "right", "expectedMomentNm": 5000 },
+        { "xM": 3.5, "side": "right", "expectedMomentNm": 2500 }
+      ],
+      "expectedExtrema": { "maximumNm": 5000, "minimumNm": 0 }
+    },
+    {
+      "id": "PUB-M-08",
+      "title": "简支梁全跨均布载荷",
+      "support": "simplySupported",
+      "lengthM": 5,
+      "loads": [{ "type": "uniformLoad", "startM": 0, "endM": 5, "intensityNPerM": -3000 }],
+      "probes": [
+        { "xM": 1, "side": "right", "expectedMomentNm": 6000 },
+        { "xM": 2.5, "side": "right", "expectedMomentNm": 9375 },
+        { "xM": 4, "side": "right", "expectedMomentNm": 6000 }
+      ],
+      "expectedExtrema": { "maximumNm": 9375, "minimumNm": 0 }
+    },
+    {
+      "id": "PUB-M-09",
+      "title": "简支梁左支座顺时针力矩",
+      "support": "simplySupported",
+      "lengthM": 3,
+      "loads": [{ "type": "pointMoment", "positionM": 0, "momentNm": -6000 }],
+      "probes": [
+        { "xM": 0, "side": "right", "expectedMomentNm": 6000 },
+        { "xM": 1.5, "side": "right", "expectedMomentNm": 3000 },
+        { "xM": 3, "side": "left", "expectedMomentNm": 0 }
+      ],
+      "expectedExtrema": { "maximumNm": 6000, "minimumNm": 0 }
+    },
+    {
+      "id": "PUB-M-10",
+      "title": "简支梁跨中逆时针集中力矩跳变",
+      "support": "simplySupported",
+      "lengthM": 4,
+      "loads": [{ "type": "pointMoment", "positionM": 2, "momentNm": 8000 }],
+      "probes": [
+        { "xM": 1, "side": "right", "expectedMomentNm": 2000 },
+        { "xM": 2, "side": "left", "expectedMomentNm": 4000 },
+        { "xM": 2, "side": "right", "expectedMomentNm": -4000 },
+        { "xM": 3, "side": "right", "expectedMomentNm": -2000 }
+      ],
+      "expectedExtrema": { "maximumNm": 4000, "minimumNm": -4000 }
+    }
+  ]
+}

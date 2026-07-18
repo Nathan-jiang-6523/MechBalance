@@ -91,8 +91,14 @@ export function sampleBeamSolution(
   }
 
   for (const xM of solution.discontinuitiesM) {
-    add(xM, 'left', 'discontinuity')
-    add(xM, 'right', 'discontinuity')
+    if (xM <= 0) {
+      add(0, 'right', 'discontinuity')
+    } else if (xM >= lengthM) {
+      add(lengthM, 'left', 'discontinuity')
+    } else {
+      add(xM, 'left', 'discontinuity')
+      add(xM, 'right', 'discontinuity')
+    }
   }
 
   for (const fieldExtrema of Object.values(extrema)) {

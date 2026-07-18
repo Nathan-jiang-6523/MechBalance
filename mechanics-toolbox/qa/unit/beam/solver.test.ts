@@ -197,6 +197,40 @@ describe('Euler-Bernoulli analytic beam solver', () => {
     expectClose(fixedLeft.rotationRad, 0)
   })
 
+  it('mirrors full and partial uniform loads to a right-fixed cantilever', () => {
+    const full = solved({
+      ...base,
+      support: 'cantileverRight',
+      loads: [{ type: 'uniformLoad', startM: 0, endM: 1, intensityNPerM: -10_000 }],
+    })
+    expectClose(full.evaluate(0, 'right').momentNm, 0)
+    expectClose(full.evaluate(0.5).momentNm, -1_250)
+    expectClose(full.evaluate(1, 'left').momentNm, -5_000)
+    expectClose(full.reactions.rightMomentNm, -5_000)
+
+    const partial = solved({
+      ...base,
+      support: 'cantileverRight',
+      loads: [{ type: 'uniformLoad', startM: 0, endM: 0.5, intensityNPerM: -10_000 }],
+    })
+    expectClose(partial.evaluate(0, 'right').momentNm, 0)
+    expectClose(partial.evaluate(0.5, 'right').momentNm, -1_250)
+    expectClose(partial.evaluate(1, 'left').momentNm, -3_750)
+    expectClose(partial.reactions.rightMomentNm, -3_750)
+  })
+
+  it('mirrors a free-end point moment to a right-fixed cantilever', () => {
+    const solution = solved({
+      ...base,
+      support: 'cantileverRight',
+      loads: [{ type: 'pointMoment', positionM: 0, momentNm: 1_000 }],
+    })
+    expectClose(solution.reactions.rightMomentNm, -1_000)
+    expectClose(solution.evaluate(0, 'right').momentNm, -1_000)
+    expectClose(solution.evaluate(0.5).momentNm, -1_000)
+    expectClose(solution.evaluate(1, 'left').momentNm, -1_000)
+  })
+
   it('enforces simply-supported force position and raw load limit', () => {
     expect(solveBeam({
       ...base,
