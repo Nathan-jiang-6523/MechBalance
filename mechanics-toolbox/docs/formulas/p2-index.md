@@ -1,8 +1,8 @@
 # P2 公式索引与追溯基线
 
-- 文档版本：`P2-FORMULA-INDEX-v1.2.0`
+- 文档版本：`P2-FORMULA-INDEX-v1.3.0`
 - 冻结日期：2026-07-19
-- 实现状态含义：`Gate P2-0 契约`定义公共类型/错误/单位与验证边界；梁、影响线/移动载荷和 `Gate P2-4A` 桁架公式已实现；刚架等后续模块仍只冻结追溯信息。
+- 实现状态含义：`Gate P2-0 契约`定义公共类型/错误/单位与验证边界；梁、影响线/移动载荷、桁架和刚架候选公式已实现；刚架正式 GO 等待 FRAME-A01 端力标签冲突裁决。
 - 真值优先级：`ai/memory-bank/p2-acceptance-cases-form.md` 的已确认卡片高于项目实现输出；禁止用项目输出反填 fixture。
 
 ## 统一坐标、正负号、单位与假设
@@ -25,14 +25,14 @@
 | `P2-DSM-001` | `P2-DSM-v1` | P2-1 | 装配 `K=ΣA_eᵀk_eA_e`，约束自由 DOF 解 `K_ff d_f=F_f-K_fc d_c`，反力 `R=Kd-F`。 | 约束不足/机构/奇异矩阵返回 `P2_SINGULAR_STIFFNESS`；节点平衡残差按力、力矩分别验收。 | 验收 `P2-BEAM-A01…A06/C01/N01`；线弹性直接刚度法，2026-07-19。 |
 | `P2-EB-RECOVERY-001` | `P2-EB-RECOVERY-v1` | P2-1 | `N=EA·du/dx`、`M=EI·d²v/dx²`、`V=dM/dx`；全跨均布载荷恢复须含载荷特解，不能仅作节点直线插值。 | 跳变处保留左右极限；端内力映射 `i+:[Fxi,-Fyi,Mzi]`、`j-:[-Fxj,Fyj,-Mzj]`。 | 验收 `P2-BEAM-A01…A06/C01`；EB 闭式解，2026-07-19。 |
 
-## Gate P2-4A 已实现及后续模块冻结公式
+## Gate P2-4A/P2-4B 已实现及后续模块冻结公式
 
 | 公式 ID | 实现版本 | 公式/契约 | 符号、单位与边界 | 来源与访问日期 |
 | --- | --- | --- | --- | --- |
 | `P2-CBEAM-001` | `P2-CBEAM-v1` | 复用 `P2-EB-001/P2-DSM-001`；等属性单跨梁按固端或固定—简支约束求解，`R=Kd-F`，不另引入力法公式。 | `[u,v,θ]`；`E/A/I` 全跨相等；内部铰/端释放输入必须返回 `P2_FEATURE_NOT_INCLUDED`。 | 验收 `P2-CBEAM-A03/A04/A05/X01` 与 EB 直接刚度法；[CALFEM beam2e](https://calfem-for-python.readthedocs.io/en/latest/calfem_reference/#calfem.core.beam2e)，访问 2026-07-19。 |
 | `P2-TRUSS-001` | `P2-TRUSS-v1` | `k_e=(EA/L)tᵀt`，`t=[-c,-s,c,s]`；轴力 `N=EA[(u_j^l-u_i^l)/L-ε_free]`，应力 `σ=N/A`。 | 每节点 `[u,v]`；`c=Δx/L`、`s=Δy/L`；`N>0` 拉；`k_e:N/m`、`N:N`、`σ:Pa`。 | 验收 `P2-TRUSS-E01/A01/A02/N01/X01`；线弹性杆单元直接刚度法，2026-07-19。 |
 | `P2-TRUSS-INITIAL-001` | `P2-TRUSS-INITIAL-v1` | `ε_free=αΔT+ε₀`；自重 `W=ρALg`，全局 `-y` 两端各施加 `W/2`。 | `α:1/K`、`ΔT:K`、`ε₀:1`、`ρ:kg/m³`、`g:m/s²`；自重不恢复横向杆端剪力/弯矩。 | 验收 `P2-TRUSS-T01/IS01/SW01`；[OpenSees InitStrainMaterial](https://opensees.berkeley.edu/wiki/index.php?title=Initial_Strain_Material)，访问 2026-07-19。 |
-| `P2-FRAME-001` | `P2-FRAME-v1` | 局部 6×6 梁柱刚度复用 `P2-EB-001`，全局刚度 `k_g=Tᵀk_lT`；常值区间载荷 `f_e=∫_a^b Nᵀq_y dx`。 | `[u,v,θ]`；局部 `+x_l:i→j`、`+y_l` 逆时针 90°；首版只含全跨/区间常值局部 `q_y`，无端释放。 | 验收 `P2-FRAME-E01/A01/A02/A03/N01/X01`；[OpenSees eleLoad](https://opensees.github.io/OpenSeesDocumentation/user/manual/model/pattern/PlainPatternloadcommands/eleLoad.html)，访问 2026-07-19。 |
+| `P2-FRAME-001` | `P2-FRAME-v1` | 局部 6×6 梁柱刚度复用 `P2-EB-001`，全局刚度 `k_g=Tᵀk_lT`；常值区间载荷 `f_e=∫_a^b Nᵀ[q_x,q_y] dx`。 | `[u,v,θ]`；局部 `+x_l:i→j`、`+y_l` 逆时针 90°；首版只含全跨/区间常值局部 `q_x/q_y`，无端释放。 | 验收 `P2-FRAME-E01/A01/A02/A03/N01/X01`；[OpenSees eleLoad](https://opensees.github.io/OpenSeesDocumentation/user/manual/model/pattern/PlainPatternloadcommands/eleLoad.html)，访问 2026-07-19。 |
 | `P2-FRAME-INITIAL-001` | `P2-FRAME-INITIAL-v1` | 均匀温度/初应变只产生轴向自由应变 `ε_free=αΔT+ε₀`；机械应变为零时 `N=-EAε_free`。 | `N>0` 拉；不含截面温度梯度和热弯曲；端力按“单元作用于节点”符号输出。 | 验收 `P2-FRAME-T01/IS01`；[OpenSees InitStrainMaterial](https://opensees.berkeley.edu/wiki/index.php?title=Initial_Strain_Material)，访问 2026-07-19。 |
 | `P2-IL-001` | `P2-IL-v1` | 简支梁左反力 `η_RA(z)=1-z/L`；截面弯矩 `η_M=z(L-a)/L (z≤a)`、`a(L-z)/L (z≥a)`；剪力在 `z=a` 保留跳跃 `+1` 的左右极限；位移用简支梁互等 Green 函数。 | `z,a,L:m`；反力/剪力纵坐标无量纲，弯矩为 `m`，位移为 `m/N`；只支持简支梁。 | 验收 `P2-IL-A01/A02/A03`；截面静力平衡与 Maxwell–Betti 互等定理，2026-07-19。 |
 | `P2-ML-001` | `P2-ML-v1` | 轴组响应 `R(z)=Σ φP_iη(z_i)`；控制位置由轴到达影响线端点、峰值或跳变位置的有限候选事件比较，不用固定步长冒充极值。 | `P_i:N`、`φ:1` 且有限正值；单轴组、单行进方向、静力包络，允许轴组部分在桥外。 | 验收 `P2-ML-A01/A02/A03`；影响线线性叠加，2026-07-19。 |

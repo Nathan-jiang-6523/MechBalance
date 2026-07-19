@@ -4,6 +4,7 @@ export interface LinearSystemCheck {
     | 'free-force-equilibrium'
     | 'free-moment-equilibrium'
     | 'node-equilibrium'
+    | 'node-moment-equilibrium'
     | 'element-axial-equilibrium'
     | 'global-force-x-balance'
     | 'global-force-y-balance'

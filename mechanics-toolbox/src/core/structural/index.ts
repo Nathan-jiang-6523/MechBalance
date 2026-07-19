@@ -1,6 +1,7 @@
 export * from './contracts'
 export * from './beam'
 export * from './checks'
+export * from './frame'
 export * from './influence'
 export * from './math'
 export * from './moving-load'

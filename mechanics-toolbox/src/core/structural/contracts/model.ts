@@ -90,6 +90,12 @@ export interface FrameElement2D {
   readonly nodeI: NodeId
   readonly nodeJ: NodeId
   readonly properties: BeamPropertySource
+  /** P2 accepts release requests only to reject them explicitly. */
+  readonly releaseIMz?: boolean
+  readonly releaseJMz?: boolean
+  readonly internalHinge?: boolean
+  readonly nodeIRotationReleased?: boolean
+  readonly nodeJRotationReleased?: boolean
 }
 
 export type StructuralElement2D = BeamElement2D | TrussElement2D | FrameElement2D
@@ -132,14 +138,19 @@ export interface BeamUniformLoad {
   readonly qY: number
 }
 
-/** qY: 局部 +y_l 方向 N/m；a/b: m，0<=a<b<=L；省略区间表示全跨。 */
-export interface FrameUniformLoad {
+/** qX/qY: 局部 +x_l/+y_l 方向 N/m；至少提供一个分量。 */
+interface FrameUniformLoadBase {
   readonly type: 'frame-uniform'
   readonly id: LoadId
   readonly elementId: ElementId
-  readonly qY: number
   readonly interval?: Readonly<{ a: number; b: number }>
 }
+
+/** a/b: m，0<=a<b<=L；省略区间表示全跨。 */
+export type FrameUniformLoad = FrameUniformLoadBase & (
+  | Readonly<{ qX: number; qY?: number }>
+  | Readonly<{ qX?: number; qY: number }>
+)
 
 /** deltaT: K。只表示均匀温差，不表示截面温度梯度。 */
 export interface UniformTemperatureLoad {
