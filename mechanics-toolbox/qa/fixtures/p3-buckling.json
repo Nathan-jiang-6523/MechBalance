@@ -1,0 +1,29 @@
+{
+  "plateSquare": {
+    "a": 1,
+    "b": 1,
+    "t": 0.02,
+    "e": 200000000000,
+    "nu": 0.3,
+    "applied": 1000000,
+    "m": 1,
+    "n": 1,
+    "k": 4,
+    "criticalLineLoad": 5784383.532161,
+    "criticalStress": 289219176.60805,
+    "criticalForce": 5784383.532161
+  },
+  "shell": {
+    "length": 1,
+    "radius": 0.5,
+    "t": 0.005,
+    "e": 200000000000,
+    "nu": 0.3,
+    "applied": 1000000,
+    "criticalStress": 1210455065.337,
+    "criticalLineLoad": 6052275.326685,
+    "criticalForce": 19013783.682
+  },
+  "source": "徐芝纶教材优先；圆柱壳为 NASA/SP-8007-2020/REV 2 第 4.1.1 节，2026-07-19",
+  "tolerance": { "relative": 0.000001 }
+}

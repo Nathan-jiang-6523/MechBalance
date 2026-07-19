@@ -8,8 +8,18 @@ import SectionCalculator from './features/sections/SectionCalculator.vue'
 import StressCalculator from './features/stress/StressCalculator.vue'
 import TorsionCalculator from './features/torsion/TorsionCalculator.vue'
 import UnitConverter from './features/unit-converter/UnitConverter.vue'
+import { ThinCylinderCalculator } from './features/plate-shell/thin-cylinder'
+import { LameCylinderCalculator } from './features/plate-shell/lame-cylinder'
+import { CircularPlateCalculator } from './features/plate-shell/circular-plate'
+import { RectangularPlateCalculator } from './features/plate-shell/rectangular-plate'
+import { BucklingCalculator as PlateShellBucklingCalculator } from './features/plate-shell/buckling'
 
 type ViewId = 'sections' | 'units' | 'beam' | 'axial' | 'torsion' | 'stress' | 'buckling'
+  | 'thin-cylinder'
+  | 'lame-cylinder'
+  | 'circular-plate'
+  | 'rectangular-plate'
+  | 'plate-shell-buckling'
 
 const activeView = ref<ViewId>('sections')
 
@@ -21,6 +31,11 @@ const navigation = [
   { index: '05', id: 'torsion', label: '圆轴扭转', status: '可用' },
   { index: '06', id: 'stress', label: '应力与莫尔圆', status: '可用' },
   { index: '07', id: 'buckling', label: '压杆稳定', status: '可用' },
+  { index: '08', id: 'thin-cylinder', label: '薄壁圆筒', status: 'P3' },
+  { index: '09', id: 'lame-cylinder', label: '厚壁圆筒', status: 'P3' },
+  { index: '10', id: 'circular-plate', label: '圆板弯曲', status: 'P3' },
+  { index: '11', id: 'rectangular-plate', label: '矩形板弯曲', status: 'P3' },
+  { index: '12', id: 'plate-shell-buckling', label: '板壳屈曲', status: 'P3' },
 ] as const
 
 const pageTitle = computed(() => ({
@@ -31,7 +46,16 @@ const pageTitle = computed(() => ({
   torsion: '圆轴扭转与功率换算',
   stress: '平面应力与强度准则',
   buckling: '欧拉压杆稳定工作台',
+  'thin-cylinder': '薄壁圆筒膜应力工作台',
+  'lame-cylinder': '厚壁圆筒 Lamé 解工作台',
+  'circular-plate': '圆板轴对称弯曲工作台',
+  'rectangular-plate': '矩形薄板弯曲工作台',
+  'plate-shell-buckling': '板与圆柱壳屈曲初算工作台',
 })[activeView.value])
+
+const phaseLabel = computed(() => ['thin-cylinder', 'lame-cylinder', 'circular-plate', 'rectangular-plate', 'plate-shell-buckling'].includes(activeView.value)
+  ? 'P3 / 板壳力学'
+  : 'P1 / 材料力学')
 
 function selectView(id: ViewId | null): void {
   if (id) activeView.value = id
@@ -49,7 +73,7 @@ function selectView(id: ViewId | null): void {
         </div>
       </div>
 
-      <p class="nav-caption">P1 · 材料力学 MVP</p>
+      <p class="nav-caption">P1 材料力学 · P3 板壳力学</p>
       <nav class="nav-list">
         <button
           v-for="item in navigation"
@@ -76,7 +100,7 @@ function selectView(id: ViewId | null): void {
     <main class="workspace">
       <header class="topbar">
         <div>
-          <p class="breadcrumb">P1 / 材料力学</p>
+          <p class="breadcrumb">{{ phaseLabel }}</p>
           <h1 class="page-title">{{ pageTitle }}</h1>
         </div>
         <div class="offline-badge" aria-label="离线可用">
@@ -102,7 +126,12 @@ function selectView(id: ViewId | null): void {
       <AxialCalculator v-else-if="activeView === 'axial'" />
       <TorsionCalculator v-else-if="activeView === 'torsion'" />
       <StressCalculator v-else-if="activeView === 'stress'" />
-      <BucklingCalculator v-else />
+      <BucklingCalculator v-else-if="activeView === 'buckling'" />
+      <ThinCylinderCalculator v-else-if="activeView === 'thin-cylinder'" />
+      <LameCylinderCalculator v-else-if="activeView === 'lame-cylinder'" />
+      <CircularPlateCalculator v-else-if="activeView === 'circular-plate'" />
+      <RectangularPlateCalculator v-else-if="activeView === 'rectangular-plate'" />
+      <PlateShellBucklingCalculator v-else />
     </main>
   </div>
 </template>
