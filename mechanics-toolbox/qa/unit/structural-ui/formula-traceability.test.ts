@@ -27,7 +27,7 @@ describe('P2 formula document traceability', () => {
       },
       {
         name: 'p2-frame.md',
-        documentVersion: 'P2-FRAME-FORMULAS-v1.0.0',
+        documentVersion: 'P2-FRAME-FORMULAS-v1.1.0',
         fixture: 'qa/fixtures/p2-frame.json',
         formulas: [
           ['P2-FRAME-001', 'P2-FRAME-v1'],
@@ -49,6 +49,11 @@ describe('P2 formula document traceability', () => {
         expect(text).toContain(`\`${version}\``)
       }
     }
+
+    const frameText = readFormulaDocument('p2-frame.md')
+    expect(frameText).toContain('r_local = k_local*d_local - f_eq')
+    expect(frameText).toContain('p_local = f_eq - k_local*d_local')
+    expect(frameText).toContain('p_local = -r_local')
   })
 
   it('keeps every displayed formula ID/version registered in the canonical index', () => {
