@@ -40,4 +40,4 @@ x=2\pm\frac{2\sqrt3}{3}
 
 运行：`python qa/reference/p2-beam-sympy.py`。脚本强制 SymPy 版本精确等于 `1.14.0`；力和弯矩相对差、位置差均按冻结上限 `1e-9` 判定。项目结果只能与该独立输出单向比较。
 
-`2026-07-19` 本地执行结论：`passed=true`。CBEAM-A03 的 `R_A/R_B/M(0)/θ(L)` 及 CBEAM-A05 的 `R_A/R_B/M(0)/M(L)/M(L/2)`、两处反弯点相对差均为 `0`。正式 Gate 仍按任务责任等待用户确认该独立结果。
+`2026-07-19` 本地执行结论：`passed=true`。CBEAM-A03 的 `R_A/R_B/M(0)/θ(L)` 及 CBEAM-A05 的 `R_A/R_B/M(0)/M(L)/M(L/2)`、两处反弯点相对差均为 `0`。用户于同日确认 P2-D08 对照结果，Gate P2-2 正式 GO。
