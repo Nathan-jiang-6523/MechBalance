@@ -16,6 +16,7 @@ describe('单位目录', () => {
       'pressure',
       'elasticModulus',
       'moment',
+      'momentPerLength',
       'torque',
       'lineLoad',
       'density',
@@ -35,6 +36,11 @@ describe('单位目录', () => {
     expect(unitIds('area')).toEqual(['mm2', 'cm2', 'm2'])
     expect(unitIds('force')).toEqual(['N', 'kN'])
     expect(unitIds('moment')).toEqual(['N_mm', 'N_m', 'kN_m'])
+    expect(unitIds('momentPerLength')).toEqual([
+      'N_mm_per_mm',
+      'N_m_per_m',
+      'kN_m_per_m',
+    ])
     expect(unitIds('lineLoad')).toEqual(['N_per_mm', 'kN_per_m', 'N_per_m'])
     expect(unitIds('stress')).toEqual(['MPa', 'GPa', 'Pa', 'N_per_mm2'])
     expect(unitIds('angle')).toEqual(['rad', 'deg'])
@@ -47,6 +53,8 @@ describe('单位目录', () => {
   it('工程预设排在 SI 前且 t 只登记为质量单位', () => {
     expect(UNIT_PRESETS.map((preset) => preset.id)).toEqual(['engineering', 'si'])
     expect(UNIT_PRESETS[0]?.units.mass).toBe('t')
+    expect(UNIT_PRESETS[0]?.units.momentPerLength).toBe('N_mm_per_mm')
+    expect(UNIT_PRESETS[1]?.units.momentPerLength).toBe('N_m_per_m')
     expect(QUANTITY_CATALOG.force.units.some((unit) => unit.id === ('t' as never))).toBe(false)
     expect(QUANTITY_CATALOG.force.units.some((unit) => unit.symbol === 'tf')).toBe(false)
   })

@@ -79,6 +79,12 @@ const momentUnits = [
   linearUnit('kN_m', '千牛米', 'kN·m', 1e3),
 ] as const
 
+const momentPerLengthUnits = [
+  linearUnit('N_mm_per_mm', '牛顿毫米每毫米', 'N·mm/mm', 1),
+  linearUnit('N_m_per_m', '牛顿米每米', 'N·m/m', 1),
+  linearUnit('kN_m_per_m', '千牛米每米', 'kN·m/m', 1e3),
+] as const
+
 const lineLoadUnits = [
   linearUnit('N_per_mm', '牛顿每毫米', 'N/mm', 1e3),
   linearUnit('kN_per_m', '千牛每米', 'kN/m', 1e3),
@@ -150,6 +156,12 @@ export const QUANTITY_CATALOG: Readonly<Record<QuantityId, QuantityDefinition>> 
   pressure: quantity('pressure', '压力', 'Pa', stressUnits),
   elasticModulus: quantity('elasticModulus', '弹性模量', 'Pa', stressUnits),
   moment: quantity('moment', '力矩', 'N_m', momentUnits),
+  momentPerLength: quantity(
+    'momentPerLength',
+    '板线弯矩',
+    'N_m_per_m',
+    momentPerLengthUnits,
+  ),
   torque: quantity('torque', '转矩', 'N_m', momentUnits),
   lineLoad: quantity('lineLoad', '线载荷', 'N_per_m', lineLoadUnits),
   density: quantity('density', '密度', 'kg_per_m3', densityUnits),
@@ -177,6 +189,7 @@ const engineeringUnits: Readonly<Record<QuantityId, UnitId>> = {
   pressure: 'MPa',
   elasticModulus: 'MPa',
   moment: 'N_mm',
+  momentPerLength: 'N_mm_per_mm',
   torque: 'N_mm',
   lineLoad: 'N_per_mm',
   density: 't_per_mm3',
@@ -193,5 +206,5 @@ const siUnits = Object.fromEntries(
 
 export const UNIT_PRESETS: readonly UnitPreset[] = [
   { id: 'engineering', label: '工程单位（t–mm–s–N–MPa）', units: engineeringUnits },
-  { id: 'si', label: 'SI 单位', units: siUnits },
+  { id: 'si', label: 'SI 单位（kg–m–s–N–Pa）', units: siUnits },
 ]
