@@ -28,7 +28,7 @@ export const STRUCTURAL_MODULES = [
     summary: '节点力、均匀温差、初应变和杆件自重。',
   },
   {
-    id: 'frame', index: '05', title: '平面刚架', status: 'beta',
+    id: 'frame', index: '05', title: '平面刚架', status: 'available',
     summary: '节点作用、局部分布载荷、温度和初应变。',
   },
   {
