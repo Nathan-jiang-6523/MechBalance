@@ -71,6 +71,9 @@ export interface BeamElement2D {
   readonly id: ElementId
   readonly nodeI: NodeId
   readonly nodeJ: NodeId
+  /** P2 accepts these request flags only to reject them explicitly. */
+  readonly releaseIMz?: boolean
+  readonly releaseJMz?: boolean
 }
 
 export interface TrussElement2D {

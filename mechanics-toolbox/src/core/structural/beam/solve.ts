@@ -25,6 +25,7 @@ import {
   recoverBeamResistingVector,
 } from './end-forces'
 import { beamUniformLoadVector } from './load-vector'
+import { validateBeamScope } from './validation'
 
 export interface BeamNodeSolution {
   readonly nodeId: string
@@ -38,14 +39,18 @@ export interface BeamNodeSolution {
 
 export interface BeamElementSolution {
   readonly elementId: string
+  readonly xI: number
   readonly length: number
   readonly dofIndices: readonly number[]
+  readonly localDisplacements: BeamVector6
+  readonly uniformLoadQY: number
   readonly consistentLoad: BeamVector6
   readonly resistingVector: BeamVector6
   readonly elementOnNodeEndForces: BeamVector6
 }
 
 export interface BeamFiniteElementSolution {
+  readonly properties: BeamResolvedProperties
   readonly displacements: readonly number[]
   readonly appliedLoads: readonly number[]
   readonly stiffness: Matrix
@@ -60,13 +65,13 @@ export type BeamFiniteElementSolveResult =
   | Readonly<{ ok: true; value: BeamFiniteElementSolution }>
   | Readonly<{ ok: false; issues: readonly StructuralIssue[] }>
 
-interface ResolvedBeamProperties {
+export interface BeamResolvedProperties {
   readonly E: number
   readonly A: number
   readonly I: number
 }
 
-function resolveProperties(model: BeamModel2D): ResolvedBeamProperties | undefined {
+function resolveProperties(model: BeamModel2D): BeamResolvedProperties | undefined {
   const source = model.uniformProperties
   if (source.source === 'inline') return { E: source.E, A: source.A, I: source.I }
   const material = model.materials.find(({ id }) => id === source.materialId)
@@ -75,7 +80,7 @@ function resolveProperties(model: BeamModel2D): ResolvedBeamProperties | undefin
   return { E: material.E, A: section.A, I: section.I }
 }
 
-function validateNumericInputs(model: BeamModel2D, properties: ResolvedBeamProperties | undefined): StructuralIssue[] {
+function validateNumericInputs(model: BeamModel2D, properties: BeamResolvedProperties | undefined): StructuralIssue[] {
   const issues: StructuralIssue[] = []
   if (properties) {
     for (const [field, value] of Object.entries(properties)) {
@@ -142,6 +147,7 @@ export function solveBeamFiniteElement(model: BeamModel2D): BeamFiniteElementSol
   const properties = resolveProperties(model)
   const issues = [
     ...validateNumericInputs(model, properties),
+    ...validateBeamScope(model),
     ...validateStructuralModelBoundary(model),
   ]
   if (issues.length > 0) return { ok: false, issues }
@@ -166,15 +172,19 @@ export function solveBeamFiniteElement(model: BeamModel2D): BeamFiniteElementSol
       const length = nodeJ.x - nodeI.x
       const stiffness = beamLocalStiffness({ ...properties, L: length })
       const consistentLoad = [0, 0, 0, 0, 0, 0]
+      let uniformLoadQY = 0
       for (const load of model.loads) {
         if (load.type !== 'beam-uniform' || load.elementId !== element.id) continue
+        uniformLoadQY += load.qY
         const vector = beamUniformLoadVector(load.qY, length)
         vector.forEach((value, dof) => { consistentLoad[dof] = consistentLoad[dof]! + value })
       }
       return {
         element,
+        xI: nodeI.x,
         length,
         stiffness,
+        uniformLoadQY,
         consistentLoad: toVector6(consistentLoad),
         dofIndices: elementDofIndices(element.nodeI, element.nodeJ, globalDofs),
       }
@@ -205,9 +215,11 @@ export function solveBeamFiniteElement(model: BeamModel2D): BeamFiniteElementSol
       partition.freeDofs.map((column) => assembled.stiffness[row]![column]!),
     )
     const reducedLoad = partition.freeDofs.map((dof) => appliedLoads[dof]!)
-    const linear = solveEquilibratedStiffnessSystem(reducedStiffness, reducedLoad)
+    const reducedSolution = partition.freeDofs.length === 0
+      ? []
+      : solveEquilibratedStiffnessSystem(reducedStiffness, reducedLoad).solution
     const displacements = Array<number>(totalDofs).fill(0)
-    partition.freeDofs.forEach((dof, index) => { displacements[dof] = linear.solution[index]! })
+    partition.freeDofs.forEach((dof, index) => { displacements[dof] = reducedSolution[index]! })
     const recoveredReactions = recoverReactions(
       assembled.stiffness,
       displacements,
@@ -216,12 +228,17 @@ export function solveBeamFiniteElement(model: BeamModel2D): BeamFiniteElementSol
     )
     const constrainedSet = new Set(partition.constrainedDofs)
     const reactions = recoveredReactions.full.map((value, dof) => constrainedSet.has(dof) ? value : 0)
-    const elements = elementData.map(({ element, length, stiffness, consistentLoad, dofIndices }) => {
+    const elements = elementData.map(({
+      element, xI, length, stiffness, uniformLoadQY, consistentLoad, dofIndices,
+    }) => {
       const localDisplacements = toVector6(dofIndices.map((dof) => displacements[dof]!))
       return {
         elementId: element.id,
+        xI,
         length,
         dofIndices,
+        localDisplacements,
+        uniformLoadQY,
         consistentLoad,
         resistingVector: recoverBeamResistingVector(stiffness as BeamMatrix6, localDisplacements, consistentLoad),
         elementOnNodeEndForces: recoverBeamElementOnNodeEndForces(stiffness as BeamMatrix6, localDisplacements, consistentLoad),
@@ -277,6 +294,7 @@ export function solveBeamFiniteElement(model: BeamModel2D): BeamFiniteElementSol
     return {
       ok: true,
       value: {
+        properties,
         displacements,
         appliedLoads,
         stiffness: assembled.stiffness,
