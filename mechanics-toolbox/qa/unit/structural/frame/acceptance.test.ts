@@ -78,6 +78,10 @@ function matrixRank(matrix: FrameMatrix6): number {
 describe('P2 frozen frame acceptance', () => {
   it('is tied to the confirmed fixture set', () => {
     expect(fixture.fixtureVersion).toBe('P2-FRAME-FIXTURES-v1')
+    expect(fixture.common.endForces)
+      .toBe('localEndForces=f_eq-k_l*d_l; element-on-node; local axes i->j; use for node equilibrium')
+    expect(fixture.common.memberResistingActions)
+      .toBe('localResistingForces=k_l*d_l-f_eq=-localEndForces')
     expect(fixture.cases.map(({ id }) => id)).toEqual([
       'P2-FRAME-E01', 'P2-FRAME-A01', 'P2-FRAME-A02', 'P2-FRAME-A03',
       'P2-FRAME-T01', 'P2-FRAME-IS01', 'P2-FRAME-N01', 'P2-FRAME-X01',
@@ -149,8 +153,7 @@ describe('P2 frozen frame acceptance', () => {
     expect(node(result, '4').reactionFy).toBeCloseTo(3_675.80323108, 5)
     expect(node(result, '4').reactionMz).toBeCloseTo(10_648.3935378, 4)
 
-    // A01 expected signs are traditional resisting actions kd-f, despite fixture common
-    // text calling end forces element-on-node. Both vectors stay explicit; f-kd is opposite.
+    // Frozen A01 end-action numbers are member resisting actions k_l*d_l-f_eq.
     expect(element(result, '12').localResistingForces[5]).toBeCloseTo(7_351.60646215, 5)
     expect(element(result, '43').localResistingForces[5]).toBeCloseTo(7_351.60646215, 5)
     expect(element(result, '23').localResistingForces[1]).toBeCloseTo(-3_675.80323108, 5)
@@ -162,7 +165,7 @@ describe('P2 frozen frame acceptance', () => {
         expect(force).toBeCloseTo(-localResistingForces[index]!, 7)
       })
     })
-    // Element-on-node forces at loaded node 2 plus external load must equilibrate.
+    // Public element-on-node localEndForces=f_eq-k_l*d_l are opposite and close node equilibrium.
     const columnTop = element(result, '12').localEndForces
     const beamLeft = element(result, '23').localEndForces
     expect(-columnTop[4] + beamLeft[0] + 6_000).toBeCloseTo(0, 6)
