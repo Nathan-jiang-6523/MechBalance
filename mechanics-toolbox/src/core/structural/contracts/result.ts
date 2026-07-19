@@ -161,7 +161,9 @@ export function hasSafeStructuralQuantities(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return true
 
   const candidate = value as Record<string, unknown>
-  if ('value' in candidate || 'unit' in candidate || 'positive' in candidate) {
+  // Container records such as ControlPositionResult also have a `value` field.
+  // A structural scalar is identified by its unit/positive metadata instead.
+  if ('unit' in candidate || 'positive' in candidate) {
     return isFiniteStructuralQuantity(candidate)
   }
   return Object.values(candidate).every(hasSafeStructuralQuantities)

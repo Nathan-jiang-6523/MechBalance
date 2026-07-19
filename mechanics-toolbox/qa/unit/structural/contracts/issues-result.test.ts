@@ -61,6 +61,17 @@ describe('P2 结构 issue 与结果契约', () => {
     expect(hasSafeStructuralQuantities({ force: { value: Number.NaN, unit: 'N', positive: 'tension' } })).toBe(false)
   })
 
+  it('递归检查含 value 字段的控制点容器而不把容器误判为标量', () => {
+    const control = {
+      responseId: 'M',
+      kind: 'maximum',
+      value: { value: 12_000, unit: 'N*m', positive: '正弯矩' },
+      position: { value: 2, unit: 'm', positive: '从左端沿 +x' },
+    }
+    expect(hasSafeStructuralQuantities(control)).toBe(true)
+    expect(hasSafeStructuralQuantities({ ...control, value: { ...control.value, value: Number.NaN } })).toBe(false)
+  })
+
   it('错误结果禁止携带 structural、group、chart 或 balance 成功数据', () => {
     const errorResult = {
       calculatorId: 'p2-beam', status: 'error', headline: '失败', groups: [], charts: [], balanceChecks: [],
