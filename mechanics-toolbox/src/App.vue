@@ -6,10 +6,11 @@ import BeamCalculator from './features/beam/BeamCalculator.vue'
 import BucklingCalculator from './features/buckling/BucklingCalculator.vue'
 import SectionCalculator from './features/sections/SectionCalculator.vue'
 import StressCalculator from './features/stress/StressCalculator.vue'
+import StructuralCalculator from './features/structural/StructuralCalculator.vue'
 import TorsionCalculator from './features/torsion/TorsionCalculator.vue'
 import UnitConverter from './features/unit-converter/UnitConverter.vue'
 
-type ViewId = 'sections' | 'units' | 'beam' | 'axial' | 'torsion' | 'stress' | 'buckling'
+type ViewId = 'sections' | 'units' | 'beam' | 'axial' | 'torsion' | 'stress' | 'buckling' | 'structural'
 
 const activeView = ref<ViewId>('sections')
 
@@ -21,6 +22,7 @@ const navigation = [
   { index: '05', id: 'torsion', label: '圆轴扭转', status: '可用' },
   { index: '06', id: 'stress', label: '应力与莫尔圆', status: '可用' },
   { index: '07', id: 'buckling', label: '压杆稳定', status: '可用' },
+  { index: '08', id: 'structural', label: '结构力学', status: '可用' },
 ] as const
 
 const pageTitle = computed(() => ({
@@ -31,6 +33,7 @@ const pageTitle = computed(() => ({
   torsion: '圆轴扭转与功率换算',
   stress: '平面应力与强度准则',
   buckling: '欧拉压杆稳定工作台',
+  structural: 'P2 结构力学工作台',
 })[activeView.value])
 
 function selectView(id: ViewId | null): void {
@@ -49,7 +52,7 @@ function selectView(id: ViewId | null): void {
         </div>
       </div>
 
-      <p class="nav-caption">P1 · 材料力学 MVP</p>
+      <p class="nav-caption">P1 · 材料力学 / P2 · 结构力学</p>
       <nav class="nav-list">
         <button
           v-for="item in navigation"
@@ -76,7 +79,7 @@ function selectView(id: ViewId | null): void {
     <main class="workspace">
       <header class="topbar">
         <div>
-          <p class="breadcrumb">P1 / 材料力学</p>
+          <p class="breadcrumb">{{ activeView === 'structural' ? 'P2 / 结构力学' : 'P1 / 材料力学' }}</p>
           <h1 class="page-title">{{ pageTitle }}</h1>
         </div>
         <div class="offline-badge" aria-label="离线可用">
@@ -102,7 +105,8 @@ function selectView(id: ViewId | null): void {
       <AxialCalculator v-else-if="activeView === 'axial'" />
       <TorsionCalculator v-else-if="activeView === 'torsion'" />
       <StressCalculator v-else-if="activeView === 'stress'" />
-      <BucklingCalculator v-else />
+      <BucklingCalculator v-else-if="activeView === 'buckling'" />
+      <StructuralCalculator v-else />
     </main>
   </div>
 </template>
