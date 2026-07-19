@@ -546,49 +546,49 @@
 > 仅对应内核 Gate 通过后启动；梁解析门未过时不得开发影响线/桁架/刚架 UI。
 > 任务 ID 为保持既有追溯不重排；原 P2-H/P2-I 与 P2-J08/J09 机械接口任务已取消。
 
-### [ ] P2-J01：建立 P2 计算器导航壳
+### [x] P2-J01：建立 P2 计算器导航壳
 **描述**：在阶段专属目录建立模块选择，不先改共享 `App.vue`。
 **验收标准**：各模块状态显示 planned/beta/available；未完成模块不可误用。
 **文件**：`src/features/structural/StructuralWorkspace.vue`
 **责任**：Codex。
 **对应规格**：Vue 只做输入与呈现。
 
-### [ ] P2-J02：实现通用结构模型编辑器
+### [x] P2-J02：实现通用结构模型编辑器
 **描述**：编辑节点、单元、支座、材料、截面和载荷。
 **验收标准**：字段持续显示单位；错误定位；不复制单位表。
 **文件**：`src/features/structural/components/*`、组件测试。
 **责任**：Codex。
 **对应规格**：输入单位持续显示。
 
-### [ ] P2-J03：实现梁/桁架/刚架 SVG 示意图
+### [x] P2-J03：实现梁/桁架/刚架 SVG 示意图
 **描述**：显示全局/局部轴、节点号、单元号、支座和载荷方向。
 **验收标准**：桌面/移动无关键标签遮挡；方向与内核一致。
 **文件**：`src/features/structural/components/StructureDiagram.vue`、测试。
 **责任**：Codex。
 **对应规格**：结构图强制信息。
 
-### [ ] P2-J04：实现结构结果表与控制摘要
+### [x] P2-J04：实现结构结果表与控制摘要
 **描述**：先显示控制值，再显示节点/单元明细。
 **验收标准**：数值、单位、对象 ID、位置、方向、拉压/正负含义和警告齐全；不显示未确认利用率。
 **文件**：`src/features/structural/components/StructuralResults.vue`、测试。
 **责任**：Codex。
 **对应规格**：结果优先。
 
-### [ ] P2-J05：实现结构曲线/分布图
+### [x] P2-J05：实现结构曲线/分布图
 **描述**：绘制 `V/M`、影响线、包络和确认的应力/内力分布。
 **验收标准**：正负区分；跳变保留；颜色之外有数值表。
 **文件**：`src/features/structural/components/StructuralChart.vue`、测试。
 **责任**：Codex。
 **对应规格**：不得只给颜色。
 
-### [ ] P2-J06：实现公式与矩阵折叠区
+### [x] P2-J06：实现公式与矩阵折叠区
 **描述**：复用 `MathFormula.vue` 显示公式、假设、版本和矩阵。
 **验收标准**：默认不抢占结论区；离线 KaTeX 正常。
 **文件**：`src/features/structural/components/StructuralTheory.vue`、测试。
 **责任**：Codex。
 **对应规格**：矩阵和推导放折叠区。
 
-### [ ] P2-J07：集成到共享 `App.vue`
+### [x] P2-J07：集成到共享 `App.vue`
 **描述**：仅在阶段 UI 可用后接入主导航。
 **验收标准**：P1 回归不变；提交只含共享集成改动，标题以 `integration:` 开头。
 **文件**：`src/App.vue`、必要注册文件。
@@ -597,28 +597,28 @@
 
 ## K. QA、发布与交接
 
-### [ ] P2-K01：建立各 Gate 单元测试入口
+### [x] P2-K01：建立各 Gate 单元测试入口
 **描述**：按 beam/influence/moving-load/truss/frame 分目录。
 **验收标准**：测试不依赖 UI；fixture 与实现分离。
 **文件**：`qa/unit/structural/*`
 **责任**：Codex。
 **对应规格**：纯函数内核先于 UI。
 
-### [ ] P2-K02：执行 P1 全量回归
+### [x] P2-K02：执行 P1 全量回归
 **描述**：每个 P2 Gate 合并前运行现有测试。
 **验收标准**：P1 测试无退化；失败先定位，不改真值绕过。
 **命令**：`npm run typecheck`、`npm run test`
 **责任**：Codex。
 **对应规格**：不破坏 P1。
 
-### [ ] P2-K03：建立 P2 Playwright 桌面验收
+### [x] P2-K03：建立 P2 Playwright 桌面验收
 **描述**：覆盖正常输入、错误、结构图、结果表、公式和离线页面。
 **验收标准**：无溢出、标签遮挡、空白图表或外部请求。
 **文件**：`qa/e2e/p2-structural.spec.ts`
 **责任**：Codex。
 **对应规格**：桌面验收。
 
-### [ ] P2-K04：建立 P2 Playwright 移动验收
+### [x] P2-K04：建立 P2 Playwright 移动验收
 **描述**：覆盖冻结 UI-02 指定的 BEAM-A01 与 TRUSS-A01 移动视口；机械连接模块已取消，不进入 P2。
 **验收标准**：无横向溢出；关键标签和结果可读。
 **文件**：`qa/e2e/p2-structural.spec.ts`
@@ -632,7 +632,7 @@
 **责任**：Codex；用户确认体验门槛。
 **对应规格**：先测量再决定 Web Worker。
 
-### [ ] P2-K06：执行单 HTML 离线构建验收
+### [x] P2-K06：执行单 HTML 离线构建验收
 **描述**：构建并用 `file://` 验证 P2。
 **验收标准**：无 CDN/后台/网络请求；公式、曲线、结构图均可用。
 **命令**：`npm run build`、`npm run test:e2e`
@@ -662,16 +662,16 @@
 
 ## 质量要求
 
-- [ ] 只在 `phase/p2-structural-mechanics` 与 `F:\mechanics\.worktrees\p2` 工作。
-- [ ] 不修改 P3/P4 专属目录，不读取禁读目录或未授权 `referance` 项目。
-- [ ] 复用 P1 单位、数值、校验、结果、警告契约；不复制单位表。
-- [ ] 纯计算不依赖 Vue；UI 不承载力学求解。
-- [ ] 用户真值与实现独立；冲突时停止模块并请用户裁决。
-- [ ] 所有命令无后台进程；不写启动服务器命令。
-- [ ] 必须执行 `npm run typecheck`、`npm run test`、`npm run build`、`npm run test:e2e`。
-- [ ] 必须覆盖桌面与移动端，无横向溢出和关键标签遮挡。
-- [ ] 生产交付无 CDN、后台服务、账号和数据库。
-- [ ] 共享文件改动使用独立 `integration:` 提交；不创建 remote、不推送。
+- [x] 只在 `phase/p2-structural-mechanics` 与 `F:\mechanics\.worktrees\p2` 工作。
+- [x] 不修改 P3/P4 专属目录，不读取禁读目录或未授权 `referance` 项目。
+- [x] 复用 P1 单位、数值、校验、结果、警告契约；不复制单位表。
+- [x] 纯计算不依赖 Vue；UI 不承载力学求解。
+- [x] 用户真值与实现独立；冲突时停止模块并请用户裁决。
+- [x] 所有命令无后台进程；不写启动服务器命令。
+- [x] 必须执行 `npm run typecheck`、`npm run test`、`npm run build`、`npm run test:e2e`。
+- [x] 必须覆盖桌面与移动端，无横向溢出和关键标签遮挡。
+- [x] 生产交付无 CDN、后台服务、账号和数据库。
+- [x] 共享文件改动使用独立 `integration:` 提交；不创建 remote、不推送。
 - [ ] 小步提交；源码、测试、批量格式化不混为一个提交。
 - [ ] P2 agent 不审批自己的 diff；交由主 agent 复核。
 
