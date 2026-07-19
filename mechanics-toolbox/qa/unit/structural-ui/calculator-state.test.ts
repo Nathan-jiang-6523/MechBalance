@@ -90,4 +90,15 @@ describe('P2 structural calculator state machine', () => {
     await wrapper.findAll('select')[0]!.setValue('TRUSS-T01')
     expect(wrapper.get('#p2-calculator-title').text()).toBe('桁架均匀温升自由伸长')
   })
+
+  it('shows where the influence-line response is read on the beam', async () => {
+    const wrapper = mount(StructuralCalculator, { global: { stubs } })
+    wrapper.getComponent({ name: 'StructuralWorkspace' }).vm.$emit('module-change', 'influence-line')
+    await wrapper.vm.$nextTick()
+    const schematic = wrapper.get('[data-testid="influence-line-schematic"]')
+    expect(schematic.attributes('data-response-type')).toBe('section-shear')
+    expect(schematic.text()).toContain('单位荷载位置 z：0 → L')
+    expect(schematic.text()).toContain('a = 4000 mm')
+    expect(schematic.text()).toContain('目标截面剪力 V(a)影响线')
+  })
 })

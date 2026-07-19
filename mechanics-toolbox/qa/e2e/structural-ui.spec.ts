@@ -144,6 +144,30 @@ test('桁架、刚架、影响线和移动荷载均可从冻结算例计算', as
   }
 })
 
+test('影响线示意标清移动荷载路径与固定响应截面', async ({ page }, testInfo) => {
+  await page.locator('[data-module-id="influence-line"]').click()
+  const schematic = page.getByTestId('influence-line-schematic')
+  await expect(schematic).toBeVisible()
+  await expect(schematic).toHaveAttribute('data-response-type', 'section-shear')
+  await expect(schematic.getByText('单位荷载位置 z：0 → L')).toBeVisible()
+  await expect(schematic.getByText('a = 4000 mm', { exact: true })).toBeVisible()
+  await expect(schematic.getByText('L-a = 6000 mm')).toBeVisible()
+  await expect(schematic.getByText('目标截面剪力 V(a)影响线', { exact: true })).toBeVisible()
+  await expect(schematic.locator('.target-marker')).toHaveAttribute('data-ratio', '0.4')
+  await expect(schematic.locator('.target-cut')).toHaveCount(1)
+  expect(await schematic.locator('.target-cut').evaluate((element) => getComputedStyle(element).stroke))
+    .not.toBe('none')
+  if (testInfo.project.name === 'chromium-mobile') {
+    await expect(schematic.locator('.mobile-overview')).toBeVisible()
+    await expect(schematic.locator('.mobile-overview')).toContainText('A → B')
+    await expect(schematic.locator('.mobile-overview')).toContainText('固定读取：目标截面剪力 V(a)，a = 4000 mm')
+  } else {
+    await expect(schematic.locator('.schematic-scroll')).toBeVisible()
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .toBeLessThanOrEqual(0)
+})
+
 test('结构工作台在当前视口内且关键触控目标不小于 44px', async ({ page }) => {
   const viewport = page.viewportSize()
   expect(viewport).not.toBeNull()
