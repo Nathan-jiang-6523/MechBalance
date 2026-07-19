@@ -17,7 +17,7 @@
 | 模块 | 计划文件 | 首版公式边界 |
 | --- | --- | --- |
 | 薄壁圆筒 | [`p3-thin-cylinder.md`](./p3-thin-cylinder.md) | 开口/封闭端，内外压、轴力、扭矩；已登记 |
-| 厚壁圆筒 | `p3-lame-cylinder.md` | 单层 Lamé，应力、轴向状态、位移 |
+| 厚壁圆筒 | [`p3-lame-cylinder.md`](./p3-lame-cylinder.md) | 单层 Lamé，应力、轴向状态、位移；已登记 |
 | 圆板 | `p3-circular-plate.md` | 实心、等厚、固支/简支、均布载荷 |
 | 矩形板 | `p3-rectangular-plate.md` | SSSS/CCCC、均布载荷；RP-06 后置 |
 | 板屈曲 | `p3-plate-buckling.md` | SSSS 单向均匀压缩 |
