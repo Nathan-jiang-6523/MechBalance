@@ -5,7 +5,7 @@
 - 实现版本：`P2-FRAME-v1`、`P2-FRAME-INITIAL-v1`
 - Gate：`P2-4B`
 - 访问/冻结日期：`2026-07-19`
-- 状态：用户已确认 `FRAME-A01` 登记数值属于 member resisting actions；`Gate P2-4B/P2-G09` 的端力语义已闭合，可进入关闭记录
+- 状态：用户已确认 `FRAME-A01` 登记数值属于 member resisting actions；`Gate P2-4B/P2-G09` 的端力语义已闭合并已关闭
 
 ## 范围与坐标
 

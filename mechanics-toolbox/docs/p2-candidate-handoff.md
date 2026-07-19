@@ -37,8 +37,8 @@
 
 ## 已确认裁决
 
-1. 用户确认 `FRAME-A01` 冻结端力数值属于 member resisting actions `kd-f`；element-on-node 固定为 `f-kd`。数值不变，只重标字段语义；`P2-G09/Gate P2-4B` 可关闭。
-2. 用户确认沿用性能记录中的当前门槛，P2 首版不引入 Web Worker；`P2-K05` 可关闭。
+1. 用户确认 `FRAME-A01` 冻结端力数值属于 member resisting actions `kd-f`；element-on-node 固定为 `f-kd`。数值不变，只重标字段语义；`P2-G09/Gate P2-4B` 已关闭。
+2. 用户确认沿用性能记录中的当前门槛，P2 首版不引入 Web Worker；`P2-K05` 已关闭。
 3. 用户确认 `P2-K07` 公式、算例与来源审计：公式 ID/version 与结果 metadata/理论目录/索引一致，42 个 fixture 来源独立，无本地参考书/PDF读取，无项目实现输出回填真值。
 
 ## 尚未签收的项目

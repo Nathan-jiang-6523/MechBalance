@@ -2,7 +2,7 @@
 
 - 文档版本：`P2-FORMULA-INDEX-v1.3.0`
 - 冻结日期：2026-07-19
-- 实现状态含义：`Gate P2-0 契约`定义公共类型/错误/单位与验证边界；梁、影响线/移动载荷、桁架和刚架公式均已实现；用户已确认 `FRAME-A01` 为 resisting actions 口径，`Gate P2-4B/P2-G09` 可关闭。
+- 实现状态含义：`Gate P2-0 契约`定义公共类型/错误/单位与验证边界；梁、影响线/移动载荷、桁架和刚架公式均已实现；用户已确认 `FRAME-A01` 为 resisting actions 口径，`Gate P2-4B/P2-G09` 已关闭。
 - 真值优先级：`ai/memory-bank/p2-acceptance-cases-form.md` 的已确认卡片高于项目实现输出；禁止用项目输出反填 fixture。
 
 ## 统一坐标、正负号、单位与假设
