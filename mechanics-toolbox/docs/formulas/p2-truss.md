@@ -1,5 +1,12 @@
 # P2 平面桁架公式登记
 
+- 文档版本：`P2-TRUSS-FORMULAS-v1.0.0`
+- 公式 ID：`P2-TRUSS-001`、`P2-TRUSS-INITIAL-001`
+- 实现版本：`P2-TRUSS-v1`、`P2-TRUSS-INITIAL-v1`
+- Gate：`P2-4A`
+- 访问/冻结日期：`2026-07-19`
+- 状态：已实现并通过冻结 fixture；本文公式与真值来源独立于项目求解器输出
+
 ## 坐标、自由度与正号
 
 - 节点自由度固定为全局 `[u,v]`，单位 `m`。
@@ -61,3 +68,10 @@ f_weight,global = [0,-W/2,0,-W/2]
 ## 装配、约束与校核
 
 按单元自由度映射装配 `Ku=F`，只支持 `u/v=0` 约束。求解后检查自由自由度残差、全局 `Fx/Fy/Mz` 平衡以及 `u^T K u = u^T F`。零力状态使用 `|N|<=1e-6 N` 判定；此阈值只用于状态标签，不截断结果值。
+
+## 来源与追溯
+
+- 公式登记索引：[`p2-index.md`](./p2-index.md) 的 `P2-TRUSS-001`、`P2-TRUSS-INITIAL-001`；索引版本 `P2-FORMULA-INDEX-v1.3.0`，访问 `2026-07-19`。
+- 冻结 fixture：`qa/fixtures/p2-truss.json`，schema `1.0.0`；覆盖 `P2-TRUSS-E01/A01/A02/T01/IS01/SW01/N01/X01`，真值政策为独立冻结且禁止项目输出回填。
+- 人工可读验收卡：`ai/memory-bank/p2-acceptance-cases-form.md` 第四节“平面桁架”，来源为直接刚度法闭式坐标变换、节点法、虚功、自由应变本构和自重定义，确认日期 `2026-07-19`。
+- 初应变外部来源：[OpenSees InitStrainMaterial](https://opensees.berkeley.edu/wiki/index.php?title=Initial_Strain_Material)，访问 `2026-07-19`；仅用于核对 `epsilon_free` 本构，不替代冻结 fixture。

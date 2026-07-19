@@ -152,4 +152,4 @@ e_{rel}=e_{abs}/|v_{mid}^{ref}|.
 - 范围、`[u,v,θ]`、UDL、一致单位、误差门槛和解析场恢复要求：`ai/memory-bank/p2-confirmation-form.md` 的 `P2-D01/D02/D03/D06/D07/D09`；Nathan 已确认，`2026-07-19`。
 - 冻结输入、序列和容差：`mechanics-toolbox/qa/fixtures/p2-beam.json` 的 `P2-BEAM-A02/C01`；fixture 版本 `P2-BEAM-FIXTURES-v1`，`2026-07-19`；政策为禁止由项目输出反填。
 - 人工可读验收卡：`ai/memory-bank/p2-acceptance-cases-form.md` 的 `P2-BEAM-A02/C01`；独立来源标记为 EB 闭式解与 Hermite 形函数代入，`2026-07-19`。
-- 恢复公式登记：`docs/formulas/p2-index.md` 的 `P2-EB-RECOVERY-001`；索引版本 `P2-FORMULA-INDEX-v1.0.0`，`2026-07-19`。
+- 恢复公式登记：`docs/formulas/p2-index.md` 的 `P2-EB-RECOVERY-001`；索引版本 `P2-FORMULA-INDEX-v1.3.0`，`2026-07-19`。

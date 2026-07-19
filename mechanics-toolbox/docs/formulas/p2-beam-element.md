@@ -257,5 +257,5 @@ D_{ii}=\sqrt{K_{ii}},\qquad
 
 - 范围、自由度、荷载、正负号和结果字段：`ai/memory-bank/p2-confirmation-form.md` 的 `P2-D01/D02/D03/D06/D07/D09`；Nathan 已确认，`2026-07-19`。
 - 冻结验收真值：`mechanics-toolbox/qa/fixtures/p2-beam.json` 的 `P2-BEAM-E01/E02/E03/A02/A06/C01`；fixture 版本 `P2-BEAM-FIXTURES-v1`，`2026-07-19`；政策为禁止由项目输出反填。
-- 公式登记：`docs/formulas/p2-index.md` 的 `P2-EB-001/P2-EB-002/P2-EB-RECOVERY-001`；索引版本 `P2-FORMULA-INDEX-v1.0.0`，`2026-07-19`。
+- 公式登记：`docs/formulas/p2-index.md` 的 `P2-EB-001/P2-EB-002/P2-EB-RECOVERY-001`；索引版本 `P2-FORMULA-INDEX-v1.3.0`，`2026-07-19`。
 - 外部交叉核对：CALFEM for Python `beam2e` 文档，访问登记日期 `2026-07-19`；仅作公式形态交叉核对，不覆盖冻结验收真值。
