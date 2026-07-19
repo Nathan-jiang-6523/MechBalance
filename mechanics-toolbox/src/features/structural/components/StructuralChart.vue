@@ -12,7 +12,8 @@ use([LineChart, ScatterChart, GridComponent, LegendComponent, MarkLineComponent,
 
 const props = defineProps<{ chart: CurveChart }>()
 const chartElement = ref<HTMLDivElement | null>(null)
-const tableRows = computed(() => buildStructuralChartTableRows(props.chart))
+const totalTableRows = computed(() => props.chart.series.reduce((sum, series) => sum + series.points.length, 0))
+const tableRows = computed(() => buildStructuralChartTableRows(props.chart, 240))
 let instance: ECharts | null = null
 let resizeObserver: ResizeObserver | null = null
 
@@ -97,6 +98,9 @@ onBeforeUnmount(() => {
       :aria-label="`${chart.title}曲线；正值青色点，负值红色点，零值灰色点`"
     />
     <p class="sign-legend"><span data-sign="positive">+正</span><span data-sign="negative">−负</span><span data-sign="zero">0 零</span></p>
+    <p v-if="tableRows.length < totalTableRows" class="table-limit-note">
+      数值表显示 {{ tableRows.length }} / {{ totalTableRows }} 个代表点；曲线仍使用全部计算点。
+    </p>
     <div class="chart-table-wrap">
       <table data-testid="structural-chart-table">
         <thead><tr><th>系列</th><th>x / {{ chart.xUnit }}</th><th>侧别</th><th>数值</th><th>正负</th></tr></thead>
@@ -119,6 +123,7 @@ onBeforeUnmount(() => {
 .structural-chart h4 { margin: 0; padding: 12px 14px 0; font-size: 14px; }
 .chart-canvas { width: 100%; height: 300px; }
 .sign-legend { display: flex; gap: 14px; margin: -4px 14px 10px; font-size: 11px; font-weight: 800; }
+.table-limit-note { margin: 0 14px 10px; color: var(--color-muted); font-size: 11px; }
 [data-sign="positive"] { color: #126a73; }
 [data-sign="negative"] { color: #b5413c; }
 [data-sign="zero"] { color: #667780; }

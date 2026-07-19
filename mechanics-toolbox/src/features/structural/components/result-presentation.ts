@@ -83,35 +83,33 @@ function endForceRows(endForce: ElementEndForceResult, presetId: UnitPresetId): 
   })
 }
 
-function stationRows(station: ElementStationResult, presetId: UnitPresetId): StructuralDisplayRow[] {
-  const position = { value: station.x.value, unit: station.x.unit, side: station.side }
-  const rows = [
-    quantityRow(`station-${station.elementId}-${station.x.value}-${station.side}-N`, '轴力 N', station.axialForce, presetId, {
-      objectId: station.elementId, position,
-    }),
-    quantityRow(`station-${station.elementId}-${station.x.value}-${station.side}-V`, '剪力 V', station.shearForce, presetId, {
-      objectId: station.elementId, position,
-    }),
-    quantityRow(`station-${station.elementId}-${station.x.value}-${station.side}-M`, '弯矩 M', station.bendingMoment, presetId, {
-      objectId: station.elementId, position,
-    }),
-  ]
-  if (station.rotation) rows.push(quantityRow(
-    `station-${station.elementId}-${station.x.value}-${station.side}-theta`, '转角 θ', station.rotation, presetId,
-    { objectId: station.elementId, position },
-  ))
-  if (station.displacement) rows.push(quantityRow(
-    `station-${station.elementId}-${station.x.value}-${station.side}-v`, '位移 v', station.displacement, presetId,
-    { objectId: station.elementId, position },
-  ))
-  station.fiberStresses?.forEach((fiber, index) => rows.push(quantityRow(
-    `station-${station.elementId}-${station.x.value}-${station.side}-stress-${index}`,
-    `纤维应力 σ（y=${fiber.y.value} ${fiber.y.unit}）`,
-    fiber.stress,
-    presetId,
-    { objectId: station.elementId, position, note: fiber.y.positive },
-  )))
-  return rows
+function criticalStressRows(
+  stations: readonly ElementStationResult[],
+  presetId: UnitPresetId,
+): StructuralDisplayRow[] {
+  const candidates = stations.flatMap((station) => (station.fiberStresses ?? []).map((fiber, fiberIndex) => ({
+    station,
+    fiber,
+    fiberIndex,
+  })))
+  if (candidates.length === 0) return []
+  return (['maximum', 'minimum'] as const).map((kind) => {
+    const candidate = candidates.reduce((best, current) => kind === 'maximum'
+      ? (current.fiber.stress.value > best.fiber.stress.value ? current : best)
+      : (current.fiber.stress.value < best.fiber.stress.value ? current : best))
+    const { station, fiber, fiberIndex } = candidate
+    return quantityRow(
+      `critical-stress-${kind}-${station.elementId}-${station.x.value}-${fiberIndex}`,
+      `纤维应力 σ · ${kind === 'maximum' ? '最大值' : '最小值'}`,
+      fiber.stress,
+      presetId,
+      {
+        objectId: station.elementId,
+        position: { value: station.x.value, unit: station.x.unit, side: station.side },
+        note: `y=${fiber.y.value} ${fiber.y.unit}；${fiber.y.positive}`,
+      },
+    )
+  })
 }
 
 function isUnconfirmedUtilization(text: string): boolean {
@@ -163,7 +161,7 @@ export function buildStructuralResultRows(
   if (data.analysis === 'beam' || data.analysis === 'frame') {
     elements = [
       ...data.endForces.flatMap((endForce) => endForceRows(endForce, presetId)),
-      ...data.stations.flatMap((station) => stationRows(station, presetId)),
+      ...criticalStressRows(data.stations, presetId),
     ]
   } else if (data.analysis === 'truss') {
     elements = data.elements.flatMap((element) => [
@@ -311,8 +309,11 @@ export interface StructuralChartTableRow {
   readonly sign: '正' | '负' | '零'
 }
 
-export function buildStructuralChartTableRows(chart: CurveChart): readonly StructuralChartTableRow[] {
-  return chart.series.flatMap((series) => series.points.map((point, index) => ({
+export function buildStructuralChartTableRows(
+  chart: CurveChart,
+  maximumRows = Number.POSITIVE_INFINITY,
+): readonly StructuralChartTableRow[] {
+  const allRows = chart.series.flatMap((series) => series.points.map((point, index) => ({
     key: `${series.id}-${index}-${point.side ?? 'none'}`,
     seriesId: series.id,
     seriesName: series.name,
@@ -322,6 +323,29 @@ export function buildStructuralChartTableRows(chart: CurveChart): readonly Struc
     ...(point.side === undefined ? {} : { side: point.side }),
     sign: pointSign(point.y),
   })))
+  if (allRows.length <= maximumRows) return allRows
+
+  const selected = new Set<string>()
+  for (const series of chart.series) {
+    const rows = allRows.filter((row) => row.seriesId === series.id)
+    if (rows[0]) selected.add(rows[0].key)
+    if (rows.at(-1)) selected.add(rows.at(-1)!.key)
+  }
+  for (const row of allRows) {
+    if (row.side === 'left' || row.side === 'right') selected.add(row.key)
+  }
+  const minimum = allRows.reduce((best, row) => row.y < best.y ? row : best)
+  const maximum = allRows.reduce((best, row) => row.y > best.y ? row : best)
+  selected.add(minimum.key)
+  selected.add(maximum.key)
+
+  const remaining = allRows.filter(({ key }) => !selected.has(key))
+  const capacity = Math.max(0, maximumRows - selected.size)
+  for (let index = 0; index < capacity; index += 1) {
+    const row = remaining[Math.floor(index * remaining.length / Math.max(1, capacity))]
+    if (row) selected.add(row.key)
+  }
+  return allRows.filter(({ key }) => selected.has(key)).slice(0, maximumRows)
 }
 
 export function sideLabel(side?: PointSide): string {

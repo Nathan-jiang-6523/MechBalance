@@ -17,6 +17,7 @@ test('BEAM-A01 首次计算、单位原子切换和旧结果失效', async ({ pa
 
   await page.getByRole('button', { name: '计算结构响应' }).click()
   await expect(page.getByRole('heading', { name: '计算完成' })).toBeVisible()
+  await page.locator('[data-detail="displacements"] summary').click()
   await expect(page.getByTestId('displacement-table')).toContainText('mm')
   await expect(page.getByTestId('control-table')).toContainText('N·mm')
 
@@ -34,14 +35,15 @@ test('BEAM-A01 首次计算、单位原子切换和旧结果失效', async ({ pa
 
 test('桁架、刚架、影响线和移动荷载均可从冻结算例计算', async ({ page }) => {
   for (const item of [
-    { module: 'truss', resultText: '杆件正应力' },
-    { module: 'frame', resultText: '支座反力矩' },
-    { module: 'influence-line', resultText: 'left（左侧）' },
-    { module: 'moving-load', resultText: '控制轴' },
+    { module: 'truss', detail: 'elements', resultText: '杆件正应力' },
+    { module: 'frame', detail: 'reactions', resultText: '支座反力矩' },
+    { module: 'influence-line', detail: undefined, resultText: 'left（左侧）' },
+    { module: 'moving-load', detail: undefined, resultText: '控制轴' },
   ]) {
     await page.locator(`[data-module-id="${item.module}"]`).click()
     await page.getByRole('button', { name: '计算结构响应' }).click()
     await expect(page.getByRole('heading', { name: '计算完成' })).toBeVisible()
+    if (item.detail) await page.locator(`[data-detail="${item.detail}"] summary`).click()
     await expect(page.locator('.structural-results')).toContainText(item.resultText)
   }
 })

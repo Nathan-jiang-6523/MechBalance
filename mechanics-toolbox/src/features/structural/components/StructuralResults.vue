@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { formatSignificant } from '../../../core/numeric'
 import type { UnitPresetId } from '../../../core/units'
 import type { StructuralScreenResult } from '../../../core/structural/contracts'
@@ -11,6 +11,13 @@ const props = withDefaults(defineProps<{ result: StructuralScreenResult; unitPre
 })
 const rows = computed(() => buildStructuralResultRows(props.result, props.unitPresetId))
 const charts = computed(() => buildStructuralCharts(props.result, props.unitPresetId))
+const expandedDetails = ref(new Set<string>())
+function updateDetail(id: string, event: Event): void {
+  const next = new Set(expandedDetails.value)
+  if ((event.currentTarget as HTMLDetailsElement).open) next.add(id)
+  else next.delete(id)
+  expandedDetails.value = next
+}
 const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 'tension'
   ? '拉' : state === 'compression' ? '压' : state === 'zero' ? '零力' : '—'
 </script>
@@ -43,25 +50,25 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         </table></div>
       </section>
 
-      <section v-if="rows.displacements.length" class="result-block" aria-labelledby="node-displacements-title">
-        <h3 id="node-displacements-title">节点位移</h3>
-        <div class="table-wrap"><table data-testid="displacement-table">
+      <details v-if="rows.displacements.length" class="result-block result-detail" data-detail="displacements" @toggle="updateDetail('displacements', $event)">
+        <summary id="node-displacements-title">节点位移 <small>{{ rows.displacements.length }} 项</small></summary>
+        <div v-if="expandedDetails.has('displacements')" class="table-wrap"><table data-testid="displacement-table">
           <thead><tr><th>量</th><th>节点 ID</th><th>数值</th><th>方向/正值含义</th></tr></thead>
           <tbody><tr v-for="row in rows.displacements" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
         </table></div>
-      </section>
+      </details>
 
-      <section v-if="rows.reactions.length" class="result-block" aria-labelledby="node-reactions-title">
-        <h3 id="node-reactions-title">节点反力</h3>
-        <div class="table-wrap"><table data-testid="reaction-table">
+      <details v-if="rows.reactions.length" class="result-block result-detail" data-detail="reactions" @toggle="updateDetail('reactions', $event)">
+        <summary id="node-reactions-title">节点反力 <small>{{ rows.reactions.length }} 项</small></summary>
+        <div v-if="expandedDetails.has('reactions')" class="table-wrap"><table data-testid="reaction-table">
           <thead><tr><th>量</th><th>节点 ID</th><th>数值</th><th>方向/正值含义</th></tr></thead>
           <tbody><tr v-for="row in rows.reactions" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
         </table></div>
-      </section>
+      </details>
 
-      <section v-if="rows.elements.length" class="result-block" aria-labelledby="element-results-title">
-        <h3 id="element-results-title">单元/杆件明细</h3>
-        <div class="table-wrap"><table data-testid="element-table">
+      <details v-if="rows.elements.length" class="result-block result-detail" data-detail="elements" @toggle="updateDetail('elements', $event)">
+        <summary id="element-results-title">单元/杆件明细 <small>{{ rows.elements.length }} 项</small></summary>
+        <div v-if="expandedDetails.has('elements')" class="table-wrap"><table data-testid="element-table">
           <thead><tr><th>量</th><th>对象 ID</th><th>数值</th><th>位置</th><th>拉压</th><th>方向/正负含义</th></tr></thead>
           <tbody><tr v-for="row in rows.elements" :key="row.key">
             <td>{{ row.label }}</td><td>{{ row.objectId ?? '—' }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td>
@@ -69,15 +76,15 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
             <td>{{ stateLabel(row.state) }}</td><td>{{ row.positive }}<span v-if="row.note"> · {{ row.note }}</span></td>
           </tr></tbody>
         </table></div>
-      </section>
+      </details>
 
-      <section v-if="result.balanceChecks.length" class="result-block" aria-labelledby="balance-title">
-        <h3 id="balance-title">平衡/能量检查</h3>
-        <div class="table-wrap"><table data-testid="balance-table">
+      <details v-if="result.balanceChecks.length" class="result-block result-detail" data-detail="balance" @toggle="updateDetail('balance', $event)">
+        <summary id="balance-title">平衡/能量检查 <small>{{ result.balanceChecks.length }} 项</small></summary>
+        <div v-if="expandedDetails.has('balance')" class="table-wrap"><table data-testid="balance-table">
           <thead><tr><th>检查</th><th>残差</th><th>容差</th><th>结果</th></tr></thead>
           <tbody><tr v-for="check in result.balanceChecks" :key="check.id"><td>{{ check.label }}</td><td>{{ formatSignificant(check.residual) }} {{ check.unit }}</td><td>{{ formatSignificant(check.tolerance) }} {{ check.unit }}</td><td>{{ check.passed ? '通过' : '未通过' }}</td></tr></tbody>
         </table></div>
-      </section>
+      </details>
 
       <section v-if="charts.length" class="result-block charts" aria-labelledby="structural-charts-title">
         <div class="chart-heading"><h3 id="structural-charts-title">内力、变形与影响线</h3><p>曲线下方数值表保留正负及 left/right 跳变点。</p></div>
@@ -98,6 +105,7 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
 .messages { display: grid; gap: 7px; }.messages article { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; padding: 10px 12px; border-left: 3px solid #667780; background: #f4f7f8; font-size: 12px; }
 .messages article[data-severity="warning"] { border-color: #d49a00; background: #fff9e9; }.messages article[data-severity="error"] { border-color: #b5413c; background: #fff1f0; }.messages small { color: var(--color-muted); }
 .result-block { min-width: 0; padding: 16px; border: 1px solid var(--color-line); border-radius: 11px; background: #fbfcfc; }.controls { border-top: 3px solid var(--color-brand); }.result-block h3 { margin: 0 0 12px; font-size: 15px; }
+.result-detail > summary { min-height: 44px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 15px; font-weight: 700; }.result-detail > summary small { color: var(--color-muted); font-size: 11px; font-weight: 500; }.result-detail[open] > summary { margin-bottom: 12px; }
 .table-wrap { max-width: 100%; overflow: auto; }table { width: 100%; min-width: 690px; border-collapse: collapse; background: #fff; font-size: 12px; }th, td { padding: 9px 10px; border: 1px solid var(--color-line); text-align: left; vertical-align: top; }th { color: #53636e; background: #f3f7f8; white-space: nowrap; }
 .chart-heading { margin-bottom: 12px; }.chart-heading h3 { margin-bottom: 4px; }.chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 960px) { .chart-grid { grid-template-columns: 1fr; } }@media (max-width: 580px) { .structural-results { padding: 14px; }.results-header { flex-direction: column; }.result-block { padding: 12px; } }

@@ -71,12 +71,16 @@ function beamResult(): StructuralScreenResult {
 }
 
 describe('P2 structural result presentation', () => {
-  it('puts control values before node/element details and shows warning, units, IDs, positions and signs', () => {
+  it('puts control values before lazy node/element details and shows warning, units, IDs, positions and signs', async () => {
     const result = beamResult()
     const wrapper = shallowMount(StructuralResults, {
       props: { result },
       global: { stubs: { StructuralChart: { props: ['chart'], template: '<div data-testid="chart-stub" />' } } },
     })
+    for (const detail of wrapper.findAll('details')) {
+      ;(detail.element as HTMLDetailsElement).open = true
+      await detail.trigger('toggle')
+    }
     expect(wrapper.findAll('[data-testid="control-row"]')).toHaveLength(1)
     expect(wrapper.text()).toContain('P2_WARN')
     expect(wrapper.text()).toContain('平衡残差接近限值')
@@ -113,7 +117,7 @@ describe('P2 structural result presentation', () => {
     expect(momentSeries?.points[0]).toMatchObject({ x: 500, y: 12_000 })
   })
 
-  it('shows truss tension/compression state and provides axial/stress distributions', () => {
+  it('shows truss tension/compression state and provides axial/stress distributions', async () => {
     const result: StructuralScreenResult = {
       calculatorId: 'truss', status: 'success', headline: '桁架', groups: [], charts: [], messages: [], balanceChecks: [], metadata,
       structural: {
@@ -128,6 +132,9 @@ describe('P2 structural result presentation', () => {
     const wrapper = shallowMount(StructuralResults, {
       props: { result }, global: { stubs: { StructuralChart: true } },
     })
+    const elementDetail = wrapper.get('[data-detail="elements"]')
+    ;(elementDetail.element as HTMLDetailsElement).open = true
+    await elementDetail.trigger('toggle')
     expect(wrapper.text()).toContain('压')
     expect(wrapper.text()).toContain('T1')
   })
@@ -188,5 +195,19 @@ describe('P2 StructuralChart', () => {
     expect(wrapper.text()).toContain('正')
     expect(wrapper.text()).toContain('负')
     expect(wrapper.text()).toContain('零')
+  })
+
+  it('limits very large numeric tables while retaining endpoints and extrema', () => {
+    const large: CurveChart = {
+      id: 'large', title: 'large', xLabel: 'x', xUnit: 'm', series: [{
+        id: 's', name: 's', kind: 'line', unit: 'N',
+        points: Array.from({ length: 700 }, (_, index) => ({ x: index, y: index === 350 ? -999 : index })),
+      }],
+    }
+    const rows = buildStructuralChartTableRows(large, 10)
+    expect(rows).toHaveLength(10)
+    expect(rows.some(({ x }) => x === 0)).toBe(true)
+    expect(rows.some(({ x }) => x === 699)).toBe(true)
+    expect(rows.some(({ y }) => y === -999)).toBe(true)
   })
 })

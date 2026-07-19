@@ -1,8 +1,10 @@
 import { performance } from 'node:perf_hooks'
+import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import { solveFrameFiniteElement, type FrameModel2D } from '../../src/core/structural'
 import { runStructuralCalculation } from '../../src/features/structural/calculation'
+import StructuralResults from '../../src/features/structural/components/StructuralResults.vue'
 
 function maximumFrameModel(): FrameModel2D {
   const nodes = Array.from({ length: 100 }, (_, index) => ({
@@ -73,6 +75,19 @@ describe('P2 confirmed-size performance record', () => {
       solveAndPresentationMaximumMilliseconds: Math.max(...presentationMilliseconds),
     }
     console.info(`P2_PERFORMANCE_RECORD=${JSON.stringify(record)}`)
-    expect(runStructuralCalculation(model).status).toBe('success')
+    const screenResult = runStructuralCalculation(model)
+    expect(screenResult.status).toBe('success')
+    const renderStarted = performance.now()
+    const wrapper = mount(StructuralResults, {
+      props: { result: screenResult },
+      global: { stubs: { StructuralChart: { template: '<div data-testid="chart-stub" />' } } },
+    })
+    const renderMilliseconds = performance.now() - renderStarted
+    console.info(`P2_UI_RENDER_RECORD=${JSON.stringify({
+      environment: 'Vue Test Utils + jsdom; StructuralChart stubbed',
+      tableRows: wrapper.findAll('tbody tr').length,
+      renderMilliseconds,
+    })}`)
+    wrapper.unmount()
   }, 30_000)
 })
