@@ -78,8 +78,10 @@ function selectModule(module: StructuralModuleDescriptor): void {
         <h3>{{ activeModule.title }}</h3>
         <p>{{ activeModule.summary }}</p>
       </div>
-      <p class="stage-note">内核已就绪；模型编辑、结构图和结果区由后续 UI 任务接入。</p>
+      <p class="stage-note">内核已就绪；在下方编辑模型、核对结构图并计算结果。</p>
     </section>
+
+    <slot name="workspace" :module-id="activeModuleId" />
 
     <StructuralTheory v-if="activeTheory" :content="activeTheory" />
   </section>
