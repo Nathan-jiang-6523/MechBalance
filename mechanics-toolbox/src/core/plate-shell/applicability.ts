@@ -124,6 +124,6 @@ export function evaluateCircularShellLength(lengthM: number, meanRadiusM: number
     maximum: 5,
     blockWhenExceeded: false,
     atLimitMessage: '恰处圆柱壳长径比产品护栏',
-    exceededMessage: 'L/r 超过 5；长柱屈曲及壳-柱交互未覆盖',
+    exceededMessage: 'L/r 超过 5；整体柱屈曲及壳-柱交互未覆盖',
   })
 }
