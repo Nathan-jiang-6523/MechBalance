@@ -31,15 +31,21 @@ const RESULT_UNIT_QUANTITIES: Readonly<Partial<Record<string, StructuralQuantity
   m: 'length',
   N: 'force',
   'N*m': 'moment',
+  J: 'moment',
   Pa: 'stress',
   kg: 'mass',
   rad: 'rotation',
   '1': 'dimensionless',
+  'm/N': 'flexibility',
 }
 
-function displayValue(value: number, unit: string, presetId: UnitPresetId): Readonly<{ value: number; unit: string }> {
+export function displayStructuralValue(
+  value: number,
+  unit: string,
+  presetId: UnitPresetId,
+): Readonly<{ value: number; unit: string }> {
   const quantityKey = RESULT_UNIT_QUANTITIES[unit]
-  if (!quantityKey || unit === 'm/N') return { value, unit }
+  if (!quantityKey) return { value, unit }
   const quantityId = getStructuralQuantityId(quantityKey)
   const unitId = getStructuralUnit(quantityKey, presetId)
   return {
@@ -47,6 +53,8 @@ function displayValue(value: number, unit: string, presetId: UnitPresetId): Read
     unit: getUnitDefinition(quantityId, unitId).symbol,
   }
 }
+
+const displayValue = displayStructuralValue
 
 function quantityRow(
   key: string,
@@ -106,7 +114,10 @@ function criticalStressRows(
       {
         objectId: station.elementId,
         position: { value: station.x.value, unit: station.x.unit, side: station.side },
-        note: `y=${fiber.y.value} ${fiber.y.unit}；${fiber.y.positive}`,
+        note: (() => {
+          const displayedY = displayValue(fiber.y.value, fiber.y.unit, presetId)
+          return `y=${displayedY.value} ${displayedY.unit}；${fiber.y.positive}`
+        })(),
       },
     )
   })

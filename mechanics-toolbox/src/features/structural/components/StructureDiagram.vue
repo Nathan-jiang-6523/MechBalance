@@ -8,6 +8,13 @@ import type {
   StructuralModel2D,
   StructuralNode2D,
 } from '../../../core/structural/contracts'
+import {
+  DEFAULT_STRUCTURAL_UNIT_PRESET_ID,
+  getStructuralQuantityId,
+  getStructuralUnit,
+  type StructuralQuantityKey,
+} from '../../../core/structural/units'
+import { convertFromSI, getUnitDefinition, type UnitPresetId } from '../../../core/units'
 
 export interface StructureDiagramNodeDisplacement {
   readonly nodeId: string
@@ -21,10 +28,32 @@ export interface StructureDiagramDeformation {
   readonly nodeDisplacements: readonly StructureDiagramNodeDisplacement[]
 }
 
-const props = defineProps<{
+export interface StructureDiagramLayers {
+  readonly nodeLabels: boolean
+  readonly elementLabels: boolean
+  readonly localAxes: boolean
+  readonly supports: boolean
+  readonly loads: boolean
+  readonly results: boolean
+}
+
+const DEFAULT_LAYERS: StructureDiagramLayers = {
+  nodeLabels: true,
+  elementLabels: true,
+  localAxes: true,
+  supports: true,
+  loads: true,
+  results: true,
+}
+
+const props = withDefaults(defineProps<{
   model: StructuralModel2D
   deformation?: StructureDiagramDeformation
-}>()
+  unitPresetId?: UnitPresetId
+  layers?: Partial<StructureDiagramLayers>
+}>(), {
+  unitPresetId: DEFAULT_STRUCTURAL_UNIT_PRESET_ID,
+})
 
 const SVG_WIDTH = 960
 const PLOT = { left: 72, right: 690, top: 58, bottom: 430 } as const
@@ -34,6 +63,7 @@ const titleId = `structure-diagram-title-${uid}`
 const axisMarkerId = `structure-axis-${uid}`
 const loadMarkerId = `structure-load-${uid}`
 const localMarkerId = `structure-local-${uid}`
+const visibleLayers = computed<StructureDiagramLayers>(() => ({ ...DEFAULT_LAYERS, ...props.layers }))
 
 interface WorldNode extends StructuralNode2D {
   readonly deformedX?: number
@@ -90,15 +120,18 @@ function screenPoint(x: number, y: number): ScreenPoint {
   }
 }
 
-const nodeViews = computed(() => worldNodes.value.map((node, index) => ({
-  ...node,
-  ...screenPoint(node.x, node.y),
-  labelDx: [10, 10, -10, -10][index % 4]!,
-  labelDy: [-10, 16, -10, 16][index % 4]!,
-  ...(node.deformedX === undefined || node.deformedY === undefined
-    ? {}
-    : { deformed: screenPoint(node.deformedX, node.deformedY) }),
-})))
+const nodeViews = computed(() => worldNodes.value.map((node, index) => {
+  const isSupported = props.model.constraints.some(({ nodeId }) => nodeId === node.id)
+  return {
+    ...node,
+    ...screenPoint(node.x, node.y),
+    labelDx: isSupported ? 12 : [10, 10, -10, -10][index % 4]!,
+    labelDy: isSupported ? -12 : [-10, 16, -10, 16][index % 4]!,
+    ...(node.deformedX === undefined || node.deformedY === undefined
+      ? {}
+      : { deformed: screenPoint(node.deformedX, node.deformedY) }),
+  }
+}))
 
 const nodeViewById = computed(() => new Map(nodeViews.value.map((node) => [node.id, node])))
 
@@ -227,23 +260,40 @@ const memberArrows = computed<readonly ArrowView[]>(() => props.model.loads.flat
 }))
 
 function loadLegend(load: StructuralLoad): string {
+  const display = (value: number, quantity: StructuralQuantityKey): string => {
+    const quantityId = getStructuralQuantityId(quantity)
+    const unitId = getStructuralUnit(quantity, props.unitPresetId)
+    const converted = convertFromSI(value, quantityId, unitId)
+    return `${Number(converted.toPrecision(6))} ${getUnitDefinition(quantityId, unitId).symbol}`
+  }
+  const displayInterval = (a: number, b: number): string => {
+    const quantityId = getStructuralQuantityId('length')
+    const unitId = getStructuralUnit('length', props.unitPresetId)
+    const left = Number(convertFromSI(a, quantityId, unitId).toPrecision(6))
+    const right = Number(convertFromSI(b, quantityId, unitId).toPrecision(6))
+    return `[${left}, ${right}] ${getUnitDefinition(quantityId, unitId).symbol}`
+  }
   if (load.type === 'nodal') {
     const values = [
-      ...('fx' in load && load.fx !== undefined ? [`Fx=${load.fx} N`] : []),
-      ...('fy' in load && load.fy !== undefined ? [`Fy=${load.fy} N`] : []),
-      ...('mz' in load && load.mz !== undefined ? [`Mz=${load.mz} N·m`] : []),
+      ...('fx' in load && load.fx !== undefined ? [`Fx=${display(load.fx, 'force')}`] : []),
+      ...('fy' in load && load.fy !== undefined ? [`Fy=${display(load.fy, 'force')}`] : []),
+      ...('mz' in load && load.mz !== undefined ? [`Mz=${display(load.mz, 'moment')}`] : []),
     ]
     return `${load.id}: 节点 ${load.nodeId}; ${values.join(', ')}`
   }
-  if (load.type === 'beam-uniform') return `${load.id}: 单元 ${load.elementId}; qy=${load.qY} N/m（局部）`
+  if (load.type === 'beam-uniform') return `${load.id}: 单元 ${load.elementId}; qy=${display(load.qY, 'lineLoad')}（局部）`
   if (load.type === 'frame-uniform') {
-    const interval = load.interval ? `; [${load.interval.a}, ${load.interval.b}] m` : '; 全长'
-    return `${load.id}: 单元 ${load.elementId}; qx=${load.qX ?? 0}, qy=${load.qY ?? 0} N/m（局部）${interval}`
+    const interval = load.interval
+      ? `; ${displayInterval(load.interval.a, load.interval.b)}`
+      : '; 全长'
+    return `${load.id}: 单元 ${load.elementId}; qx=${display(load.qX ?? 0, 'lineLoad')}, qy=${display(load.qY ?? 0, 'lineLoad')}（局部）${interval}`
   }
-  if (load.type === 'uniform-temperature') return `${load.id}: 单元 ${load.elementId}; ΔT=${load.deltaT} K`
-  if (load.type === 'initial-strain') return `${load.id}: 单元 ${load.elementId}; ε₀=${load.strain}`
-  return `${load.id}: 单元 ${load.elementId}; 自重 g=${load.gravity} m/s²（全局 -y）`
+  if (load.type === 'uniform-temperature') return `${load.id}: 单元 ${load.elementId}; ΔT=${display(load.deltaT, 'temperatureDifference')}`
+  if (load.type === 'initial-strain') return `${load.id}: 单元 ${load.elementId}; ε₀=${display(load.strain, 'strain')}`
+  return `${load.id}: 单元 ${load.elementId}; 自重 g=${display(load.gravity, 'acceleration')}（全局 -y）`
 }
+
+const unitPresetLabel = computed(() => props.unitPresetId === 'si' ? 'SI' : '工程单位')
 
 const legendHeight = computed(() => Math.max(520, 96 + props.model.loads.length * 48))
 const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
@@ -254,8 +304,7 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
     <div
       class="structure-diagram-scroll"
       role="region"
-      aria-label="结构、支座、坐标轴及载荷示意图，可横向滚动查看"
-      tabindex="0"
+      aria-label="结构、支座、坐标轴及载荷示意图"
     >
       <svg
         class="structure-diagram"
@@ -300,6 +349,7 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
           />
 
           <g
+            v-if="visibleLayers.localAxes"
             v-for="element in elementViews"
             :key="`${element.id}-axes`"
             class="local-axes"
@@ -324,12 +374,18 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
             />
             <text :x="element.localXEnd.x + 5" :y="element.localXEnd.y - 4">xₗ</text>
             <text :x="element.localYEnd.x + 5" :y="element.localYEnd.y - 4">yₗ</text>
-            <text class="element-label" :x="element.midpoint.x + 8 * element.s" :y="element.midpoint.y + 8 * element.c">
-              {{ element.id }}
-            </text>
           </g>
 
-          <g v-for="support in supports" :key="support.nodeId" class="support" :data-support="support.type" :data-node-id="support.nodeId">
+          <text
+            v-if="visibleLayers.elementLabels"
+            v-for="element in elementViews"
+            :key="`${element.id}-label`"
+            class="element-label"
+            :x="element.midpoint.x + 8 * element.s"
+            :y="element.midpoint.y + 8 * element.c"
+          >{{ element.id }}</text>
+
+          <g v-if="visibleLayers.supports" v-for="support in supports" :key="support.nodeId" class="support" :data-support="support.type" :data-node-id="support.nodeId">
             <template v-if="support.type === 'fixed'">
               <line :x1="support.x - 4" :x2="support.x - 4" :y1="support.y - 25" :y2="support.y + 25" class="fixed-wall" />
               <path :d="`M ${support.x - 20} ${support.y - 18} l 16 -10 M ${support.x - 20} ${support.y} l 16 -10 M ${support.x - 20} ${support.y + 18} l 16 -10`" />
@@ -351,14 +407,14 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
 
           <g v-for="node in nodeViews" :key="node.id" class="node" :data-node-id="node.id">
             <circle :cx="node.x" :cy="node.y" r="5" />
-            <text class="node-label" :x="node.x + node.labelDx" :y="node.y + node.labelDy">{{ node.id }}</text>
+            <text v-if="visibleLayers.nodeLabels" class="node-label" :x="node.x + node.labelDx" :y="node.y + node.labelDy">{{ node.id }}</text>
           </g>
 
-          <g v-for="arrow in [...nodalArrows, ...memberArrows]" :key="arrow.key" class="load-arrow" :data-load-id="arrow.loadId" :data-load-kind="arrow.kind" :data-direction="arrow.direction">
+          <g v-if="visibleLayers.loads" v-for="arrow in [...nodalArrows, ...memberArrows]" :key="arrow.key" class="load-arrow" :data-load-id="arrow.loadId" :data-load-kind="arrow.kind" :data-direction="arrow.direction">
             <line :x1="arrow.x1" :y1="arrow.y1" :x2="arrow.x2" :y2="arrow.y2" :marker-end="`url(#${loadMarkerId})`" />
           </g>
 
-          <g v-for="moment in nodalMoments" :key="moment.id" class="nodal-moment" :data-load-id="moment.id" :data-direction="moment.positive ? 'positive-ccw' : 'negative-cw'">
+          <g v-if="visibleLayers.loads" v-for="moment in nodalMoments" :key="moment.id" class="nodal-moment" :data-load-id="moment.id" :data-direction="moment.positive ? 'positive-ccw' : 'negative-cw'">
             <path
               :d="moment.positive
                 ? `M ${moment.x + 19} ${moment.y} A 20 20 0 1 0 ${moment.x - 19} ${moment.y}`
@@ -367,7 +423,7 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
             />
           </g>
 
-          <template v-if="deformation">
+          <template v-if="deformation && visibleLayers.results">
             <line
               v-for="element in elementViews.filter((value) => value.deformedI && value.deformedJ)"
               :key="`${element.id}-deformed`"
@@ -384,7 +440,7 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
 
         <line class="legend-separator" x1="712" x2="712" y1="18" :y2="legendHeight - 18" />
         <g class="legend-zone" data-zone="legend" :data-zone-min-x="LEGEND_X">
-          <text :x="LEGEND_X" y="34" class="legend-title">输入载荷（SI）</text>
+          <text :x="LEGEND_X" y="34" class="legend-title">输入载荷（{{ unitPresetLabel }}）</text>
           <text v-if="model.loads.length === 0" :x="LEGEND_X" y="62" class="legend-empty">无载荷</text>
           <foreignObject
             v-for="(load, index) in model.loads"
@@ -409,11 +465,10 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
 .structure-diagram-shell { margin: 0; }
 .structure-diagram-scroll {
   width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-gutter: stable;
+  min-width: 0;
+  overflow: hidden;
 }
-.structure-diagram { display: block; width: 100%; min-width: 840px; height: auto; }
+.structure-diagram { display: block; width: 100%; min-width: 0; height: auto; }
 .structure-diagram :is(line, path, circle) { vector-effect: non-scaling-stroke; }
 .element-line { stroke: #174f58; stroke-width: 4; stroke-linecap: round; }
 .node circle { fill: #fff; stroke: #174f58; stroke-width: 2; }
@@ -450,7 +505,6 @@ text {
 .deformation-warning { fill: #9a5a18; font-size: 13px; }
 figcaption { margin-top: .45rem; color: #52636d; font-size: .82rem; }
 @media (max-width: 720px) {
-  .structure-diagram { min-width: 840px; }
-  .structure-diagram-scroll { padding-bottom: .25rem; }
+  .structure-diagram { min-width: 0; }
 }
 </style>

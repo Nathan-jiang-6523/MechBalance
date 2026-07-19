@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import {
   isStructuralIssueCode,
   type InfluenceLineRequest,
@@ -22,7 +22,10 @@ import {
   type UnitPresetId,
 } from '../../core/units'
 import { runStructuralCalculation } from './calculation'
-import StructureDiagram, { type StructureDiagramDeformation } from './components/StructureDiagram.vue'
+import StructureDiagram, {
+  type StructureDiagramDeformation,
+  type StructureDiagramLayers,
+} from './components/StructureDiagram.vue'
 import StructuralModelEditor from './components/StructuralModelEditor.vue'
 import StructuralResults from './components/StructuralResults.vue'
 import { getStructuralExample, STRUCTURAL_EXAMPLES, type StructuralExample } from './examples'
@@ -47,6 +50,14 @@ const result = ref<StructuralScreenResult | null>(null)
 const issues = ref<readonly StructuralIssue[]>([])
 const state = ref<WorkspaceState>('idle')
 const hasSuccessfulCalculation = ref(false)
+const diagramLayers = reactive<StructureDiagramLayers>({
+  nodeLabels: true,
+  elementLabels: true,
+  localAxes: true,
+  supports: true,
+  loads: true,
+  results: true,
+})
 let recalculateTimer: ReturnType<typeof setTimeout> | undefined
 
 const currentModel = computed((): StructuralModel2D | null =>
@@ -121,7 +132,12 @@ function markEdited(next: StructuralAnalysisRequest): void {
   request.value = next
   result.value = null
   issues.value = []
-  state.value = containsNonfinite(next) ? 'dirty-invalid' : 'dirty-valid'
+  const invalid = containsNonfinite(next)
+  state.value = invalid ? 'dirty-invalid' : 'dirty-valid'
+  if (invalid) {
+    if (recalculateTimer) clearTimeout(recalculateTimer)
+    return
+  }
   if (!hasSuccessfulCalculation.value) return
   if (recalculateTimer) clearTimeout(recalculateTimer)
   recalculateTimer = setTimeout(calculate, 300)
@@ -220,8 +236,17 @@ onBeforeUnmount(() => {
               <h3 id="p2-diagram-title">结构与载荷示意</h3>
               <p>全局/局部轴、节点、单元、支座与载荷方向均按内核约定绘制。</p>
             </div>
-            <StructureDiagram v-if="deformation" :model="currentModel" :deformation="deformation" />
-            <StructureDiagram v-else :model="currentModel" />
+            <fieldset class="diagram-layer-controls" aria-label="图层显示">
+              <legend>图层显示</legend>
+              <label><input v-model="diagramLayers.nodeLabels" type="checkbox" data-layer-toggle="node-labels" />节点号</label>
+              <label><input v-model="diagramLayers.elementLabels" type="checkbox" data-layer-toggle="element-labels" />单元号</label>
+              <label><input v-model="diagramLayers.localAxes" type="checkbox" data-layer-toggle="local-axes" />局部轴</label>
+              <label><input v-model="diagramLayers.supports" type="checkbox" data-layer-toggle="supports" />支座</label>
+              <label><input v-model="diagramLayers.loads" type="checkbox" data-layer-toggle="loads" />载荷</label>
+              <label><input v-model="diagramLayers.results" type="checkbox" data-layer-toggle="results" />结果</label>
+            </fieldset>
+            <StructureDiagram v-if="deformation" :model="currentModel" :deformation="deformation" :unit-preset-id="unitPresetId" :layers="diagramLayers" />
+            <StructureDiagram v-else :model="currentModel" :unit-preset-id="unitPresetId" :layers="diagramLayers" />
           </section>
         </div>
 
@@ -282,6 +307,10 @@ select, input { min-height: 44px; max-width: 100%; padding: 8px 10px; border: 1p
 .model-layout { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr); gap: 16px; align-items: start; }
 .diagram-panel { min-width: 0; padding: 16px; overflow: hidden; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }
 .diagram-panel h3 { margin: 0 0 4px; font-size: 15px; }.diagram-panel p, .simple-editor p, .calculate-row p { margin: 0; color: var(--color-muted); font-size: 11px; line-height: 1.6; }
+.diagram-layer-controls { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 12px 0 4px; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 8px; }
+.diagram-layer-controls legend { padding: 0 5px; color: var(--color-muted); font-size: 11px; font-weight: 800; }
+.diagram-layer-controls label { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: #40545d; font-size: 12px; font-weight: 700; }
+.diagram-layer-controls input { width: 18px; min-height: 18px; margin: 0; padding: 0; }
 .simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p { grid-column: 1 / -1; }
 .calculate-row { display: flex; gap: 14px; align-items: center; }.calculate-button { min-height: 46px; padding: 11px 20px; border: 0; border-radius: 8px; color: #fff; background: var(--color-brand); font-weight: 800; cursor: pointer; }.calculate-button:disabled { opacity: .55; cursor: wait; }
 .result-placeholder { display: grid; gap: 5px; padding: 24px; border: 1px dashed #b8c8cd; border-radius: 10px; color: var(--color-muted); background: #f8fafb; text-align: center; }.result-placeholder strong { color: #40545d; }

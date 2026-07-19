@@ -4,13 +4,24 @@ import { formatSignificant } from '../../../core/numeric'
 import type { UnitPresetId } from '../../../core/units'
 import type { StructuralScreenResult } from '../../../core/structural/contracts'
 import StructuralChart from './StructuralChart.vue'
-import { buildStructuralCharts, buildStructuralResultRows, sideLabel, type StructuralDisplayRow } from './result-presentation'
+import {
+  buildStructuralCharts,
+  buildStructuralResultRows,
+  displayStructuralValue,
+  sideLabel,
+  type StructuralDisplayRow,
+} from './result-presentation'
 
 const props = withDefaults(defineProps<{ result: StructuralScreenResult; unitPresetId?: UnitPresetId }>(), {
   unitPresetId: 'si',
 })
 const rows = computed(() => buildStructuralResultRows(props.result, props.unitPresetId))
 const charts = computed(() => buildStructuralCharts(props.result, props.unitPresetId))
+const displayedBalanceChecks = computed(() => props.result.balanceChecks.map((check) => ({
+  ...check,
+  residualDisplay: displayStructuralValue(check.residual, check.unit, props.unitPresetId),
+  toleranceDisplay: displayStructuralValue(check.tolerance, check.unit, props.unitPresetId),
+})))
 const expandedDetails = ref(new Set<string>())
 function updateDetail(id: string, event: Event): void {
   const next = new Set(expandedDetails.value)
@@ -78,11 +89,11 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         </table></div>
       </details>
 
-      <details v-if="result.balanceChecks.length" class="result-block result-detail" data-detail="balance" @toggle="updateDetail('balance', $event)">
-        <summary id="balance-title">平衡/能量检查 <small>{{ result.balanceChecks.length }} 项</small></summary>
+      <details v-if="displayedBalanceChecks.length" class="result-block result-detail" data-detail="balance" @toggle="updateDetail('balance', $event)">
+        <summary id="balance-title">平衡/能量检查 <small>{{ displayedBalanceChecks.length }} 项</small></summary>
         <div v-if="expandedDetails.has('balance')" class="table-wrap"><table data-testid="balance-table">
           <thead><tr><th>检查</th><th>残差</th><th>容差</th><th>结果</th></tr></thead>
-          <tbody><tr v-for="check in result.balanceChecks" :key="check.id"><td>{{ check.label }}</td><td>{{ formatSignificant(check.residual) }} {{ check.unit }}</td><td>{{ formatSignificant(check.tolerance) }} {{ check.unit }}</td><td>{{ check.passed ? '通过' : '未通过' }}</td></tr></tbody>
+          <tbody><tr v-for="check in displayedBalanceChecks" :key="check.id"><td>{{ check.label }}</td><td>{{ formatSignificant(check.residualDisplay.value) }} {{ check.residualDisplay.unit }}</td><td>{{ formatSignificant(check.toleranceDisplay.value) }} {{ check.toleranceDisplay.unit }}</td><td>{{ check.passed ? '通过' : '未通过' }}</td></tr></tbody>
         </table></div>
       </details>
 

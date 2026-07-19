@@ -2,6 +2,7 @@ import type { BalanceCheck, CalculationMetadata, ResultMessage } from '../../cor
 import {
   createFrameStationResult,
   createStructuralQuantity,
+  findBeamElementExtrema,
   generateInfluenceLineSeries,
   recoverBeamDisplacementAt,
   recoverBeamInternalForcesAt,
@@ -30,11 +31,34 @@ import {
 
 const SAMPLE_INTERVALS = 24
 
-function metadata(requestId: string, startedAt: number): CalculationMetadata {
+const FORMULA_REFERENCES: Readonly<Record<string, CalculationMetadata['formulaReferences']>> = {
+  'p2-beam': [
+    { id: 'P2-EB-001', version: 'P2-EB6-v1', label: 'Euler–Bernoulli 梁单元刚度' },
+    { id: 'P2-DSM-001', version: 'P2-DSM-v1', label: '直接刚度法装配与求解' },
+    { id: 'P2-EB-RECOVERY-001', version: 'P2-EB-RECOVERY-v1', label: '梁内力与位移恢复' },
+  ],
+  'p2-truss': [
+    { id: 'P2-TRUSS-001', version: 'P2-TRUSS-v1', label: '平面桁架单元与轴力' },
+    { id: 'P2-TRUSS-INITIAL-001', version: 'P2-TRUSS-INITIAL-v1', label: '桁架自由应变与自重' },
+  ],
+  'p2-frame': [
+    { id: 'P2-FRAME-001', version: 'P2-FRAME-v1', label: '平面刚架变换、刚度与分布荷载' },
+    { id: 'P2-FRAME-INITIAL-001', version: 'P2-FRAME-INITIAL-v1', label: '刚架温度与初应变' },
+  ],
+  'p2-influence-line': [
+    { id: 'P2-IL-001', version: 'P2-IL-v1', label: '简支梁影响线' },
+  ],
+  'p2-moving-load': [
+    { id: 'P2-ML-001', version: 'P2-ML-v1', label: '移动轴组控制位置' },
+    { id: 'P2-IL-001', version: 'P2-IL-v1', label: '简支梁影响线' },
+  ],
+}
+
+function metadata(calculatorId: string, requestId: string, startedAt: number): CalculationMetadata {
   return {
     requestId,
     calculatedAt: new Date().toISOString(),
-    formulaReferences: [{ id: 'P2-STRUCTURAL-MATRIX-STIFFNESS', version: '1.0', label: 'P2 结构矩阵刚度法' }],
+    formulaReferences: FORMULA_REFERENCES[calculatorId] ?? [],
     elapsedMilliseconds: Math.max(0, performance.now() - startedAt),
   }
 }
@@ -65,7 +89,7 @@ function errorResult(
     charts: [],
     balanceChecks: [],
     messages,
-    metadata: metadata(requestId, startedAt),
+    metadata: metadata(calculatorId, requestId, startedAt),
   }
 }
 
@@ -81,10 +105,10 @@ function balanceChecks(checks: readonly LinearSystemCheck[]): readonly BalanceCh
 }
 
 function checkMessages(checks: readonly LinearSystemCheck[]): readonly ResultMessage[] {
-  return checks.filter(({ passed }) => !passed).map(({ id, value, unit, tolerance }) => ({
+  return checks.filter(({ passed }) => !passed).map(({ id }) => ({
     code: `P2_CHECK_${id.toUpperCase().replaceAll('-', '_')}`,
     severity: 'warning' as const,
-    message: `${id} 余量 ${value} ${unit} 超过容差 ${tolerance} ${unit}`,
+    message: `${id} 未通过；换算后的残差与容差见“平衡/能量检查”明细。`,
   }))
 }
 
@@ -132,10 +156,28 @@ function beamEndForce(elementId: string, values: readonly number[]): ElementEndF
 }
 
 function beamData(solution: BeamFiniteElementSolution): StructuralResultData {
-  const stations = solution.elements.flatMap((element) => Array.from(
-    { length: SAMPLE_INTERVALS + 1 },
-    (_, index): ElementStationResult => {
-      const localX = element.length * index / SAMPLE_INTERVALS
+  const globalStart = Math.min(...solution.elements.map(({ xI }) => xI))
+  const globalEnd = Math.max(...solution.elements.map(({ xI, length }) => xI + length))
+  const stations = solution.elements.flatMap((element) => {
+    const fieldInput = {
+      elementId: element.elementId,
+      xI: element.xI,
+      E: solution.properties.E,
+      I: solution.properties.I,
+      L: element.length,
+      localDisplacements: element.localDisplacements,
+      elementOnNodeEndForces: element.elementOnNodeEndForces,
+      qY: element.uniformLoadQY,
+    }
+    const tolerance = Math.max(1, element.length) * 1e-12
+    const normalize = (value: number) => Math.abs(value) <= tolerance
+      ? 0
+      : Math.abs(value - element.length) <= tolerance ? element.length : value
+    const positions = [...new Set([
+      ...Array.from({ length: SAMPLE_INTERVALS + 1 }, (_, index) => element.length * index / SAMPLE_INTERVALS),
+      ...findBeamElementExtrema(fieldInput).map(({ localX }) => normalize(localX)),
+    ])].sort((left, right) => left - right)
+    return positions.map((localX): ElementStationResult => {
       const force = recoverBeamInternalForcesAt({
         L: element.length,
         elementOnNodeEndForces: element.elementOnNodeEndForces,
@@ -148,18 +190,22 @@ function beamData(solution: BeamFiniteElementSolution): StructuralResultData {
         localDisplacements: element.localDisplacements,
         qY: element.uniformLoadQY,
       }, localX)
+      const globalX = element.xI + localX
+      const side = localX === 0 && globalX > globalStart
+        ? 'right'
+        : localX === element.length && globalX < globalEnd ? 'left' : 'continuous'
       return {
         elementId: element.elementId,
-        x: createStructuralQuantity(element.xI + localX, 'm', '全局 +x'),
-        side: 'continuous',
+        x: createStructuralQuantity(globalX, 'm', '全局 +x'),
+        side,
         axialForce: createStructuralQuantity(force.N, 'N', '正值表示拉力'),
         shearForce: createStructuralQuantity(force.V, 'N', '正值满足 V=dM/dx'),
         bendingMoment: createStructuralQuantity(force.M, 'N*m', '正值表示正弯矩'),
         displacement: createStructuralQuantity(displacement.v, 'm', '正值沿全局 +y'),
         rotation: createStructuralQuantity(displacement.theta, 'rad', '正值逆时针'),
       }
-    },
-  ))
+    })
+  })
   return {
     analysis: 'beam',
     displacements: solution.nodes.map((node) => ({
@@ -277,7 +323,7 @@ function successResult(
     charts: [],
     messages,
     balanceChecks: balanceChecks(checks),
-    metadata: metadata(requestId, startedAt),
+    metadata: metadata(calculatorId, requestId, startedAt),
     structural,
   }
 }
