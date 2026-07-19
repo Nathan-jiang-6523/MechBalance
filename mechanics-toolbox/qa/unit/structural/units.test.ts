@@ -10,9 +10,7 @@ import {
   STRUCTURAL_QUANTITY_MAP,
   STRUCTURAL_UNIT_GAPS,
   STRUCTURAL_UNIT_SYSTEMS,
-  StructuralUnitMappingError,
   type MappedStructuralQuantityKey,
-  type StructuralUnitGapKey,
 } from '../../../src/core/structural/units'
 
 describe('P2 结构量到 P1 单位目录的映射', () => {
@@ -36,6 +34,10 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
       translationRotationStiffness: 'force',
       rotationalStiffness: 'moment',
       translationalStiffness: 'lineLoad',
+      acceleration: 'acceleration',
+      strain: 'strain',
+      thermalExpansionCoefficient: 'thermalExpansionCoefficient',
+      dimensionless: 'dimensionless',
     })
   })
 
@@ -45,8 +47,6 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
     expect(SI_STRUCTURAL_UNIT_PRESET_ID).toBe('si')
 
     for (const [key, quantityId] of Object.entries(STRUCTURAL_QUANTITY_MAP)) {
-      if (quantityId === null) continue
-
       const structuralKey = key as MappedStructuralQuantityKey
       const sharedQuantity = quantityId as keyof typeof QUANTITY_CATALOG
       const engineeringPreset = UNIT_PRESETS.find((preset) => preset.id === 'engineering')
@@ -78,13 +78,14 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
       ['temperatureDifference', 50],
       ['translationRotationStiffness', 6_000_000],
       ['rotationalStiffness', 12_000_000],
+      ['acceleration', 9_806.65],
+      ['strain', 500],
+      ['thermalExpansionCoefficient', 12e-6],
+      ['dimensionless', 1.2],
     ]
 
     for (const [key, value] of samples) {
       const quantity = getStructuralQuantityId(key)
-      expect(quantity).not.toBeNull()
-      if (quantity === null) continue
-
       const engineering = getStructuralUnit(key, 'engineering')
       const si = getStructuralUnit(key, 'si')
       const siValue = convertUnit(value, quantity, engineering, si)
@@ -96,7 +97,6 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
   it('固定冻结算例使用的绝对换算真值', () => {
     const toSi = (key: MappedStructuralQuantityKey, value: number) => {
       const quantity = getStructuralQuantityId(key)
-      if (quantity === null) throw new Error(`unexpected unit gap: ${key}`)
       return convertUnit(
         value,
         quantity,
@@ -112,40 +112,15 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
     expect(toSi('lineLoad', -10)).toBe(-10_000)
     expect(toSi('translationalStiffness', 300)).toBe(300_000)
     expect(toSi('density', 7.85e-9)).toBeCloseTo(7_850, 10)
+    expect(toSi('acceleration', 9_806.65)).toBeCloseTo(9.80665, 12)
+    expect(toSi('strain', 500)).toBeCloseTo(500e-6, 15)
+    expect(toSi('thermalExpansionCoefficient', 12e-6)).toBe(12e-6)
+    expect(toSi('dimensionless', 1.2)).toBe(1.2)
   })
 })
 
-describe('P2 共享单位缺口', () => {
-  it('登记四类真实缺口及使用边界', () => {
-    expect(Object.keys(STRUCTURAL_UNIT_GAPS)).toEqual([
-      'acceleration',
-      'dimensionless',
-      'strain',
-      'thermalExpansionCoefficient',
-    ])
-
-    for (const gap of Object.values(STRUCTURAL_UNIT_GAPS)) {
-      expect(gap.engineeringUnit).not.toBe('')
-      expect(gap.siUnit).not.toBe('')
-      expect(gap.p2Scope).not.toBe('')
-      expect(getStructuralQuantityId(gap.quantity)).toBeNull()
-    }
+describe('P2 共享单位已完整', () => {
+  it('没有剩余结构单位缺口', () => {
+    expect(STRUCTURAL_UNIT_GAPS).toEqual({})
   })
-
-  it.each(Object.keys(STRUCTURAL_UNIT_GAPS) as StructuralUnitGapKey[])(
-    '%s 不静默冒充已有单位',
-    (quantity) => {
-      expect(() => getStructuralUnit(quantity)).toThrow(StructuralUnitMappingError)
-      expect(() => getStructuralUnitSelection(quantity)).toThrow(StructuralUnitMappingError)
-      try {
-        getStructuralUnit(quantity)
-      } catch (error) {
-        expect(error).toMatchObject({
-          code: 'STRUCTURAL_UNIT_GAP',
-          quantity,
-          gap: STRUCTURAL_UNIT_GAPS[quantity],
-        })
-      }
-    },
-  )
 })

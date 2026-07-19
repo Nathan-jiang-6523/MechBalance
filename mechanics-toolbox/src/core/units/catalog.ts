@@ -124,6 +124,25 @@ const rotationalSpeedUnits = [
   linearUnit('r_per_s', '转每秒', 'r/s', 1),
 ] as const
 
+const accelerationUnits = [
+  linearUnit('mm_per_s2', '毫米每二次方秒', 'mm/s²', 1e-3),
+  linearUnit('m_per_s2', '米每二次方秒', 'm/s²', 1),
+] as const
+
+const strainUnits = [
+  linearUnit('microstrain', '微应变', 'με', 1e-6),
+  linearUnit('one', '无量纲应变', '1', 1),
+] as const
+
+const thermalExpansionCoefficientUnits = [
+  linearUnit('per_degC', '每摄氏度', '1/°C', 1),
+  linearUnit('per_K', '每开尔文', '1/K', 1),
+] as const
+
+const dimensionlessUnits = [
+  linearUnit('one', '无量纲', '1', 1),
+] as const
+
 function quantity(
   id: QuantityId,
   label: string,
@@ -163,6 +182,15 @@ export const QUANTITY_CATALOG: Readonly<Record<QuantityId, QuantityDefinition>> 
   angle: quantity('angle', '角度', 'rad', angleUnits),
   power: quantity('power', '功率', 'W', powerUnits),
   rotationalSpeed: quantity('rotationalSpeed', '转速', 'r_per_s', rotationalSpeedUnits),
+  acceleration: quantity('acceleration', '加速度', 'm_per_s2', accelerationUnits),
+  strain: quantity('strain', '应变', 'one', strainUnits),
+  thermalExpansionCoefficient: quantity(
+    'thermalExpansionCoefficient',
+    '线膨胀系数',
+    'per_K',
+    thermalExpansionCoefficientUnits,
+  ),
+  dimensionless: quantity('dimensionless', '无量纲', 'one', dimensionlessUnits),
 }
 
 const engineeringUnits: Readonly<Record<QuantityId, UnitId>> = {
@@ -185,6 +213,10 @@ const engineeringUnits: Readonly<Record<QuantityId, UnitId>> = {
   angle: 'rad',
   power: 'kW',
   rotationalSpeed: 'r_per_min',
+  acceleration: 'mm_per_s2',
+  strain: 'microstrain',
+  thermalExpansionCoefficient: 'per_degC',
+  dimensionless: 'one',
 }
 
 const siUnits = Object.fromEntries(
