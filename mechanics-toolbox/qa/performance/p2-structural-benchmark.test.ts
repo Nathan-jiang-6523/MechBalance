@@ -75,6 +75,9 @@ describe('P2 confirmed-size performance record', () => {
       solveAndPresentationMaximumMilliseconds: Math.max(...presentationMilliseconds),
     }
     console.info(`P2_PERFORMANCE_RECORD=${JSON.stringify(record)}`)
+    // Engineering regression budgets only; product experience threshold remains a sign-off item.
+    expect(record.solveMaximumMilliseconds).toBeLessThan(250)
+    expect(record.solveAndPresentationMaximumMilliseconds).toBeLessThan(500)
     const screenResult = runStructuralCalculation(model)
     expect(screenResult.status).toBe('success')
     const renderStarted = performance.now()
@@ -88,6 +91,7 @@ describe('P2 confirmed-size performance record', () => {
       tableRows: wrapper.findAll('tbody tr').length,
       renderMilliseconds,
     })}`)
+    expect(renderMilliseconds).toBeLessThan(1_000)
     wrapper.unmount()
   }, 30_000)
 })

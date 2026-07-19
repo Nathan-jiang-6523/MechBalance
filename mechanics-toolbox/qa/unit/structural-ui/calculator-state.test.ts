@@ -74,6 +74,10 @@ describe('P2 structural calculator state machine', () => {
     expect(wrapper.find('[data-testid="results-stub"]').exists()).toBe(false)
     expect(wrapper.find('[data-state="dirty-invalid"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('当前含非法数值')
+    await vi.advanceTimersByTimeAsync(300)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="results-stub"]').exists()).toBe(false)
+    expect(wrapper.find('[data-state="dirty-invalid"]').exists()).toBe(true)
   })
 
   it('loads the matching frozen example when the workspace module changes', async () => {

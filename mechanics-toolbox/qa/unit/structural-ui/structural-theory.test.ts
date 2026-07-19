@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import MathFormula from '../../../src/components/MathFormula.vue'
+import { STRUCTURAL_THEORY_CATALOG } from '../../../src/features/structural/catalog'
 import StructuralTheory from '../../../src/features/structural/components/StructuralTheory.vue'
 import type {
   StructuralMatrixView,
@@ -51,5 +52,45 @@ describe('P2 StructuralTheory', () => {
     expect(wrapper.text()).toContain('—')
     expect(wrapper.text()).not.toContain('NaN')
     expect(wrapper.text()).not.toContain('Infinity')
+  })
+
+  it('renders every formula used by each available structural module with its frozen version', () => {
+    const expected = {
+      beam: [
+        ['P2-EB-001', 'P2-EB6-v1'],
+        ['P2-EB-002', 'P2-EB-LOAD-v1'],
+        ['P2-DSM-001', 'P2-DSM-v1'],
+        ['P2-EB-RECOVERY-001', 'P2-EB-RECOVERY-v1'],
+        ['P2-CBEAM-001', 'P2-CBEAM-v1'],
+      ],
+      'influence-line': [['P2-IL-001', 'P2-IL-v1']],
+      'moving-load': [
+        ['P2-IL-001', 'P2-IL-v1'],
+        ['P2-ML-001', 'P2-ML-v1'],
+      ],
+      truss: [
+        ['P2-DSM-001', 'P2-DSM-v1'],
+        ['P2-TRUSS-001', 'P2-TRUSS-v1'],
+        ['P2-TRUSS-INITIAL-001', 'P2-TRUSS-INITIAL-v1'],
+      ],
+      frame: [
+        ['P2-EB-001', 'P2-EB6-v1'],
+        ['P2-DSM-001', 'P2-DSM-v1'],
+        ['P2-FRAME-001', 'P2-FRAME-v1'],
+        ['P2-FRAME-INITIAL-001', 'P2-FRAME-INITIAL-v1'],
+      ],
+    } as const
+
+    for (const [moduleId, formulaEntries] of Object.entries(expected)) {
+      const moduleContent = STRUCTURAL_THEORY_CATALOG[moduleId as keyof typeof expected]
+      expect(moduleContent).toBeDefined()
+      expect(moduleContent!.formulas.map(({ id, version }) => [id, version])).toEqual(formulaEntries)
+
+      const wrapper = mount(StructuralTheory, { props: { content: moduleContent! } })
+      expect(wrapper.findAll('.formula-card')).toHaveLength(formulaEntries.length)
+      for (const [id, version] of formulaEntries) {
+        expect(wrapper.get(`[data-formula-id="${id}"]`).text()).toContain(`${id} · ${version}`)
+      }
+    }
   })
 })

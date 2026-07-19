@@ -39,14 +39,36 @@ describe('P2 StructureDiagram', () => {
   })
 
   it('renders nodal and distributed load directions plus exact-input legend', () => {
-    const wrapper = mount(StructureDiagram, { props: { model: frame } })
+    const wrapper = mount(StructureDiagram, { props: { model: frame, unitPresetId: 'si' } })
     expect(wrapper.get('[data-load-id="P1"][data-load-kind="Fx"]').attributes('data-direction')).toBe('global+x')
     expect(wrapper.get('[data-load-id="P1"][data-load-kind="Fy"]').attributes('data-direction')).toBe('global-y')
     expect(wrapper.get('.nodal-moment[data-load-id="P1"]').attributes('data-direction')).toBe('positive-ccw')
     expect(wrapper.findAll('[data-load-id="Q1"][data-load-kind="qX"]')).toHaveLength(5)
     expect(wrapper.findAll('[data-load-id="Q1"][data-load-kind="qY"]')).toHaveLength(5)
     expect(wrapper.get('.legend-object[data-load-id="Q1"] .legend-item').text()).toContain('[1, 4] m')
-    expect(wrapper.get('.legend-object[data-load-id="T1"] .legend-item').text()).toContain('ΔT=25 K')
+    expect(wrapper.get('.legend-object[data-load-id="T1"] .legend-item').text()).toContain('ΔT=25 ΔK')
+  })
+
+  it('switches every legend quantity atomically to the shared engineering units', async () => {
+    const model: FrameModel2D = {
+      ...frame,
+      loads: [
+        ...frame.loads,
+        { type: 'initial-strain', id: 'IS1', elementId: 'E1', strain: 500e-6 },
+      ],
+    }
+    const wrapper = mount(StructureDiagram, { props: { model, unitPresetId: 'engineering' } })
+    expect(wrapper.text()).toContain('输入载荷（工程单位）')
+    expect(wrapper.get('.legend-object[data-load-id="P1"] .legend-item').text()).toContain('Fx=1000 N')
+    expect(wrapper.get('.legend-object[data-load-id="P1"] .legend-item').text()).toContain('Mz=300000 N·mm')
+    expect(wrapper.get('.legend-object[data-load-id="Q1"] .legend-item').text()).toContain('qx=0.5 N/mm')
+    expect(wrapper.get('.legend-object[data-load-id="Q1"] .legend-item').text()).toContain('[1000, 4000] mm')
+    expect(wrapper.get('.legend-object[data-load-id="IS1"] .legend-item').text()).toContain('ε₀=500 με')
+    await wrapper.setProps({ unitPresetId: 'si' })
+    expect(wrapper.text()).toContain('输入载荷（SI）')
+    expect(wrapper.get('.legend-object[data-load-id="P1"] .legend-item').text()).toContain('Mz=300 N·m')
+    expect(wrapper.get('.legend-object[data-load-id="Q1"] .legend-item').text()).toContain('qx=500 N/m')
+    expect(wrapper.get('.legend-object[data-load-id="IS1"] .legend-item').text()).toContain('ε₀=0.0005 1')
   })
 
   it('renders truss pin/roller, self-weight direction and omits mechanical computation', () => {
@@ -63,7 +85,7 @@ describe('P2 StructureDiagram', () => {
       ],
       loads: [{ type: 'truss-self-weight', id: 'SW', elementId: 'AB', gravity: 9.81 }],
     }
-    const wrapper = mount(StructureDiagram, { props: { model: truss } })
+    const wrapper = mount(StructureDiagram, { props: { model: truss, unitPresetId: 'si' } })
     expect(wrapper.get('[data-node-id="A"].support').attributes('data-support')).toBe('pin')
     expect(wrapper.get('[data-node-id="B"].support').attributes('data-support')).toBe('roller-y')
     expect(wrapper.get('[data-load-id="SW"][data-load-kind="self-weight"]').attributes('data-direction')).toBe('global-y')
@@ -84,7 +106,7 @@ describe('P2 StructureDiagram', () => {
       ],
       loads: [{ type: 'beam-uniform', id: 'BQ', elementId: 'BIJ', qY: -10_000 }],
     }
-    const wrapper = mount(StructureDiagram, { props: { model: beam } })
+    const wrapper = mount(StructureDiagram, { props: { model: beam, unitPresetId: 'si' } })
     expect(wrapper.get('[data-element-id="BIJ"].local-axes').attributes('data-c')).toBe('1')
     expect(wrapper.get('[data-load-id="BQ"][data-load-kind="qY"]').attributes('data-direction')).toBe('qY-')
     expect(wrapper.get('.legend-object[data-load-id="BQ"] .legend-item').text()).toContain('qy=-10000 N/m（局部）')
@@ -105,7 +127,34 @@ describe('P2 StructureDiagram', () => {
     expect(wrapper.get('.deformation-warning').text()).toContain('×100')
   })
 
-  it('keeps mobile labels inside fixed safe viewBox with horizontal scrolling', () => {
+  it('toggles labels, axes, supports, loads and result layers independently', async () => {
+    const wrapper = mount(StructureDiagram, {
+      props: {
+        model: frame,
+        deformation: {
+          scale: 100,
+          nodeDisplacements: [{ nodeId: 'N1', u: 0, v: 0 }, { nodeId: 'N2', u: 0.01, v: -0.02 }],
+        },
+      },
+    })
+    const layerSelectors = {
+      nodeLabels: '.node-label',
+      elementLabels: '.element-label',
+      localAxes: '.local-axes',
+      supports: '.support',
+      loads: '.load-arrow, .nodal-moment',
+      results: '.deformed-element',
+    } as const
+    for (const [layer, selector] of Object.entries(layerSelectors)) {
+      expect(wrapper.findAll(selector).length, `${layer} initially visible`).toBeGreaterThan(0)
+      await wrapper.setProps({ layers: { [layer]: false } })
+      expect(wrapper.findAll(selector), `${layer} hidden`).toHaveLength(0)
+      await wrapper.setProps({ layers: { [layer]: true } })
+      expect(wrapper.findAll(selector).length, `${layer} restored`).toBeGreaterThan(0)
+    }
+  })
+
+  it('keeps mobile labels inside a scalable safe viewBox without forcing horizontal scrolling', () => {
     const manyLoads: FrameModel2D = {
       ...frame,
       loads: Array.from({ length: 22 }, (_, index) => ({
@@ -114,7 +163,7 @@ describe('P2 StructureDiagram', () => {
     }
     const wrapper = mount(StructureDiagram, { props: { model: manyLoads } })
     const svg = wrapper.get('svg')
-    expect(wrapper.get('.structure-diagram-scroll').attributes('tabindex')).toBe('0')
+    expect(wrapper.get('.structure-diagram-scroll').attributes('aria-label')).not.toContain('横向滚动')
     expect(svg.attributes('data-safe-left')).toBe('16')
     expect(svg.attributes('data-safe-right')).toBe('944')
     expect(svg.attributes('viewBox')).toBe('0 0 960 1152')

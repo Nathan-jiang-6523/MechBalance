@@ -3,9 +3,12 @@ import { getStructuralExample, STRUCTURAL_EXAMPLES } from '../../../src/features
 import { runStructuralCalculation } from '../../../src/features/structural/calculation'
 
 describe('P2 frozen UI examples', () => {
-  it('registers all five available analyses and returns defensive copies', () => {
+  it('registers the frozen and requested examples across all five analyses and returns defensive copies', () => {
     expect(STRUCTURAL_EXAMPLES.map(({ id }) => id)).toEqual([
-      'BEAM-A01', 'TRUSS-A01', 'FRAME-A01', 'IL-A03', 'ML-A01',
+      'BEAM-A01', 'CBEAM-A03',
+      'TRUSS-A01', 'TRUSS-T01', 'TRUSS-IS01', 'TRUSS-SW01',
+      'FRAME-A01', 'FRAME-A02', 'FRAME-A03', 'FRAME-T01', 'FRAME-IS01',
+      'IL-A03', 'ML-A01',
     ])
     expect(getStructuralExample('BEAM-A01')).not.toBe(getStructuralExample('BEAM-A01'))
   })
@@ -21,6 +24,12 @@ describe('P2 frozen UI examples', () => {
     })
     expect(result.structural.reactions.filter(({ nodeId }) => nodeId !== '2').map(({ fy }) => fy.value))
       .toEqual([expect.closeTo(20_000, 6), expect.closeTo(20_000, 6)])
+    expect(result.structural.controls.find(({ responseId, kind }) => responseId === 'bendingMoment' && kind === 'maximum'))
+      .toMatchObject({ value: { value: expect.closeTo(40_000, 6) }, position: { value: 2 } })
+    expect(result.structural.stations.filter(({ x }) => x.value === 2).map(({ side }) => side)).toEqual(['left', 'right'])
+    expect(result.metadata.formulaReferences.map(({ id }) => id)).toEqual([
+      'P2-EB-001', 'P2-DSM-001', 'P2-EB-RECOVERY-001',
+    ])
   })
 
   it('TRUSS-A01 and FRAME-A01 retain frozen controls', () => {

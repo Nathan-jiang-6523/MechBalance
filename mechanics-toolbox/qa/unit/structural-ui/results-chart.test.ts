@@ -22,6 +22,7 @@ import {
   buildStructuralCharts,
   buildStructuralChartTableRows,
   buildStructuralResultRows,
+  displayStructuralValue,
 } from '../../../src/features/structural/components/result-presentation'
 
 const metadata = { requestId: 'r1', calculatedAt: '2026-07-19T00:00:00Z', formulaReferences: [] } as const
@@ -31,7 +32,10 @@ function beamResult(): StructuralScreenResult {
     calculatorId: 'structural-beam', status: 'warning', headline: '梁结果', summary: '已收敛',
     groups: [], charts: [], metadata,
     messages: [{ code: 'P2_WARN', severity: 'warning', message: '平衡残差接近限值', field: 'checks' }],
-    balanceChecks: [{ id: 'eq', label: '平衡', residual: 1e-8, unit: 'N', tolerance: 1e-6, passed: true }],
+    balanceChecks: [
+      { id: 'eq', label: '平衡', residual: 1e-8, unit: 'N', tolerance: 1e-6, passed: true },
+      { id: 'energy', label: '能量', residual: 0.01, unit: 'J', tolerance: 0.1, passed: true },
+    ],
     structural: {
       analysis: 'beam',
       controls: [
@@ -109,12 +113,27 @@ describe('P2 structural result presentation', () => {
     const rows = buildStructuralResultRows(result, 'engineering')
     expect(rows.controls[0]).toMatchObject({ value: 12_000, unit: 'N·mm', position: { value: 500, unit: 'mm' } })
     expect(rows.displacements.find(({ label }) => label === '节点位移 v')).toMatchObject({ value: -1, unit: 'mm' })
-    expect(rows.elements.find(({ label }) => label.startsWith('纤维应力'))).toMatchObject({ value: -20, unit: 'MPa' })
+    expect(rows.elements.find(({ label }) => label.startsWith('纤维应力'))).toMatchObject({
+      value: -20, unit: 'MPa', note: expect.stringContaining('y=100 mm'),
+    })
+    expect(displayStructuralValue(0.001, 'm/N', 'engineering')).toEqual({ value: 1, unit: 'mm/N' })
     const charts = buildStructuralCharts(result, 'engineering')
     expect(charts[0]?.xUnit).toBe('mm')
     const momentSeries = charts.find(({ id }) => id === 'structural-M')?.series[0]
     expect(momentSeries?.unit).toBe('N·mm')
     expect(momentSeries?.points[0]).toMatchObject({ x: 500, y: 12_000 })
+  })
+
+  it('converts balance residuals and absolute tolerances with the selected preset', async () => {
+    const wrapper = shallowMount(StructuralResults, {
+      props: { result: beamResult(), unitPresetId: 'engineering' },
+      global: { stubs: { StructuralChart: true } },
+    })
+    const detail = wrapper.get('[data-detail="balance"]')
+    ;(detail.element as HTMLDetailsElement).open = true
+    await detail.trigger('toggle')
+    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('10.0000 N·mm')
+    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('100.000 N·mm')
   })
 
   it('shows truss tension/compression state and provides axial/stress distributions', async () => {
