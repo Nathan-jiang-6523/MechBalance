@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0.0",
+  "source": "ai/memory-bank/p3-acceptance-cases-form.md",
+  "commonMaterial": {
+    "elasticModulusPa": 200000000000,
+    "poissonRatio": 0.3
+  },
+  "cases": [
+    {
+      "id": "P3-TW-01",
+      "title": "封闭端内压基准",
+      "input": {
+        "boundary": "closed",
+        "meanRadiusM": 1,
+        "thicknessM": 0.01,
+        "internalPressurePa": 2000000,
+        "externalPressurePa": 0,
+        "axialForceN": 0,
+        "torqueNm": 0
+      },
+      "expected": {
+        "status": "success",
+        "hoopPa": 200000000,
+        "axialPa": 100000000,
+        "shearPa": 0,
+        "vonMisesPa": 173205080.75688773,
+        "trescaPa": 200000000,
+        "warningCodes": []
+      }
+    },
+    {
+      "id": "P3-TW-02",
+      "title": "开口端内压",
+      "input": {
+        "boundary": "open",
+        "meanRadiusM": 1,
+        "thicknessM": 0.01,
+        "internalPressurePa": 2000000,
+        "externalPressurePa": 0,
+        "axialForceN": 0,
+        "torqueNm": 0
+      },
+      "expected": {
+        "status": "success",
+        "hoopPa": 200000000,
+        "axialPa": 0,
+        "shearPa": 0,
+        "vonMisesPa": 200000000,
+        "trescaPa": 200000000,
+        "warningCodes": []
+      }
+    },
+    {
+      "id": "P3-TW-03",
+      "title": "外压导致符号反转",
+      "input": {
+        "boundary": "closed",
+        "meanRadiusM": 1,
+        "thicknessM": 0.01,
+        "internalPressurePa": 0,
+        "externalPressurePa": 2000000,
+        "axialForceN": 0,
+        "torqueNm": 0
+      },
+      "expected": {
+        "status": "warning",
+        "hoopPa": -200000000,
+        "axialPa": -100000000,
+        "shearPa": 0,
+        "vonMisesPa": 173205080.75688773,
+        "trescaPa": 200000000,
+        "warningCodes": ["P3-TW-EXTERNAL-PRESSURE"]
+      }
+    },
+    {
+      "id": "P3-TW-04",
+      "title": "内压轴力扭矩组合",
+      "input": {
+        "boundary": "closed",
+        "meanRadiusM": 1,
+        "thicknessM": 0.01,
+        "internalPressurePa": 1000000,
+        "externalPressurePa": 0,
+        "axialForceN": 1000000,
+        "torqueNm": 100000
+      },
+      "expected": {
+        "status": "success",
+        "hoopPa": 100000000,
+        "axialPa": 65915494.309189536,
+        "shearPa": 1591549.4309189534,
+        "vonMisesPa": 88095982.02300501,
+        "warningCodes": []
+      }
+    },
+    {
+      "id": "P3-TW-05A",
+      "title": "薄壁判据等号允许",
+      "input": {
+        "boundary": "closed",
+        "meanRadiusM": 1,
+        "thicknessM": 0.05,
+        "internalPressurePa": 1000000,
+        "externalPressurePa": 0,
+        "axialForceN": 0,
+        "torqueNm": 0
+      },
+      "expected": {
+        "status": "warning",
+        "hoopPa": 20000000,
+        "axialPa": 10000000,
+        "warningCodes": ["P3-TW-AT-LIMIT"]
+      }
+    },
+    {
+      "id": "P3-TW-05B",
+      "title": "薄壁判据刚超限",
+      "input": {
+        "boundary": "closed",
+        "meanRadiusM": 1,
+        "thicknessM": 0.05005,
+        "internalPressurePa": 1000000,
+        "externalPressurePa": 0,
+        "axialForceN": 0,
+        "torqueNm": 0
+      },
+      "expected": {
+        "status": "error",
+        "errorIncludes": "t/r 超过 0.05"
+      }
+    }
+  ]
+}
