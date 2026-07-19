@@ -52,6 +52,7 @@ describe('P2 结构 issue 与结果契约', () => {
   })
 
   it('拒绝非有限成功值、空正号语义，并把负零归一为零', () => {
+    expect(createStructuralQuantity(-1e-6, 'm/N', 'global +y displacement per downward unit load').unit).toBe('m/N')
     expect(createStructuralQuantity(-0, 'N', 'global +x').value).toBe(0)
     expect(Object.is(createStructuralQuantity(-0, 'N', 'global +x').value, -0)).toBe(false)
     expect(() => createStructuralQuantity(Number.NaN, 'N', 'global +x', 'reactions[0].fx')).toThrow(StructuralResultValueError)

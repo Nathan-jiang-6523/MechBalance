@@ -1,7 +1,7 @@
 import type { PointSide, ScreenResult } from '../../contracts'
 import type { ElementId, NodeId } from './model'
 
-export type StructuralResultUnit = 'm' | 'rad' | 'N' | 'N*m' | 'Pa' | 'kg' | '1'
+export type StructuralResultUnit = 'm' | 'm/N' | 'rad' | 'N' | 'N*m' | 'Pa' | 'kg' | '1'
 
 export interface StructuralQuantity<Unit extends StructuralResultUnit = StructuralResultUnit> {
   readonly value: number
@@ -128,7 +128,7 @@ export interface FrameResultData extends StructuralResultDataBase {
 
 export interface InfluenceLineOrdinateResult {
   readonly position: StructuralQuantity<'m'>
-  readonly ordinate: StructuralQuantity<'1' | 'm'>
+  readonly ordinate: StructuralQuantity<'1' | 'm' | 'm/N'>
   readonly side: PointSide
 }
 
