@@ -306,22 +306,22 @@ onBeforeUnmount(() => {
 <style scoped>
 .calculator-stage { min-width: 0; display: grid; gap: 18px; }
 .calculator-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(160px, auto)) auto; gap: 14px; align-items: end; padding: 16px 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }
-.calculator-toolbar span { color: var(--color-brand); font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+.calculator-toolbar span { color: var(--color-brand); font-size: 12px; font-weight: 800; letter-spacing: .06em; }
 .calculator-toolbar h3 { margin: 4px 0 0; font-size: 17px; }
-.calculator-toolbar label, .simple-editor label { display: grid; gap: 5px; color: var(--color-muted); font-size: 11px; font-weight: 700; }
+.calculator-toolbar label, .simple-editor label { display: grid; gap: 5px; color: var(--color-muted); font-size: 12px; font-weight: 700; }
 select, input { min-height: 44px; max-width: 100%; padding: 8px 10px; border: 1px solid #b9c7cc; border-radius: 7px; color: var(--color-ink); background: #fff; font: inherit; }
 .unit-preset-control { display: grid; grid-template-columns: repeat(2, minmax(132px, 1fr)); gap: 4px; margin: 0; padding: 0; border: 0; }
-.unit-preset-control legend { margin-bottom: 5px; color: var(--color-muted); font-size: 11px; font-weight: 700; }
-.unit-preset-control button { min-height: 44px; padding: 7px 9px; border: 1px solid #b9c7cc; color: #40545d; background: #fff; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+.unit-preset-control legend { margin-bottom: 5px; color: var(--color-muted); font-size: 12px; font-weight: 700; }
+.unit-preset-control button { min-height: 44px; padding: 7px 9px; border: 1px solid #b9c7cc; color: #40545d; background: #fff; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
 .unit-preset-control button:first-of-type { border-radius: 7px 0 0 7px; }.unit-preset-control button:last-of-type { border-radius: 0 7px 7px 0; }
 .unit-preset-control button[aria-pressed="true"] { border-color: var(--color-brand); color: #fff; background: var(--color-brand); }
-.state-chip { min-width: 94px; padding: 8px 10px; border-radius: 999px; color: #40545d; background: #edf1f3; text-align: center; font-size: 11px; font-weight: 800; }
+.state-chip { min-width: 94px; padding: 8px 10px; border-radius: 999px; color: #40545d; background: #edf1f3; text-align: center; font-size: 12px; font-weight: 800; }
 .state-chip[data-state="success"] { color: var(--color-success); background: #e8f6ed; }.state-chip[data-state="warning"] { color: #795700; background: #fff5d8; }.state-chip[data-state="error"], .state-chip[data-state="dirty-invalid"] { color: #9c2f2b; background: #fdebea; }
 .model-layout { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr); gap: 16px; align-items: start; }
 .diagram-panel { min-width: 0; padding: 16px; overflow: hidden; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }
-.diagram-panel h3 { margin: 0 0 4px; font-size: 15px; }.diagram-panel p, .simple-editor p, .calculate-row p { margin: 0; color: var(--color-muted); font-size: 11px; line-height: 1.6; }
+.diagram-panel h3 { margin: 0 0 4px; font-size: 15px; }.diagram-panel p, .simple-editor p, .calculate-row p { margin: 0; color: var(--color-muted); font-size: 12px; line-height: 1.6; }
 .diagram-layer-controls { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 12px 0 4px; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 8px; }
-.diagram-layer-controls legend { padding: 0 5px; color: var(--color-muted); font-size: 11px; font-weight: 800; }
+.diagram-layer-controls legend { padding: 0 5px; color: var(--color-muted); font-size: 12px; font-weight: 800; }
 .diagram-layer-controls label { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: #40545d; font-size: 12px; font-weight: 700; }
 .diagram-layer-controls input { width: 18px; min-height: 18px; margin: 0; padding: 0; }
 .simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p { grid-column: 1 / -1; }

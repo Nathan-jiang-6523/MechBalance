@@ -168,7 +168,7 @@ summary small {
 .formula-heading span {
   color: var(--color-muted);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .matrix-placeholder {

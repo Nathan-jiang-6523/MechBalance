@@ -122,8 +122,8 @@ onBeforeUnmount(() => {
 .structural-chart { min-width: 0; border: 1px solid var(--color-line); border-radius: 10px; background: #fff; overflow: hidden; }
 .structural-chart h4 { margin: 0; padding: 12px 14px 0; font-size: 14px; }
 .chart-canvas { width: 100%; height: 300px; }
-.sign-legend { display: flex; gap: 14px; margin: -4px 14px 10px; font-size: 11px; font-weight: 800; }
-.table-limit-note { margin: 0 14px 10px; color: var(--color-muted); font-size: 11px; }
+.sign-legend { display: flex; gap: 14px; margin: -4px 14px 10px; font-size: 12px; font-weight: 800; }
+.table-limit-note { margin: 0 14px 10px; color: var(--color-muted); font-size: 12px; }
 [data-sign="positive"] { color: #126a73; }
 [data-sign="negative"] { color: #b5413c; }
 [data-sign="zero"] { color: #667780; }

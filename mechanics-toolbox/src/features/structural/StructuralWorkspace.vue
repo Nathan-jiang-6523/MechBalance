@@ -109,7 +109,7 @@ function selectModule(module: StructuralModuleDescriptor): void {
 .structural-intro span,
 .module-stage > div > span {
   color: var(--color-brand);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .06em;
 }
@@ -247,7 +247,7 @@ function selectModule(module: StructuralModuleDescriptor): void {
 
 .module-copy small {
   color: var(--color-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 

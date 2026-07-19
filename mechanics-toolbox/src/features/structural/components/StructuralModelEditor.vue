@@ -411,7 +411,7 @@ input, select, button { font: inherit; }
 input, select { min-width: 90px; max-width: 180px; padding: 5px 7px; border: 1px solid #b9c9ce; border-radius: 5px; }
 input[aria-invalid="true"] { border-color: #b64835; outline: 1px solid #b64835; }
 button { padding: 5px 9px; border: 1px solid #a9bec3; border-radius: 6px; color: #174f58; background: #f5fafa; cursor: pointer; }
-.unit { flex: 0 0 auto; color: #6b7d84; font-size: 11px; }
+.unit { flex: 0 0 auto; color: #6b7d84; font-size: 12px; }
 @media (max-width: 700px) {
   .editor-header, .section-heading { flex-direction: column; }
   .editor-section { padding: 10px; }
