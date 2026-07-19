@@ -31,8 +31,12 @@ export function lameStressAtRadius(constants: LameConstants, radiusM: number): {
 } {
   const r2 = finiteLame(radiusM ** 2, '求值半径平方超出有限数范围')
   const gradient = finiteLame(constants.bPaM2 / r2, 'Lamé 应力梯度超出有限数范围')
+  const radial = finiteLame(constants.aPa - gradient, '径向应力超出有限数范围')
+  const hoop = finiteLame(constants.aPa + gradient, '环向应力超出有限数范围')
+  const scale = Math.max(Math.abs(constants.aPa), Math.abs(gradient), 1)
+  const clean = (value: number) => Math.abs(value) <= scale * 1e-14 ? 0 : value
   return {
-    radialStressPa: finiteLame(constants.aPa - gradient, '径向应力超出有限数范围'),
-    hoopStressPa: finiteLame(constants.aPa + gradient, '环向应力超出有限数范围'),
+    radialStressPa: clean(radial),
+    hoopStressPa: clean(hoop),
   }
 }
