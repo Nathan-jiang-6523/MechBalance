@@ -3,6 +3,10 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import { runStructuralCalculation } from '../../../src/features/structural/calculation'
+import { STRUCTURAL_THEORY_CATALOG } from '../../../src/features/structural/catalog'
+import { getStructuralExample } from '../../../src/features/structural/examples'
+
 const formulasDirectory = path.resolve(process.cwd(), 'docs', 'formulas')
 
 function readFormulaDocument(name: string): string {
@@ -73,6 +77,18 @@ describe('P2 formula document traceability', () => {
       const text = readFormulaDocument(name)
       expect(text).toContain('P2-FORMULA-INDEX-v1.3.0')
       expect(text).not.toContain('P2-FORMULA-INDEX-v1.0.0')
+    }
+  })
+
+  it('keeps each result metadata formula set complete against its displayed module theory', () => {
+    const examples = ['BEAM-A01', 'TRUSS-A01', 'FRAME-A01', 'IL-A03', 'ML-A01'] as const
+    const modules = ['beam', 'truss', 'frame', 'influence-line', 'moving-load'] as const
+    for (let index = 0; index < examples.length; index += 1) {
+      const result = runStructuralCalculation(getStructuralExample(examples[index]!))
+      const metadata = result.metadata.formulaReferences.map(({ id, version }) => `${id}@${version}`).sort()
+      const theory = STRUCTURAL_THEORY_CATALOG[modules[index]]!.formulas
+        .map(({ id, version }) => `${id}@${version}`).sort()
+      expect(metadata, examples[index]).toEqual(theory)
     }
   })
 })

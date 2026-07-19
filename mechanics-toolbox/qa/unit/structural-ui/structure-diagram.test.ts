@@ -149,6 +149,7 @@ describe('P2 StructureDiagram', () => {
       expect(wrapper.findAll(selector).length, `${layer} initially visible`).toBeGreaterThan(0)
       await wrapper.setProps({ layers: { [layer]: false } })
       expect(wrapper.findAll(selector), `${layer} hidden`).toHaveLength(0)
+      if (layer === 'loads') expect(wrapper.findAll('.legend-zone')).toHaveLength(0)
       await wrapper.setProps({ layers: { [layer]: true } })
       expect(wrapper.findAll(selector).length, `${layer} restored`).toBeGreaterThan(0)
     }

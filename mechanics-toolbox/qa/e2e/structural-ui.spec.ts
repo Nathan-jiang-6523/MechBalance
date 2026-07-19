@@ -60,7 +60,7 @@ async function expectLastColumnReadable(table: Locator): Promise<void> {
 
 async function expectNoDiagramLabelCollisions(page: Page): Promise<void> {
   const collisions = await page.locator('.structure-diagram').evaluate((diagram) => {
-    const labels = [...diagram.querySelectorAll<SVGGraphicsElement>('.node-label, .element-label')]
+    const labels = [...diagram.querySelectorAll<SVGGraphicsElement>('.node-label, .element-label, .local-axes text')]
     const obstacles = [...diagram.querySelectorAll<SVGGraphicsElement>('.support, .load-arrow, .nodal-moment')]
     const overlapArea = (left: DOMRect, right: DOMRect) =>
       Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left))
@@ -70,12 +70,12 @@ async function expectNoDiagramLabelCollisions(page: Page): Promise<void> {
       const label = labels[leftIndex]!
       for (let rightIndex = leftIndex + 1; rightIndex < labels.length; rightIndex += 1) {
         const other = labels[rightIndex]!
-        if (overlapArea(label.getBoundingClientRect(), other.getBoundingClientRect()) > 0.5) {
+        if (overlapArea(label.getBoundingClientRect(), other.getBoundingClientRect()) > 0) {
           found.push(`${label.textContent}/${other.textContent}`)
         }
       }
       for (const obstacle of obstacles) {
-        if (overlapArea(label.getBoundingClientRect(), obstacle.getBoundingClientRect()) > 0.5) {
+        if (overlapArea(label.getBoundingClientRect(), obstacle.getBoundingClientRect()) > 0) {
           found.push(`${label.textContent}/${obstacle.getAttribute('class')}`)
         }
       }
@@ -92,6 +92,9 @@ test.beforeEach(async ({ page }) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`)
   })
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`))
+  page.on('request', (request) => {
+    if (/^https?:/i.test(request.url())) errors.push(`external request: ${request.url()}`)
+  })
   await page.goto(releaseUrl)
   await page.getByRole('button', { name: /结构力学/ }).click()
   await expect(page.getByRole('heading', { name: '结构分析工作台' })).toBeVisible()
@@ -103,7 +106,9 @@ test.afterEach(async ({ page }) => {
 
 test('BEAM-A01 首次计算、单位原子切换和旧结果失效', async ({ page }) => {
   const unitPreset = page.getByTestId('structural-unit-preset')
-  await expect(unitPreset).toHaveValue('engineering')
+  const engineeringPreset = unitPreset.getByRole('button', { name: 't–mm–MPa–N–s' })
+  const siPreset = unitPreset.getByRole('button', { name: 'SI（kg–m–Pa–N–s）' })
+  await expect(engineeringPreset).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText('等待首次计算')).toBeVisible()
 
   await page.getByRole('button', { name: '计算结构响应' }).click()
@@ -112,10 +117,10 @@ test('BEAM-A01 首次计算、单位原子切换和旧结果失效', async ({ pa
   await expect(page.getByTestId('displacement-table')).toContainText('mm')
   await expect(page.getByTestId('control-table')).toContainText('N·mm')
 
-  await unitPreset.selectOption('si')
+  await siPreset.click()
   await expect(page.getByRole('heading', { name: '计算完成' })).toBeVisible()
   await expect(page.getByTestId('displacement-table')).toContainText('m')
-  await unitPreset.selectOption('engineering')
+  await engineeringPreset.click()
   await expect(page.getByTestId('displacement-table')).toContainText('mm')
 
   const firstNodeX = page.locator('.structural-model-editor [data-field="nodes[0].x"]')
@@ -145,7 +150,7 @@ test('结构工作台在当前视口内且关键触控目标不小于 44px', asy
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
 
-  const sizes = await page.locator('.calculator-toolbar select, .calculate-button').evaluateAll((elements) =>
+  const sizes = await page.locator('.calculator-toolbar select, .unit-preset-control button, .calculate-button').evaluateAll((elements) =>
     elements.map((element) => {
       const rect = element.getBoundingClientRect()
       return { width: rect.width, height: rect.height }
@@ -167,19 +172,19 @@ test('桌面 FRAME-A01 与编辑器构造 CBEAM-A03 符合冻结真值及图层�
   await page.locator('[data-detail="reactions"] summary').click()
 
   await expectTableValues(page.getByTestId('displacement-table'), [
-    { label: '节点位移 u', objectId: '2', expected: 1.30736068252, relativeTolerance: 1e-6 },
-    { label: '节点位移 v', objectId: '2', expected: 0.00551370484661, relativeTolerance: 1e-6 },
-    { label: '节点转角 θ', objectId: '2', expected: -0.000309073788346, relativeTolerance: 1e-6 },
-    { label: '节点位移 u', objectId: '3', expected: 1.30736068252, relativeTolerance: 1e-6 },
-    { label: '节点位移 v', objectId: '3', expected: -0.00551370484661, relativeTolerance: 1e-6 },
+    { label: '节点位移 u', objectId: '2', expected: 1.30736068252, relativeTolerance: 1e-7 },
+    { label: '节点位移 v', objectId: '2', expected: 0.00551370484661, relativeTolerance: 1e-7 },
+    { label: '节点转角 θ', objectId: '2', expected: -0.000309073788346, relativeTolerance: 1e-7 },
+    { label: '节点位移 u', objectId: '3', expected: 1.30736068252, relativeTolerance: 1e-7 },
+    { label: '节点位移 v', objectId: '3', expected: -0.00551370484661, relativeTolerance: 1e-7 },
   ])
   await expectTableValues(page.getByTestId('reaction-table'), [
-    { label: '支座反力 Fx', objectId: '1', expected: -6_000, relativeTolerance: 1e-6 },
-    { label: '支座反力 Fy', objectId: '1', expected: -3_675.80323108, relativeTolerance: 1e-6 },
-    { label: '支座反力矩 Mz', objectId: '1', expected: 10_648_393.5378, relativeTolerance: 1e-6 },
-    { label: '支座反力 Fx', objectId: '4', expected: -6_000, relativeTolerance: 1e-6 },
-    { label: '支座反力 Fy', objectId: '4', expected: 3_675.80323108, relativeTolerance: 1e-6 },
-    { label: '支座反力矩 Mz', objectId: '4', expected: 10_648_393.5378, relativeTolerance: 1e-6 },
+    { label: '支座反力 Fx', objectId: '1', expected: -6_000, relativeTolerance: 1e-7 },
+    { label: '支座反力 Fy', objectId: '1', expected: -3_675.80323108, relativeTolerance: 1e-7 },
+    { label: '支座反力矩 Mz', objectId: '1', expected: 10_648_393.5378, relativeTolerance: 1e-7 },
+    { label: '支座反力 Fx', objectId: '4', expected: -6_000, relativeTolerance: 1e-7 },
+    { label: '支座反力 Fy', objectId: '4', expected: 3_675.80323108, relativeTolerance: 1e-7 },
+    { label: '支座反力矩 Mz', objectId: '4', expected: 10_648_393.5378, relativeTolerance: 1e-7 },
   ])
 
   const diagram = page.locator('.structure-diagram')
@@ -205,6 +210,7 @@ test('桌面 FRAME-A01 与编辑器构造 CBEAM-A03 符合冻结真值及图层�
     const toggle = page.locator(`[data-layer-toggle="${layer.id}"]`)
     await toggle.uncheck()
     await expect(diagram.locator(layer.selector)).toHaveCount(0)
+    if (layer.id === 'loads') await expect(diagram.locator('.legend-zone')).toHaveCount(0)
     await toggle.check()
     await expect(diagram.locator(layer.selector)).toHaveCount(layer.count)
   }
@@ -227,12 +233,12 @@ test('桌面 FRAME-A01 与编辑器构造 CBEAM-A03 符合冻结真值及图层�
   await page.locator('[data-detail="reactions"] summary').click()
 
   await expectTableValues(page.getByTestId('displacement-table'), [
-    { label: '节点转角 θ', objectId: '3', expected: 0.00833333333333, relativeTolerance: 1e-6 },
+    { label: '节点转角 θ', objectId: '3', expected: 0.00833333333333, relativeTolerance: 1e-7 },
   ])
   await expectTableValues(page.getByTestId('reaction-table'), [
-    { label: '支座反力 Fy', objectId: '1', expected: 25_000, relativeTolerance: 1e-6 },
-    { label: '支座反力矩 Mz', objectId: '1', expected: 20_000_000, relativeTolerance: 1e-6 },
-    { label: '支座反力 Fy', objectId: '3', expected: 15_000, relativeTolerance: 1e-6 },
+    { label: '支座反力 Fy', objectId: '1', expected: 25_000, relativeTolerance: 1e-7 },
+    { label: '支座反力矩 Mz', objectId: '1', expected: 20_000_000, relativeTolerance: 1e-7 },
+    { label: '支座反力 Fy', objectId: '3', expected: 15_000, relativeTolerance: 1e-7 },
   ])
   await expectNoInvalidNumericText(page)
 })
@@ -242,12 +248,17 @@ test('移动端 390×844 展开结果表后字号、末列和数值文本可读'
   expect(page.viewportSize()).toEqual({ width: 390, height: 844 })
 
   const unitPreset = page.getByTestId('structural-unit-preset')
-  await expect(unitPreset.locator('option')).toHaveCount(2)
+  const unitButtons = unitPreset.getByRole('button')
+  await expect(unitButtons).toHaveCount(2)
+  await expect(unitButtons.nth(0)).toBeVisible()
+  await expect(unitButtons.nth(1)).toBeVisible()
+  const engineeringPreset = unitPreset.getByRole('button', { name: 't–mm–MPa–N–s' })
+  const siPreset = unitPreset.getByRole('button', { name: 'SI（kg–m–Pa–N–s）' })
   const beamLength = page.locator('[data-field="nodes[2].x"]')
   await expect(beamLength).toHaveValue('4000')
-  await unitPreset.selectOption('si')
+  await siPreset.click()
   await expect(beamLength).toHaveValue('4')
-  await unitPreset.selectOption('engineering')
+  await engineeringPreset.click()
   await expect(beamLength).toHaveValue('4000')
 
   await page.getByRole('button', { name: '计算结构响应' }).click()
@@ -265,7 +276,7 @@ test('移动端 390×844 展开结果表后字号、末列和数值文本可读'
   await expectLastColumnReadable(elementTable)
   await expectNoDiagramLabelCollisions(page)
 
-  const minimumFonts = await page.locator('.structural-results table :is(th, td), .structure-diagram text').evaluateAll((elements) =>
+  const minimumFonts = await page.locator('.structural-results table :is(th, td), .structure-diagram text, .structure-diagram .legend-item').evaluateAll((elements) =>
     elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)))
   expect(minimumFonts.length).toBeGreaterThan(0)
   expect(Math.min(...minimumFonts)).toBeGreaterThanOrEqual(12)

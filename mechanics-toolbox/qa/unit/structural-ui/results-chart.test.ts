@@ -119,6 +119,7 @@ describe('P2 structural result presentation', () => {
     expect(displayStructuralValue(0.001, 'm/N', 'engineering')).toEqual({ value: 1, unit: 'mm/N' })
     const charts = buildStructuralCharts(result, 'engineering')
     expect(charts[0]?.xUnit).toBe('mm')
+    expect(charts[0]?.xLabel).toBe('全局位置 x')
     const momentSeries = charts.find(({ id }) => id === 'structural-M')?.series[0]
     expect(momentSeries?.unit).toBe('N·mm')
     expect(momentSeries?.points[0]).toMatchObject({ x: 500, y: 12_000 })
@@ -132,8 +133,8 @@ describe('P2 structural result presentation', () => {
     const detail = wrapper.get('[data-detail="balance"]')
     ;(detail.element as HTMLDetailsElement).open = true
     await detail.trigger('toggle')
-    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('10.0000 N·mm')
-    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('100.000 N·mm')
+    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('10.0000000 N·mm')
+    expect(wrapper.get('[data-testid="balance-table"]').text()).toContain('100.000000 N·mm')
   })
 
   it('shows truss tension/compression state and provides axial/stress distributions', async () => {
@@ -166,6 +167,7 @@ describe('P2 structural result presentation', () => {
       structural: { ...beam.structural, analysis: 'frame' },
     }
     expect(buildStructuralCharts(frame).map(({ id }) => id)).toEqual(['structural-N', 'structural-V', 'structural-M'])
+    expect(buildStructuralCharts(frame)[0]?.xLabel).toBe('局部位置 x')
 
     const influence: StructuralScreenResult = {
       calculatorId: 'influence', status: 'success', headline: '影响线', groups: [], charts: [], messages: [], balanceChecks: [], metadata,

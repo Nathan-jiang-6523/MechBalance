@@ -28,7 +28,7 @@ describe('P2 frozen UI examples', () => {
       .toMatchObject({ value: { value: expect.closeTo(40_000, 6) }, position: { value: 2 } })
     expect(result.structural.stations.filter(({ x }) => x.value === 2).map(({ side }) => side)).toEqual(['left', 'right'])
     expect(result.metadata.formulaReferences.map(({ id }) => id)).toEqual([
-      'P2-EB-001', 'P2-DSM-001', 'P2-EB-RECOVERY-001',
+      'P2-EB-001', 'P2-EB-002', 'P2-DSM-001', 'P2-EB-RECOVERY-001', 'P2-CBEAM-001',
     ])
   })
 

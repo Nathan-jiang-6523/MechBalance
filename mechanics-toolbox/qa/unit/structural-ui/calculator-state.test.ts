@@ -36,7 +36,7 @@ describe('P2 structural calculator state machine', () => {
     await wrapper.get('.calculate-button').trigger('click')
     expect(wrapper.get('[data-testid="results-stub"]').text()).toBe('success:engineering')
 
-    await wrapper.get('[data-testid="structural-unit-preset"]').setValue('si')
+    await wrapper.get('[data-unit-preset="si"]').trigger('click')
     expect(wrapper.get('[data-testid="results-stub"]').text()).toBe('success:si')
     expect(wrapper.text()).not.toContain('等待首次计算')
   })
@@ -87,5 +87,7 @@ describe('P2 structural calculator state machine', () => {
     const model = wrapper.getComponent({ name: 'StructuralModelEditor' }).props('modelValue') as StructuralModel2D
     expect(model.analysis).toBe('truss')
     expect(wrapper.text()).toContain('TRUSS-A01')
+    await wrapper.findAll('select')[0]!.setValue('TRUSS-T01')
+    expect(wrapper.get('#p2-calculator-title').text()).toBe('桁架均匀温升自由伸长')
   })
 })
