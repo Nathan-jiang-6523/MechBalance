@@ -5,12 +5,31 @@ import { runStructuralCalculation } from '../../../src/features/structural/calcu
 describe('P2 frozen UI examples', () => {
   it('registers the frozen and requested examples across all five analyses and returns defensive copies', () => {
     expect(STRUCTURAL_EXAMPLES.map(({ id }) => id)).toEqual([
-      'BEAM-A01', 'CBEAM-A03',
+      'BEAM-A03', 'BEAM-A01', 'CBEAM-A03',
       'TRUSS-A01', 'TRUSS-T01', 'TRUSS-IS01', 'TRUSS-SW01',
       'FRAME-A01', 'FRAME-A02', 'FRAME-A03', 'FRAME-T01', 'FRAME-IS01',
       'IL-A03', 'ML-A01',
     ])
     expect(getStructuralExample('BEAM-A01')).not.toBe(getStructuralExample('BEAM-A01'))
+  })
+
+  it('BEAM-A03 is the unambiguous stable cantilever default and matches frozen truth', () => {
+    const model = getStructuralExample('BEAM-A03')
+    expect(model.analysis).toBe('beam')
+    if (model.analysis !== 'beam') return
+    expect(model.constraints.filter(({ nodeId }) => nodeId === '1').map(({ dof }) => dof).sort())
+      .toEqual(['theta', 'u', 'v'])
+    const result = runStructuralCalculation(model)
+    expect(result.status).toBe('success')
+    if (result.status === 'error' || result.structural.analysis !== 'beam') return
+    expect(result.structural.displacements.find(({ nodeId }) => nodeId === '2')).toMatchObject({
+      v: { value: expect.closeTo(-0.05625, 10) },
+      theta: { value: expect.closeTo(-0.028125, 10) },
+    })
+    expect(result.structural.reactions.find(({ nodeId }) => nodeId === '1')).toMatchObject({
+      fy: { value: expect.closeTo(10_000, 6) },
+      mz: { value: expect.closeTo(30_000, 6) },
+    })
   })
 
   it('BEAM-A01 retains u/v/theta from the first P2 stage', () => {

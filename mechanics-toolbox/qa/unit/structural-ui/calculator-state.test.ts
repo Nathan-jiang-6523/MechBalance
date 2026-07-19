@@ -18,6 +18,11 @@ const stubs = {
     template: '<div data-testid="editor-stub" />',
   },
   StructureDiagram: { name: 'StructureDiagram', template: '<div data-testid="diagram-stub" />' },
+  MovingLoadSchematic: {
+    name: 'MovingLoadSchematic',
+    props: ['request', 'result', 'unitPresetId'],
+    template: '<div data-testid="moving-load-schematic-stub">{{ request.movingLoad.direction }}:{{ unitPresetId }}</div>',
+  },
   StructuralResults: {
     name: 'StructuralResults',
     props: ['result', 'unitPresetId'],
@@ -100,5 +105,12 @@ describe('P2 structural calculator state machine', () => {
     expect(schematic.text()).toContain('单位荷载位置 z：0 → L')
     expect(schematic.text()).toContain('a = 4000 mm')
     expect(schematic.text()).toContain('目标截面剪力 V(a)影响线')
+  })
+
+  it('mounts the dedicated moving-load schematic with the active direction and units', async () => {
+    const wrapper = mount(StructuralCalculator, { global: { stubs } })
+    wrapper.getComponent({ name: 'StructuralWorkspace' }).vm.$emit('module-change', 'moving-load')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[data-testid="moving-load-schematic-stub"]').text()).toBe('left-to-right:engineering')
   })
 })

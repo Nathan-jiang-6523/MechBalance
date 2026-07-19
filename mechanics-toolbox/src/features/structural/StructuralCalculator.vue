@@ -27,6 +27,7 @@ import StructureDiagram, {
   type StructureDiagramLayers,
 } from './components/StructureDiagram.vue'
 import InfluenceLineSchematic from './components/InfluenceLineSchematic.vue'
+import MovingLoadSchematic from './components/MovingLoadSchematic.vue'
 import StructuralModelEditor from './components/StructuralModelEditor.vue'
 import StructuralResults from './components/StructuralResults.vue'
 import { getStructuralExample, STRUCTURAL_EXAMPLES, type StructuralExample } from './examples'
@@ -37,7 +38,7 @@ type AvailableModuleId = StructuralAnalysisRequest['analysis']
 type WorkspaceState = 'idle' | 'dirty-valid' | 'dirty-invalid' | 'solving' | 'success' | 'warning' | 'error'
 
 const DEFAULT_EXAMPLE_BY_MODULE: Readonly<Record<AvailableModuleId, StructuralExample['id']>> = {
-  beam: 'BEAM-A01',
+  beam: 'BEAM-A03',
   truss: 'TRUSS-A01',
   frame: 'FRAME-A01',
   'influence-line': 'IL-A03',
@@ -45,7 +46,7 @@ const DEFAULT_EXAMPLE_BY_MODULE: Readonly<Record<AvailableModuleId, StructuralEx
 }
 
 const unitPresetId = ref<UnitPresetId>('engineering')
-const exampleId = ref<StructuralExample['id']>('BEAM-A01')
+const exampleId = ref<StructuralExample['id']>('BEAM-A03')
 const request = ref<StructuralAnalysisRequest>(getStructuralExample(exampleId.value))
 const result = ref<StructuralScreenResult | null>(null)
 const issues = ref<readonly StructuralIssue[]>([])
@@ -70,6 +71,10 @@ const influenceRequest = computed((): InfluenceLineRequest | null =>
   request.value.analysis === 'influence-line' ? request.value : null)
 const movingRequest = computed((): MovingLoadRequest | null =>
   request.value.analysis === 'moving-load' ? request.value : null)
+const movingResult = computed(() => {
+  if (!result.value || result.value.status === 'error') return undefined
+  return result.value.structural.analysis === 'moving-load' ? result.value.structural : undefined
+})
 const currentExamples = computed(() => STRUCTURAL_EXAMPLES.filter(({ request: candidate }) =>
   candidate.analysis === request.value.analysis))
 const currentExample = computed(() => STRUCTURAL_EXAMPLES.find(({ id }) => id === exampleId.value))
@@ -285,6 +290,11 @@ onBeforeUnmount(() => {
             相邻轴距 {{ index + 1 }} / {{ unitSymbol('length') }}
             <input type="number" :value="displayValue(spacing, 'length')" @input="patchMovingSpacing($event, index)" />
           </label>
+          <MovingLoadSchematic
+            :request="movingRequest"
+            :result="movingResult"
+            :unit-preset-id="unitPresetId"
+          />
           <p>只输出已确认的最大/最小控制值与控制轴位置，不生成未确认的完整包络曲线。</p>
         </section>
 
@@ -326,7 +336,7 @@ select, input { min-height: 44px; max-width: 100%; padding: 8px 10px; border: 1p
 .diagram-layer-controls legend { padding: 0 5px; color: var(--color-muted); font-size: 12px; font-weight: 800; }
 .diagram-layer-controls label { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: #40545d; font-size: 12px; font-weight: 700; }
 .diagram-layer-controls input { width: 18px; min-height: 18px; margin: 0; padding: 0; }
-.simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p, .simple-editor .influence-schematic { grid-column: 1 / -1; }
+.simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p, .simple-editor .influence-schematic, .simple-editor .moving-load-schematic { grid-column: 1 / -1; }
 .calculate-row { display: flex; gap: 14px; align-items: center; }.calculate-button { min-height: 46px; padding: 11px 20px; border: 0; border-radius: 8px; color: #fff; background: var(--color-brand); font-weight: 800; cursor: pointer; }.calculate-button:disabled { opacity: .55; cursor: wait; }
 .result-placeholder { display: grid; gap: 5px; padding: 24px; border: 1px dashed #b8c8cd; border-radius: 10px; color: var(--color-muted); background: #f8fafb; text-align: center; }.result-placeholder strong { color: #40545d; }
 @media (max-width: 1100px) { .calculator-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }.model-layout { grid-template-columns: 1fr; } }

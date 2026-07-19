@@ -9,6 +9,7 @@ import type {
 
 export interface StructuralExample {
   readonly id:
+    | 'BEAM-A03'
     | 'BEAM-A01'
     | 'CBEAM-A03'
     | 'TRUSS-A01'
@@ -54,6 +55,20 @@ const beamA01: BeamModel2D = {
     { nodeId: '3', dof: 'v', value: 0 },
   ],
   loads: [{ type: 'nodal', id: 'P', nodeId: '2', fy: -40_000 }],
+}
+
+const beamA03: BeamModel2D = {
+  analysis: 'beam', units: 'SI', topology: 'single-span', propertyPolicy: 'uniform',
+  uniformProperties: { source: 'inline', E: 200e9, A: 0.01, I: 8e-6 },
+  nodes: [{ id: '1', x: 0, y: 0 }, { id: '2', x: 3, y: 0 }],
+  materials: [], sections: [],
+  elements: [{ type: 'beam', id: '12', nodeI: '1', nodeJ: '2' }],
+  constraints: [
+    { nodeId: '1', dof: 'u', value: 0 },
+    { nodeId: '1', dof: 'v', value: 0 },
+    { nodeId: '1', dof: 'theta', value: 0 },
+  ],
+  loads: [{ type: 'nodal', id: 'P', nodeId: '2', fy: -10_000 }],
 }
 
 const cbeamA03: BeamModel2D = {
@@ -237,7 +252,11 @@ const mlA01: MovingLoadRequest = {
 
 export const STRUCTURAL_EXAMPLES = [
   {
-    id: 'BEAM-A01', title: '简支梁跨中集中力', request: beamA01,
+    id: 'BEAM-A03', title: '左端固支悬臂梁自由端集中力', request: beamA03,
+    fixtureSource: fixtureSource('P2-BEAM-A03', 'qa/fixtures/p2-beam.json', 'P2-BEAM-FIXTURES-v1'),
+  },
+  {
+    id: 'BEAM-A01', title: '简支梁跨中集中力（验证基准）', request: beamA01,
     fixtureSource: fixtureSource('P2-BEAM-A01', 'qa/fixtures/p2-beam.json', 'P2-BEAM-FIXTURES-v1'),
   },
   {

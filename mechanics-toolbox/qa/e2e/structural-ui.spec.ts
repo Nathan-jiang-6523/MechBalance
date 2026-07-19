@@ -104,7 +104,7 @@ test.afterEach(async ({ page }) => {
   expect(runtimeErrors.get(page) ?? []).toEqual([])
 })
 
-test('BEAM-A01 首次计算、单位原子切换和旧结果失效', async ({ page }) => {
+test('稳定悬臂梁默认算例首次计算、单位原子切换和旧结果失效', async ({ page }) => {
   const unitPreset = page.getByTestId('structural-unit-preset')
   const engineeringPreset = unitPreset.getByRole('button', { name: 't–mm–MPa–N–s' })
   const siPreset = unitPreset.getByRole('button', { name: 'SI（kg–m–Pa–N–s）' })
@@ -168,6 +168,26 @@ test('影响线示意标清移动荷载路径与固定响应截面', async ({ pa
     .toBeLessThanOrEqual(0)
 })
 
+test('移动荷载示意标清轴组、轴距、方向、支座和控制工况', async ({ page }) => {
+  await page.locator('[data-module-id="moving-load"]').click()
+  const schematic = page.getByTestId('moving-load-schematic')
+  await expect(schematic).toBeVisible()
+  await expect(schematic).toHaveAttribute('data-direction', 'left-to-right')
+  await expect(schematic).toHaveAttribute('data-mode', 'configuration')
+  await expect(schematic.locator('.support')).toHaveCount(2)
+  await expect(schematic.locator('.moving-axle')).toHaveCount(2)
+  await expect(schematic.locator('[data-spacing-index="0"]')).toContainText('3000 mm')
+  await expect(schematic.locator('.response-target')).toHaveAttribute('data-response-type', 'left-reaction')
+  await expect(schematic).toContainText('从左向右（A → B）')
+  await expect(schematic).toContainText('事件点 + 驻点')
+  await page.getByRole('button', { name: '计算结构响应' }).click()
+  await expect(schematic).toHaveAttribute('data-mode', 'governing-control')
+  await expect(schematic.locator('[data-axle-id="rear"]')).toHaveAttribute('data-position', '0')
+  await expect(schematic).toContainText('最大值控制')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .toBeLessThanOrEqual(0)
+})
+
 test('结构工作台在当前视口内且关键触控目标不小于 44px', async ({ page }) => {
   const viewport = page.viewportSize()
   expect(viewport).not.toBeNull()
@@ -217,6 +237,10 @@ test('桌面 FRAME-A01 与编辑器构造 CBEAM-A03 符合冻结真值及图层�
   await expect(diagram.locator('.local-axes')).toHaveCount(3)
   await expect(diagram.locator('.node')).toHaveCount(4)
   await expect(diagram.locator('.support')).toHaveCount(2)
+  await expect(diagram.locator('.support[data-support="fixed"][data-orientation="bottom"]')).toHaveCount(2)
+  await expect(diagram.locator('.element-line[data-element-id="43"]')).toHaveAttribute('data-node-i', '4')
+  await expect(diagram.locator('.element-line[data-element-id="43"]')).toHaveAttribute('data-node-j', '3')
+  await expect(diagram.locator('.element-label', { hasText: '43 · 4→3' })).toBeVisible()
   await expect(diagram.locator('.load-arrow')).toHaveCount(2)
   await expect(diagram.locator('.deformed-element')).toHaveCount(3)
   await expect(diagram.locator('.load-arrow[data-load-id="H2"]')).toHaveAttribute('data-direction', 'global+x')
@@ -240,6 +264,7 @@ test('桌面 FRAME-A01 与编辑器构造 CBEAM-A03 符合冻结真值及图层�
   }
 
   await page.locator('[data-module-id="beam"]').click()
+  await page.locator('.calculator-toolbar select').selectOption('BEAM-A01')
   await page.locator('[data-add="constraints"]').click()
   const addedConstraint = page.locator('.structural-model-editor [data-remove^="constraints"]').last().locator('xpath=..')
   await addedConstraint.locator('input').first().fill('1')
@@ -278,12 +303,12 @@ test('移动端 390×844 展开结果表后字号、末列和数值文本可读'
   await expect(unitButtons.nth(1)).toBeVisible()
   const engineeringPreset = unitPreset.getByRole('button', { name: 't–mm–MPa–N–s' })
   const siPreset = unitPreset.getByRole('button', { name: 'SI（kg–m–Pa–N–s）' })
-  const beamLength = page.locator('[data-field="nodes[2].x"]')
-  await expect(beamLength).toHaveValue('4000')
+  const beamLength = page.locator('[data-field="nodes[1].x"]')
+  await expect(beamLength).toHaveValue('3000')
   await siPreset.click()
-  await expect(beamLength).toHaveValue('4')
+  await expect(beamLength).toHaveValue('3')
   await engineeringPreset.click()
-  await expect(beamLength).toHaveValue('4000')
+  await expect(beamLength).toHaveValue('3000')
 
   await page.getByRole('button', { name: '计算结构响应' }).click()
   await expect(page.getByRole('heading', { name: '计算完成' })).toBeVisible()

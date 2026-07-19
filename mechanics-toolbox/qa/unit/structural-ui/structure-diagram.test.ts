@@ -31,11 +31,44 @@ describe('P2 StructureDiagram', () => {
     expect(wrapper.get('title').text()).toContain('全局 x 向右、y 向上')
     expect(wrapper.findAll('.node').map((node) => node.attributes('data-node-id'))).toEqual(['N1', 'N2'])
     expect(wrapper.get('[data-element-id="E1"].element-line').attributes('data-element-type')).toBe('frame')
+    expect(wrapper.get('[data-element-id="E1"].element-line').attributes('data-node-i')).toBe('N1')
+    expect(wrapper.get('[data-element-id="E1"].element-line').attributes('data-node-j')).toBe('N2')
+    expect(wrapper.get('.element-label').text()).toBe('E1 · N1→N2')
     const axes = wrapper.get('[data-element-id="E1"].local-axes')
     expect(Number(axes.attributes('data-c'))).toBeCloseTo(0.6, 12)
     expect(Number(axes.attributes('data-s'))).toBeCloseTo(0.8, 12)
     expect(wrapper.get('[data-node-id="N1"].support').attributes('data-support')).toBe('fixed')
+    expect(wrapper.get('[data-node-id="N1"].support').attributes('data-orientation')).toBe('bottom')
     expect(wrapper.get('[data-node-id="N2"].support').attributes('data-support')).toBe('roller-y')
+  })
+
+  it('draws portal-frame column bases below the endpoints and preserves the 4→3 right-column direction', () => {
+    const portal: FrameModel2D = {
+      ...frame,
+      nodes: [
+        { id: '1', x: 0, y: 0 }, { id: '2', x: 0, y: 3 },
+        { id: '3', x: 4, y: 3 }, { id: '4', x: 4, y: 0 },
+      ],
+      elements: [
+        { ...frame.elements[0]!, id: '12', nodeI: '1', nodeJ: '2' },
+        { ...frame.elements[0]!, id: '23', nodeI: '2', nodeJ: '3' },
+        { ...frame.elements[0]!, id: '43', nodeI: '4', nodeJ: '3' },
+      ],
+      constraints: ['1', '4'].flatMap((nodeId) => (['u', 'v', 'theta'] as const)
+        .map((dof) => ({ nodeId, dof, value: 0 as const }))),
+      loads: [],
+    }
+    const wrapper = mount(StructureDiagram, { props: { model: portal } })
+    for (const nodeId of ['1', '4']) {
+      expect(wrapper.get(`[data-node-id="${nodeId}"].support`).attributes('data-orientation')).toBe('bottom')
+    }
+    const rightColumn = wrapper.get('[data-element-id="43"].element-line')
+    expect(rightColumn.attributes('data-node-i')).toBe('4')
+    expect(rightColumn.attributes('data-node-j')).toBe('3')
+    expect(wrapper.findAll('.element-label').map((label) => label.text())).toContain('43 · 4→3')
+    const node4 = wrapper.get('.node[data-node-id="4"] circle').attributes()
+    expect(rightColumn.attributes('x1')).toBe(node4.cx)
+    expect(rightColumn.attributes('y1')).toBe(node4.cy)
   })
 
   it('renders nodal and distributed load directions plus exact-input legend', () => {

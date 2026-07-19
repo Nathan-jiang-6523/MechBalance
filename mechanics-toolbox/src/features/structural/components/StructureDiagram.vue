@@ -138,6 +138,8 @@ const nodeViewById = computed(() => new Map(nodeViews.value.map((node) => [node.
 interface ElementView {
   readonly id: string
   readonly type: StructuralElement2D['type']
+  readonly nodeI: string
+  readonly nodeJ: string
   readonly i: ScreenPoint
   readonly j: ScreenPoint
   readonly midpoint: ScreenPoint
@@ -165,6 +167,8 @@ function elementView(element: StructuralElement2D): ElementView | null {
   return {
     id: element.id,
     type: element.type,
+    nodeI: element.nodeI,
+    nodeJ: element.nodeJ,
     i: viewI,
     j: viewJ,
     midpoint,
@@ -185,6 +189,31 @@ const elementViews = computed(() => props.model.elements
 const elementViewById = computed(() => new Map(elementViews.value.map((element) => [element.id, element])))
 
 type SupportType = 'fixed' | 'pin' | 'roller-x' | 'roller-y' | 'rotation'
+type FixedSupportOrientation = 'left' | 'right' | 'top' | 'bottom'
+
+function fixedSupportOrientation(node: StructuralNode2D): FixedSupportOrientation {
+  const inward = props.model.elements.reduce((sum, element) => {
+    if (element.nodeI !== node.id && element.nodeJ !== node.id) return sum
+    const otherId = element.nodeI === node.id ? element.nodeJ : element.nodeI
+    const other = props.model.nodes.find(({ id }) => id === otherId)
+    if (!other) return sum
+    const dx = other.x - node.x
+    const dy = other.y - node.y
+    const length = Math.hypot(dx, dy)
+    if (length === 0) return sum
+    return { x: sum.x + dx / length, y: sum.y + dy / length }
+  }, { x: 0, y: 0 })
+  if (Math.abs(inward.x) >= Math.abs(inward.y) && Math.abs(inward.x) > 1e-12) {
+    return inward.x > 0 ? 'left' : 'right'
+  }
+  if (Math.abs(inward.y) > 1e-12) return inward.y > 0 ? 'bottom' : 'top'
+  return 'left'
+}
+
+function fixedSupportTransform(orientation: FixedSupportOrientation, x: number, y: number): string | undefined {
+  const angle = { left: 0, right: 180, top: 90, bottom: -90 }[orientation]
+  return angle === 0 ? undefined : `rotate(${angle} ${x} ${y})`
+}
 
 const supports = computed(() => props.model.nodes.flatMap((node) => {
   const dofs = new Set(props.model.constraints.filter(({ nodeId }) => nodeId === node.id).map(({ dof }) => dof))
@@ -196,7 +225,13 @@ const supports = computed(() => props.model.nodes.flatMap((node) => {
   else if (dofs.has('v')) type = 'roller-y'
   else if (dofs.has('u')) type = 'roller-x'
   else type = 'rotation'
-  return [{ nodeId: node.id, type, x: view.x, y: view.y }]
+  return [{
+    nodeId: node.id,
+    type,
+    x: view.x,
+    y: view.y,
+    orientation: type === 'fixed' ? fixedSupportOrientation(node) : undefined,
+  }]
 }))
 
 interface ArrowView {
@@ -342,6 +377,8 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
             class="element-line"
             :data-element-id="element.id"
             :data-element-type="element.type"
+            :data-node-i="element.nodeI"
+            :data-node-j="element.nodeJ"
             :x1="element.i.x"
             :y1="element.i.y"
             :x2="element.j.x"
@@ -381,14 +418,16 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
             v-for="element in elementViews"
             :key="`${element.id}-label`"
             class="element-label"
-            :x="element.midpoint.x + 8 * element.s"
-            :y="element.midpoint.y + 8 * element.c"
-          >{{ element.id }}</text>
+            :x="element.midpoint.x + 46 * element.s"
+            :y="element.midpoint.y + 46 * element.c"
+          >{{ element.id }} · {{ element.nodeI }}→{{ element.nodeJ }}</text>
 
-          <g v-if="visibleLayers.supports" v-for="support in supports" :key="support.nodeId" class="support" :data-support="support.type" :data-node-id="support.nodeId">
+          <g v-if="visibleLayers.supports" v-for="support in supports" :key="support.nodeId" class="support" :data-support="support.type" :data-node-id="support.nodeId" :data-orientation="support.orientation">
             <template v-if="support.type === 'fixed'">
-              <line :x1="support.x - 4" :x2="support.x - 4" :y1="support.y - 25" :y2="support.y + 25" class="fixed-wall" />
-              <path :d="`M ${support.x - 20} ${support.y - 18} l 16 -10 M ${support.x - 20} ${support.y} l 16 -10 M ${support.x - 20} ${support.y + 18} l 16 -10`" />
+              <g class="fixed-symbol" :transform="fixedSupportTransform(support.orientation!, support.x, support.y)">
+                <line :x1="support.x - 4" :x2="support.x - 4" :y1="support.y - 25" :y2="support.y + 25" class="fixed-wall" />
+                <path :d="`M ${support.x - 20} ${support.y - 18} l 16 -10 M ${support.x - 20} ${support.y} l 16 -10 M ${support.x - 20} ${support.y + 18} l 16 -10`" />
+              </g>
             </template>
             <template v-else-if="support.type === 'pin' || support.type === 'roller-y'">
               <path :d="`M ${support.x} ${support.y + 3} l -16 25 h 32 Z`" />
