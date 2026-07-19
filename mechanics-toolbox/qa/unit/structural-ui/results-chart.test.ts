@@ -100,6 +100,19 @@ describe('P2 structural result presentation', () => {
     ])
   })
 
+  it('atomically converts result tables and chart axes through the shared engineering preset', () => {
+    const result = beamResult()
+    const rows = buildStructuralResultRows(result, 'engineering')
+    expect(rows.controls[0]).toMatchObject({ value: 12_000, unit: 'N·mm', position: { value: 500, unit: 'mm' } })
+    expect(rows.displacements.find(({ label }) => label === '节点位移 v')).toMatchObject({ value: -1, unit: 'mm' })
+    expect(rows.elements.find(({ label }) => label.startsWith('纤维应力'))).toMatchObject({ value: -20, unit: 'MPa' })
+    const charts = buildStructuralCharts(result, 'engineering')
+    expect(charts[0]?.xUnit).toBe('mm')
+    const momentSeries = charts.find(({ id }) => id === 'structural-M')?.series[0]
+    expect(momentSeries?.unit).toBe('N·mm')
+    expect(momentSeries?.points[0]).toMatchObject({ x: 500, y: 12_000 })
+  })
+
   it('shows truss tension/compression state and provides axial/stress distributions', () => {
     const result: StructuralScreenResult = {
       calculatorId: 'truss', status: 'success', headline: '桁架', groups: [], charts: [], messages: [], balanceChecks: [], metadata,

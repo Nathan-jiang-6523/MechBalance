@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatSignificant } from '../../../core/numeric'
+import type { UnitPresetId } from '../../../core/units'
 import type { StructuralScreenResult } from '../../../core/structural/contracts'
 import StructuralChart from './StructuralChart.vue'
 import { buildStructuralCharts, buildStructuralResultRows, sideLabel, type StructuralDisplayRow } from './result-presentation'
 
-const props = defineProps<{ result: StructuralScreenResult }>()
-const rows = computed(() => buildStructuralResultRows(props.result))
-const charts = computed(() => buildStructuralCharts(props.result))
+const props = withDefaults(defineProps<{ result: StructuralScreenResult; unitPresetId?: UnitPresetId }>(), {
+  unitPresetId: 'si',
+})
+const rows = computed(() => buildStructuralResultRows(props.result, props.unitPresetId))
+const charts = computed(() => buildStructuralCharts(props.result, props.unitPresetId))
 const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 'tension'
   ? '拉' : state === 'compression' ? '压' : state === 'zero' ? '零力' : '—'
 </script>
