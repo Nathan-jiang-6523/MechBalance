@@ -1,4 +1,5 @@
 export * from './assembly'
 export * from './constraints'
+export * from './dof'
 export * from './linear'
 export * from './reactions'

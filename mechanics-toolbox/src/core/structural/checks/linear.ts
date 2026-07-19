@@ -3,6 +3,8 @@ export interface LinearSystemCheck {
     | 'free-dof-equilibrium'
     | 'free-force-equilibrium'
     | 'free-moment-equilibrium'
+    | 'node-equilibrium'
+    | 'element-axial-equilibrium'
     | 'global-force-x-balance'
     | 'global-force-y-balance'
     | 'global-moment-balance'
