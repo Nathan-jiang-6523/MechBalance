@@ -26,6 +26,7 @@ import StructureDiagram, {
   type StructureDiagramDeformation,
   type StructureDiagramLayers,
 } from './components/StructureDiagram.vue'
+import InfluenceLineSchematic from './components/InfluenceLineSchematic.vue'
 import StructuralModelEditor from './components/StructuralModelEditor.vue'
 import StructuralResults from './components/StructuralResults.vue'
 import { getStructuralExample, STRUCTURAL_EXAMPLES, type StructuralExample } from './examples'
@@ -265,6 +266,7 @@ onBeforeUnmount(() => {
           <label v-if="'position' in influenceRequest.response">截面位置 a / {{ unitSymbol('length') }}
             <input type="number" :value="displayValue(influenceRequest.response.position, 'length')" @input="patchInfluenceResponsePosition" />
           </label>
+          <InfluenceLineSchematic :request="influenceRequest" :unit-preset-id="unitPresetId" />
           <p>剪力影响线在截面处保留 left/right 两侧极限，不平滑跳变。</p>
         </section>
 
@@ -324,7 +326,7 @@ select, input { min-height: 44px; max-width: 100%; padding: 8px 10px; border: 1p
 .diagram-layer-controls legend { padding: 0 5px; color: var(--color-muted); font-size: 12px; font-weight: 800; }
 .diagram-layer-controls label { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: #40545d; font-size: 12px; font-weight: 700; }
 .diagram-layer-controls input { width: 18px; min-height: 18px; margin: 0; padding: 0; }
-.simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p { grid-column: 1 / -1; }
+.simple-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--color-line); border-radius: 11px; background: var(--color-panel); }.simple-editor p, .simple-editor .influence-schematic { grid-column: 1 / -1; }
 .calculate-row { display: flex; gap: 14px; align-items: center; }.calculate-button { min-height: 46px; padding: 11px 20px; border: 0; border-radius: 8px; color: #fff; background: var(--color-brand); font-weight: 800; cursor: pointer; }.calculate-button:disabled { opacity: .55; cursor: wait; }
 .result-placeholder { display: grid; gap: 5px; padding: 24px; border: 1px dashed #b8c8cd; border-radius: 10px; color: var(--color-muted); background: #f8fafb; text-align: center; }.result-placeholder strong { color: #40545d; }
 @media (max-width: 1100px) { .calculator-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }.model-layout { grid-template-columns: 1fr; } }
