@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "fixtureVersion": "P2-CBEAM-FIXTURES-v1",
+  "source": "ai/memory-bank/p2-acceptance-cases-form.md",
+  "sourceSection": "三、等属性单跨超静定梁",
+  "frozenAt": "2026-07-19",
+  "truthPolicy": "independent frozen truth; no project output backfill",
+  "moduleBoundary": "equal E/A/I single-span fixed or fixed-pinned beams only; segmented properties, continuous multi-span, internal hinges and end releases excluded",
+  "cases": [
+    {
+      "id": "P2-CBEAM-A03",
+      "title": "固定—简支梁",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=4 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; q_y=-10000 N/m; left u=v=theta=0; right v=0 with u/theta free",
+      "expected": "RAy=+25000 N; RBy=+15000 N; left reaction moment=+20000 N*m; left internal beam moment=-20000 N*m; right moment=0; right theta=+0.00833333333333 rad; M(x)=-20000+25000x-5000x^2 N*m",
+      "tolerance": "relative 1e-7",
+      "errors": [],
+      "source": "force method with right reaction redundant and cantilever tip-deflection compatibility; 2026-07-19"
+    },
+    {
+      "id": "P2-CBEAM-A05",
+      "title": "两端固支等属性梁",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=4 m; E=200 GPa; A=0.01 m^2; I=8e-5 m^4; q_y=-10000 N/m; both ends u=v=theta=0; uniform E/A/I",
+      "expected": "vertical reactions each +20000 N; left/right reaction moments +13333.3333333333/-13333.3333333333 N*m; V(x)=20000-10000x N; M(x)=-13333.3333333333+20000x-5000x^2 N*m; end internal moments=-13333.3333333333 N*m; M_mid=+6666.66666666667 N*m; contraflexure x=0.845299461620748 and 3.15470053837925 m",
+      "tolerance": "reaction/moment relative 1e-8; position absolute 1e-9 m",
+      "errors": [],
+      "source": "EB fixed-ended UDL closed form and static equilibrium; 2026-07-19"
+    },
+    {
+      "id": "P2-CBEAM-A04",
+      "title": "内部铰/端释放排除项",
+      "status": "confirmed-excluded-feature",
+      "excluded": true,
+      "scopeFreeze": "end releases and internal hinges are not included; never solve silently as rigid",
+      "inputs": "nodes x=[0,2,4] m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; elements[0].releaseJMz=true at x=2 m; end v=0; left u=0; Fy_mid=-10000 N",
+      "expected": "no numerical result; future scope change requires newly frozen truth and must not mutate this card into a pass",
+      "tolerance": "error code/message/field exact",
+      "errors": [{"code":"P2_FEATURE_NOT_INCLUDED","field":"elements[0].releaseJMz","message":"P2 未纳入梁端弯矩释放/内部铰"}],
+      "source": "confirmed P2 scope freeze; 2026-07-19"
+    },
+    {
+      "id": "P2-CBEAM-X01",
+      "title": "独立程序对照",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "SymPy 1.14.0 exact-rational force-method compatibility equations; models CBEAM-A03 and A05; SI L/E/I/q and constraint text table",
+      "expected": "A03 [RA,RB]=[25000,15000] N and left internal M=-20000 N*m; A05 vertical reactions=20000 N each, end internal moments=-13333.3333333333 N*m each, midspan=+6666.66666666667 N*m; test source records equations, redundants and compatibility; no project solver output",
+      "tolerance": "relative difference <=1e-9; position absolute <=1e-9 m",
+      "errors": [],
+      "source": "SymPy 1.14.0 fixed-version independent calculation; 2026-07-19"
+    }
+  ]
+}
