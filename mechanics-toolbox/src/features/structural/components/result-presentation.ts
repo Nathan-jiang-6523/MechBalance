@@ -231,8 +231,14 @@ function stationSeries(
   })
 }
 
-function chart(id: string, title: string, series: readonly CurveSeries[], presetId: UnitPresetId): CurveChart {
-  return { id, title, xLabel: '局部位置 x', xUnit: displayValue(0, 'm', presetId).unit, series }
+function chart(
+  id: string,
+  title: string,
+  series: readonly CurveSeries[],
+  presetId: UnitPresetId,
+  xLabel: '全局位置 x' | '局部位置 x',
+): CurveChart {
+  return { id, title, xLabel, xUnit: displayValue(0, 'm', presetId).unit, series }
 }
 
 /** Build display curves only from confirmed result values; performs no mechanics calculation. */
@@ -256,15 +262,16 @@ export function buildStructuralCharts(
   }))
   const data = result.structural
   if (data.analysis === 'beam' || data.analysis === 'frame') {
+    const xLabel = data.analysis === 'beam' ? '全局位置 x' : '局部位置 x'
     const charts = [
-      chart('structural-N', '轴力 N', stationSeries(data.stations, 'axialForce', 'N', presetId), presetId),
-      chart('structural-V', '剪力 V', stationSeries(data.stations, 'shearForce', 'V', presetId), presetId),
-      chart('structural-M', '弯矩 M', stationSeries(data.stations, 'bendingMoment', 'M', presetId), presetId),
+      chart('structural-N', '轴力 N', stationSeries(data.stations, 'axialForce', 'N', presetId), presetId, xLabel),
+      chart('structural-V', '剪力 V', stationSeries(data.stations, 'shearForce', 'V', presetId), presetId, xLabel),
+      chart('structural-M', '弯矩 M', stationSeries(data.stations, 'bendingMoment', 'M', presetId), presetId, xLabel),
     ]
     if (data.analysis === 'beam') {
       charts.push(
-        chart('structural-theta', '转角 θ', stationSeries(data.stations, 'rotation', 'θ', presetId), presetId),
-        chart('structural-v', '位移 v', stationSeries(data.stations, 'displacement', 'v', presetId), presetId),
+        chart('structural-theta', '转角 θ', stationSeries(data.stations, 'rotation', 'θ', presetId), presetId, xLabel),
+        chart('structural-v', '位移 v', stationSeries(data.stations, 'displacement', 'v', presetId), presetId, xLabel),
       )
     }
     return charts.filter(({ series }) => series.length > 0)

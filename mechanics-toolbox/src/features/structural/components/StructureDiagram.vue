@@ -438,8 +438,8 @@ const viewBox = computed(() => `0 0 ${SVG_WIDTH} ${legendHeight.value}`)
           </template>
         </g>
 
-        <line class="legend-separator" x1="712" x2="712" y1="18" :y2="legendHeight - 18" />
-        <g class="legend-zone" data-zone="legend" :data-zone-min-x="LEGEND_X">
+        <line v-if="visibleLayers.loads" class="legend-separator" x1="712" x2="712" y1="18" :y2="legendHeight - 18" />
+        <g v-if="visibleLayers.loads" class="legend-zone" data-zone="legend" :data-zone-min-x="LEGEND_X">
           <text :x="LEGEND_X" y="34" class="legend-title">输入载荷（{{ unitPresetLabel }}）</text>
           <text v-if="model.loads.length === 0" :x="LEGEND_X" y="62" class="legend-empty">无载荷</text>
           <foreignObject
@@ -496,7 +496,7 @@ text {
 .legend-item {
   color: #40545d;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
   line-height: 1.35;
   overflow-wrap: anywhere;

@@ -31,6 +31,7 @@ function updateDetail(id: string, event: Event): void {
 }
 const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 'tension'
   ? '拉' : state === 'compression' ? '压' : state === 'zero' ? '零力' : '—'
+const formatResult = (value: unknown): string => formatSignificant(value, 9)
 </script>
 
 <template>
@@ -54,8 +55,8 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         <div v-else class="table-wrap"><table data-testid="control-table">
           <thead><tr><th>响应</th><th>对象 ID</th><th>数值</th><th>位置</th><th>正值含义</th><th>说明</th></tr></thead>
           <tbody><tr v-for="row in rows.controls" :key="row.key" data-testid="control-row">
-            <td>{{ row.label }}</td><td>{{ row.objectId ?? '—' }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td>
-            <td>{{ row.position ? `${formatSignificant(row.position.value)} ${row.position.unit} · ${sideLabel(row.position.side)}` : '—' }}</td>
+            <td>{{ row.label }}</td><td>{{ row.objectId ?? '—' }}</td><td>{{ formatResult(row.value) }} {{ row.unit }}</td>
+            <td>{{ row.position ? `${formatResult(row.position.value)} ${row.position.unit} · ${sideLabel(row.position.side)}` : '—' }}</td>
             <td>{{ row.positive }}</td><td>{{ row.note ?? '—' }}</td>
           </tr></tbody>
         </table></div>
@@ -65,7 +66,7 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         <summary id="node-displacements-title">节点位移 <small>{{ rows.displacements.length }} 项</small></summary>
         <div v-if="expandedDetails.has('displacements')" class="table-wrap"><table data-testid="displacement-table">
           <thead><tr><th>量</th><th>节点 ID</th><th>数值</th><th>方向/正值含义</th></tr></thead>
-          <tbody><tr v-for="row in rows.displacements" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
+          <tbody><tr v-for="row in rows.displacements" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatResult(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
         </table></div>
       </details>
 
@@ -73,7 +74,7 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         <summary id="node-reactions-title">节点反力 <small>{{ rows.reactions.length }} 项</small></summary>
         <div v-if="expandedDetails.has('reactions')" class="table-wrap"><table data-testid="reaction-table">
           <thead><tr><th>量</th><th>节点 ID</th><th>数值</th><th>方向/正值含义</th></tr></thead>
-          <tbody><tr v-for="row in rows.reactions" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
+          <tbody><tr v-for="row in rows.reactions" :key="row.key"><td>{{ row.label }}</td><td>{{ row.objectId }}</td><td>{{ formatResult(row.value) }} {{ row.unit }}</td><td>{{ row.positive }}</td></tr></tbody>
         </table></div>
       </details>
 
@@ -82,8 +83,8 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         <div v-if="expandedDetails.has('elements')" class="table-wrap"><table data-testid="element-table">
           <thead><tr><th>量</th><th>对象 ID</th><th>数值</th><th>位置</th><th>拉压</th><th>方向/正负含义</th></tr></thead>
           <tbody><tr v-for="row in rows.elements" :key="row.key">
-            <td>{{ row.label }}</td><td>{{ row.objectId ?? '—' }}</td><td>{{ formatSignificant(row.value) }} {{ row.unit }}</td>
-            <td>{{ row.position ? `${formatSignificant(row.position.value)} ${row.position.unit} · ${sideLabel(row.position.side)}` : '—' }}</td>
+            <td>{{ row.label }}</td><td>{{ row.objectId ?? '—' }}</td><td>{{ formatResult(row.value) }} {{ row.unit }}</td>
+            <td>{{ row.position ? `${formatResult(row.position.value)} ${row.position.unit} · ${sideLabel(row.position.side)}` : '—' }}</td>
             <td>{{ stateLabel(row.state) }}</td><td>{{ row.positive }}<span v-if="row.note"> · {{ row.note }}</span></td>
           </tr></tbody>
         </table></div>
@@ -93,7 +94,7 @@ const stateLabel = (state?: StructuralDisplayRow['state']): string => state === 
         <summary id="balance-title">平衡/能量检查 <small>{{ displayedBalanceChecks.length }} 项</small></summary>
         <div v-if="expandedDetails.has('balance')" class="table-wrap"><table data-testid="balance-table">
           <thead><tr><th>检查</th><th>残差</th><th>容差</th><th>结果</th></tr></thead>
-          <tbody><tr v-for="check in displayedBalanceChecks" :key="check.id"><td>{{ check.label }}</td><td>{{ formatSignificant(check.residualDisplay.value) }} {{ check.residualDisplay.unit }}</td><td>{{ formatSignificant(check.toleranceDisplay.value) }} {{ check.toleranceDisplay.unit }}</td><td>{{ check.passed ? '通过' : '未通过' }}</td></tr></tbody>
+          <tbody><tr v-for="check in displayedBalanceChecks" :key="check.id"><td>{{ check.label }}</td><td>{{ formatResult(check.residualDisplay.value) }} {{ check.residualDisplay.unit }}</td><td>{{ formatResult(check.toleranceDisplay.value) }} {{ check.toleranceDisplay.unit }}</td><td>{{ check.passed ? '通过' : '未通过' }}</td></tr></tbody>
         </table></div>
       </details>
 

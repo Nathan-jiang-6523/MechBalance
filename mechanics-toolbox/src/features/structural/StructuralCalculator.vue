@@ -71,6 +71,7 @@ const movingRequest = computed((): MovingLoadRequest | null =>
   request.value.analysis === 'moving-load' ? request.value : null)
 const currentExamples = computed(() => STRUCTURAL_EXAMPLES.filter(({ request: candidate }) =>
   candidate.analysis === request.value.analysis))
+const currentExample = computed(() => STRUCTURAL_EXAMPLES.find(({ id }) => id === exampleId.value))
 const deformation = computed((): StructureDiagramDeformation | undefined => {
   if (!result.value || result.value.status === 'error') return undefined
   const data = result.value.structural
@@ -86,6 +87,10 @@ const deformation = computed((): StructureDiagramDeformation | undefined => {
 function unitSymbol(quantity: StructuralQuantityKey): string {
   const quantityId = getStructuralQuantityId(quantity)
   return getUnitDefinition(quantityId, getStructuralUnit(quantity, unitPresetId.value)).symbol
+}
+
+function unitPresetLabel(presetId: UnitPresetId): string {
+  return presetId === 'engineering' ? 't–mm–MPa–N–s' : 'SI（kg–m–Pa–N–s）'
 }
 
 function displayValue(value: number, quantity: StructuralQuantityKey): number {
@@ -203,7 +208,7 @@ onBeforeUnmount(() => {
         <header class="calculator-toolbar">
           <div>
             <span>输入与计算</span>
-            <h3 id="p2-calculator-title">{{ currentExamples[0]?.title }}</h3>
+            <h3 id="p2-calculator-title">{{ currentExample?.title }}</h3>
           </div>
           <label>
             验收算例
@@ -213,14 +218,17 @@ onBeforeUnmount(() => {
               </option>
             </select>
           </label>
-          <label>
-            单位制
-            <select v-model="unitPresetId" data-testid="structural-unit-preset">
-              <option v-for="preset in STRUCTURAL_UNIT_SYSTEMS" :key="preset.id" :value="preset.id">
-                {{ preset.label }}
-              </option>
-            </select>
-          </label>
+          <fieldset class="unit-preset-control" data-testid="structural-unit-preset">
+            <legend>单位制</legend>
+            <button
+              v-for="preset in STRUCTURAL_UNIT_SYSTEMS"
+              :key="preset.id"
+              type="button"
+              :aria-pressed="unitPresetId === preset.id"
+              :data-unit-preset="preset.id"
+              @click="unitPresetId = preset.id"
+            >{{ unitPresetLabel(preset.id) }}</button>
+          </fieldset>
           <div class="state-chip" :data-state="state">{{ state }}</div>
         </header>
 
@@ -302,6 +310,11 @@ onBeforeUnmount(() => {
 .calculator-toolbar h3 { margin: 4px 0 0; font-size: 17px; }
 .calculator-toolbar label, .simple-editor label { display: grid; gap: 5px; color: var(--color-muted); font-size: 11px; font-weight: 700; }
 select, input { min-height: 44px; max-width: 100%; padding: 8px 10px; border: 1px solid #b9c7cc; border-radius: 7px; color: var(--color-ink); background: #fff; font: inherit; }
+.unit-preset-control { display: grid; grid-template-columns: repeat(2, minmax(132px, 1fr)); gap: 4px; margin: 0; padding: 0; border: 0; }
+.unit-preset-control legend { margin-bottom: 5px; color: var(--color-muted); font-size: 11px; font-weight: 700; }
+.unit-preset-control button { min-height: 44px; padding: 7px 9px; border: 1px solid #b9c7cc; color: #40545d; background: #fff; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+.unit-preset-control button:first-of-type { border-radius: 7px 0 0 7px; }.unit-preset-control button:last-of-type { border-radius: 0 7px 7px 0; }
+.unit-preset-control button[aria-pressed="true"] { border-color: var(--color-brand); color: #fff; background: var(--color-brand); }
 .state-chip { min-width: 94px; padding: 8px 10px; border-radius: 999px; color: #40545d; background: #edf1f3; text-align: center; font-size: 11px; font-weight: 800; }
 .state-chip[data-state="success"] { color: var(--color-success); background: #e8f6ed; }.state-chip[data-state="warning"] { color: #795700; background: #fff5d8; }.state-chip[data-state="error"], .state-chip[data-state="dirty-invalid"] { color: #9c2f2b; background: #fdebea; }
 .model-layout { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr); gap: 16px; align-items: start; }

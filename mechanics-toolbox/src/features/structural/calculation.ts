@@ -34,14 +34,19 @@ const SAMPLE_INTERVALS = 24
 const FORMULA_REFERENCES: Readonly<Record<string, CalculationMetadata['formulaReferences']>> = {
   'p2-beam': [
     { id: 'P2-EB-001', version: 'P2-EB6-v1', label: 'Euler–Bernoulli 梁单元刚度' },
+    { id: 'P2-EB-002', version: 'P2-EB-LOAD-v1', label: '梁一致节点荷载' },
     { id: 'P2-DSM-001', version: 'P2-DSM-v1', label: '直接刚度法装配与求解' },
     { id: 'P2-EB-RECOVERY-001', version: 'P2-EB-RECOVERY-v1', label: '梁内力与位移恢复' },
+    { id: 'P2-CBEAM-001', version: 'P2-CBEAM-v1', label: '单跨超静定梁边界' },
   ],
   'p2-truss': [
+    { id: 'P2-DSM-001', version: 'P2-DSM-v1', label: '直接刚度法装配与求解' },
     { id: 'P2-TRUSS-001', version: 'P2-TRUSS-v1', label: '平面桁架单元与轴力' },
     { id: 'P2-TRUSS-INITIAL-001', version: 'P2-TRUSS-INITIAL-v1', label: '桁架自由应变与自重' },
   ],
   'p2-frame': [
+    { id: 'P2-EB-001', version: 'P2-EB6-v1', label: 'Euler–Bernoulli 梁柱单元刚度' },
+    { id: 'P2-DSM-001', version: 'P2-DSM-v1', label: '直接刚度法装配与求解' },
     { id: 'P2-FRAME-001', version: 'P2-FRAME-v1', label: '平面刚架变换、刚度与分布荷载' },
     { id: 'P2-FRAME-INITIAL-001', version: 'P2-FRAME-INITIAL-v1', label: '刚架温度与初应变' },
   ],
