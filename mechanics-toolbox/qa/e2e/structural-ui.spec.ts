@@ -276,7 +276,7 @@ test('移动端 390×844 展开结果表后字号、末列和数值文本可读'
   await expectLastColumnReadable(elementTable)
   await expectNoDiagramLabelCollisions(page)
 
-  const minimumFonts = await page.locator('.structural-results table :is(th, td), .structure-diagram text, .structure-diagram .legend-item').evaluateAll((elements) =>
+  const minimumFonts = await page.locator('.calculator-stage :is(label, button, legend, p, small, th, td, .unit), .structure-diagram text, .structure-diagram .legend-item').evaluateAll((elements) =>
     elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)))
   expect(minimumFonts.length).toBeGreaterThan(0)
   expect(Math.min(...minimumFonts)).toBeGreaterThanOrEqual(12)
