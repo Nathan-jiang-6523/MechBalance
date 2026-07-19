@@ -1,11 +1,11 @@
 # P2 平面刚架公式约定
 
-- 文档版本：`P2-FRAME-FORMULAS-v1.0.0`
+- 文档版本：`P2-FRAME-FORMULAS-v1.1.0`
 - 公式 ID：`P2-FRAME-001`、`P2-FRAME-INITIAL-001`
 - 实现版本：`P2-FRAME-v1`、`P2-FRAME-INITIAL-v1`
 - Gate：`P2-4B`
 - 访问/冻结日期：`2026-07-19`
-- 状态：实现候选已完成；`FRAME-A01` 端力标签冲突仍按公式索引状态等待裁决，不以项目输出改写冻结真值
+- 状态：用户已确认 `FRAME-A01` 登记数值属于 member resisting actions；`Gate P2-4B/P2-G09` 的端力语义已闭合，可进入关闭记录
 
 ## 范围与坐标
 
@@ -128,13 +128,15 @@ N = EA*((u_j-u_i)/L - epsilon_free)
 K d = F_nodal + sum(T^T f_eq)
 ```
 
-按“单元作用于节点”的冻结约定，局部杆端力为
+局部端部量必须分成两个互为相反数、不得混用名称的字段：
 
 ```text
-p_local = f_eq - k_local*d_local
+r_local = k_local*d_local - f_eq     # member resisting actions
+p_local = f_eq - k_local*d_local     # element-on-node
+p_local = -r_local
 ```
 
-节点处所有杆端力、外荷载及支座反力的矢量和必须为零。对含局部 `q_x/q_y` 的单元，从 i 端向 j 端恢复：
+用户于 `2026-07-19` 确认：`FRAME-A01` 冻结卡中的既有端弯矩/剪力数值按 `r_local=kd-f` 解读并重标为 member resisting actions；不改动其数值。公共节点平衡字段仍固定为 `p_local=f-kd`，节点处所有 element-on-node 端力、外荷载及支座反力的矢量和必须为零。对含局部 `q_x/q_y` 的单元，从 i 端向 j 端恢复：
 
 ```text
 N(0)=p_local[0]
@@ -156,6 +158,7 @@ sigma_x(x,y)=N(x)/A-M(x)*y/I
 ## 冻结基准
 
 - `FRAME-E01`：`L=5 m,E=200 GPa,A=0.01 m^2,I=8e-5 m^4`；倾斜单元 `c=0.8,s=0.6`。
+- `FRAME-A01`：冻结端力数值属于 `r_local=kd-f`（member resisting actions）；对应 element-on-node 数值为其相反量 `p_local=f-kd`。该语义由用户于 `2026-07-19` 确认，冻结数值本身不变。
 - `FRAME-A02`：`L=4 m,q_y=-10000 N/m` 全跨，`f_eq=[0,-20000,-13333.3333333333,0,-20000,+13333.3333333333]`。
 - `FRAME-A03`：同一单元仅 `[0,2] m` 受载，`f_eq=[0,-16250,-9166.66666666667,0,-3750,+4166.66666666667]`。
 - `FRAME-T01`：`EA=2e8 N,alpha*DeltaT=600e-6`，完全约束时 `N=-120000 N`，`V=M=0`。
@@ -164,6 +167,6 @@ sigma_x(x,y)=N(x)/A-M(x)*y/I
 ## 来源与追溯
 
 - 公式登记索引：[`p2-index.md`](./p2-index.md) 的 `P2-FRAME-001`、`P2-FRAME-INITIAL-001`；索引版本 `P2-FORMULA-INDEX-v1.3.0`，访问 `2026-07-19`。
-- 冻结 fixture：`qa/fixtures/p2-frame.json`，schema `1.0.0`；覆盖 `P2-FRAME-E01/A01/A02/A03/T01/IS01/N01/X01`，真值政策为独立冻结且禁止项目输出回填。`P2-FRAME-A01` 的端力字段标签仍服从上方状态声明，不将当前实现结果反填为真值。
+- 冻结 fixture：`qa/fixtures/p2-frame.json`，schema `1.0.0`；覆盖 `P2-FRAME-E01/A01/A02/A03/T01/IS01/N01/X01`，真值政策为独立冻结且禁止项目输出回填。`P2-FRAME-A01` 仅按用户裁决重标字段语义，不由当前实现反填或改写数值。
 - 人工可读验收卡：`ai/memory-bank/p2-acceptance-cases-form.md` 第五节“平面刚架”，来源为框架直接刚度法、Euler–Bernoulli 一致荷载积分、静力平衡和自由应变本构，确认日期 `2026-07-19`。
 - 分布载荷外部来源：[OpenSees eleLoad](https://opensees.github.io/OpenSeesDocumentation/user/manual/model/pattern/PlainPatternloadcommands/eleLoad.html)；初应变外部来源：[OpenSees InitStrainMaterial](https://opensees.berkeley.edu/wiki/index.php?title=Initial_Strain_Material)；均访问 `2026-07-19`，只用于公式边界核对，不替代冻结 fixture。
