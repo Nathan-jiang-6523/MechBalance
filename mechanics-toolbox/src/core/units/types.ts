@@ -22,6 +22,7 @@ export type QuantityId =
   | 'strain'
   | 'thermalExpansionCoefficient'
   | 'dimensionless'
+  | 'flexibility'
 
 export type UnitId =
   | 'mm'
@@ -72,6 +73,8 @@ export type UnitId =
   | 'one'
   | 'per_degC'
   | 'per_K'
+  | 'mm_per_N'
+  | 'm_per_N'
 
 export interface UnitDefinition {
   readonly id: UnitId

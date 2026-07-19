@@ -38,6 +38,7 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
       strain: 'strain',
       thermalExpansionCoefficient: 'thermalExpansionCoefficient',
       dimensionless: 'dimensionless',
+      flexibility: 'flexibility',
     })
   })
 
@@ -82,6 +83,7 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
       ['strain', 500],
       ['thermalExpansionCoefficient', 12e-6],
       ['dimensionless', 1.2],
+      ['flexibility', 0.002],
     ]
 
     for (const [key, value] of samples) {
@@ -116,6 +118,7 @@ describe('P2 结构量到 P1 单位目录的映射', () => {
     expect(toSi('strain', 500)).toBeCloseTo(500e-6, 15)
     expect(toSi('thermalExpansionCoefficient', 12e-6)).toBe(12e-6)
     expect(toSi('dimensionless', 1.2)).toBe(1.2)
+    expect(toSi('flexibility', 2)).toBeCloseTo(0.002, 15)
   })
 })
 

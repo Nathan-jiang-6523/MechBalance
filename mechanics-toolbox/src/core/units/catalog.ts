@@ -143,6 +143,11 @@ const dimensionlessUnits = [
   linearUnit('one', '无量纲', '1', 1),
 ] as const
 
+const flexibilityUnits = [
+  linearUnit('mm_per_N', '毫米每牛顿', 'mm/N', 1e-3),
+  linearUnit('m_per_N', '米每牛顿', 'm/N', 1),
+] as const
+
 function quantity(
   id: QuantityId,
   label: string,
@@ -191,6 +196,7 @@ export const QUANTITY_CATALOG: Readonly<Record<QuantityId, QuantityDefinition>> 
     thermalExpansionCoefficientUnits,
   ),
   dimensionless: quantity('dimensionless', '无量纲', 'one', dimensionlessUnits),
+  flexibility: quantity('flexibility', '柔度', 'm_per_N', flexibilityUnits),
 }
 
 const engineeringUnits: Readonly<Record<QuantityId, UnitId>> = {
@@ -217,6 +223,7 @@ const engineeringUnits: Readonly<Record<QuantityId, UnitId>> = {
   strain: 'microstrain',
   thermalExpansionCoefficient: 'per_degC',
   dimensionless: 'one',
+  flexibility: 'mm_per_N',
 }
 
 const siUnits = Object.fromEntries(

@@ -31,6 +31,7 @@ export type MappedStructuralQuantityKey =
   | 'dimensionless'
   | 'strain'
   | 'thermalExpansionCoefficient'
+  | 'flexibility'
 
 export type StructuralQuantityKey = MappedStructuralQuantityKey
 
@@ -57,6 +58,7 @@ export const STRUCTURAL_QUANTITY_MAP = {
   dimensionless: 'dimensionless',
   strain: 'strain',
   thermalExpansionCoefficient: 'thermalExpansionCoefficient',
+  flexibility: 'flexibility',
 } as const satisfies Readonly<Record<StructuralQuantityKey, QuantityId>>
 
 /** All P2 quantities now map to the shared catalog. */
