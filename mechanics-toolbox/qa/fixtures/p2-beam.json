@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "1.0.0",
+  "fixtureVersion": "P2-BEAM-FIXTURES-v1",
+  "source": "ai/memory-bank/p2-acceptance-cases-form.md",
+  "sourceSection": "二、1D 梁有限元基准",
+  "frozenAt": "2026-07-19",
+  "truthPolicy": "verbatim frozen independent truth; never generated from project output",
+  "common": {
+    "coordinates": "+x right, +y up, +theta/+Mz counterclockwise",
+    "dofs": "[u_i,v_i,theta_i,u_j,v_j,theta_j]",
+    "internalForces": "N tension positive; M sagging positive; V=dM/dx",
+    "units": "values below are SI unless explicitly stated; UI default is t-mm-MPa-N-s",
+    "validationOrder": "nonfinite -> nonpositive -> geometric degeneracy -> singular stiffness"
+  },
+  "cases": [
+    {
+      "id": "P2-BEAM-E01",
+      "title": "梁弯曲 4×4 子矩阵",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "E=200 GPa; I=8.0e-6 m^4; L=4 m; dofs=[v_i,theta_i,v_j,theta_j]",
+      "expected": "EI=1.6e6 N*m^2; K=[[300000,600000,-300000,600000],[600000,1600000,-600000,800000],[-300000,-600000,300000,-600000],[600000,800000,-600000,1600000]]; K*[1,0,1,0]^T=0; K*[0,1,4,1]^T=0; rank=2",
+      "unitsNotes": "K11 N/m; K12 N; K22 N*m; matrix indices in source start at 1",
+      "tolerance": "nonzero relative 1e-12; zero absolute 1e-9",
+      "errors": [],
+      "source": "EB; K=(EI/L^3)[[12,6L,-12,6L],...]; public closed-form derivation; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-E02",
+      "title": "均布载荷一致节点荷载",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "same as E01; full-span q_y=-10000 N/m",
+      "expected": "bending=[-20000,-13333.3333333333,-20000,13333.3333333333]^T; full=[0,-20000,-13333.3333333333,0,-20000,13333.3333333333]^T; resultant=-40000 N; moment about i=-80000 N*m",
+      "unitsNotes": "full vector units=[N,N,N*m,N,N,N*m]",
+      "tolerance": "relative 1e-12; absolute 1e-8 N or N*m",
+      "errors": [],
+      "source": "EB; integral(N^T q dx) hand integration; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-E03",
+      "title": "含轴向自由度的 6×6 梁单元刚度矩阵",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "horizontal element; L=4 m; E=200 GPa; A=0.01 m^2; I=8.0e-6 m^4",
+      "expected": "EA/L=500000000 N/m; K=[[500000000,0,0,-500000000,0,0],[0,300000,600000,0,-300000,600000],[0,600000,1600000,0,-600000,800000],[-500000000,0,0,500000000,0,0],[0,-300000,-600000,0,300000,-600000],[0,600000,800000,0,-600000,1600000]]; symmetric; rank=3; rigid modes=[1,0,0,1,0,0],[0,1,0,0,1,0],[0,0,1,0,4,1]",
+      "unitsNotes": "entries retain mixed N/m, N, N*m dimensions by row/column DOF",
+      "tolerance": "nonzero relative 1e-12; rigid-mode residual <=1e-6 N and <=1e-6 N*m",
+      "errors": [],
+      "source": "DSM axial bar stiffness block plus P2-BEAM-E01 bending block; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A01",
+      "title": "简支梁跨中集中力",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=4 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; P_y=-40000 N at x=2 m; nodes x=[0,2,4] m; v(0)=v(4)=0; u(0)=0; end rotations free",
+      "expected": "RAy=RBy=20000 N; v(2)=-0.0333333333333 m; M(2)=40000 N*m; M(0)=M(4)=0; V(2-)=20000 N; V(2+)=-20000 N; force/moment residual=0",
+      "tolerance": "displacement/force/moment relative 1e-8; zeros use common absolute tolerance",
+      "errors": [],
+      "source": "EB simply-supported central point-load closed form; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A02",
+      "title": "简支梁全跨均布载荷",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=4 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; q_y=-10000 N/m; simple supports; meshes n=1,2,4; consistent loads",
+      "expected": "RAy=RBy=20000 N; exact v(2)=-0.0208333333333 m; Mmax=20000 N*m at x=2 m; V(0+)=20000 N; V(4-)=-20000 N; Hermite-only v_mid n=1:-0.0166666666667 m (20% error), n=2,4:-0.0208333333333 m; load-particular recovery M(x)=20000x-5000x^2 N*m",
+      "tolerance": "listed discrete values relative 1e-8; extremum position 1e-9 m",
+      "errors": [],
+      "source": "EB closed form and Hermite interpolation hand calculation; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A03",
+      "title": "悬臂梁自由端集中力",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=3 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; P_y=-10000 N at x=3 m; u(0)=v(0)=theta(0)=0",
+      "expected": "Ry=10000 N; reaction Mz=30000 N*m; theta(3)=-0.028125 rad; v(3)=-0.05625 m; V=10000 N; M(x)=-10000(3-x) N*m; V(3-)=10000 N; M(3)=0; V=dM/dx",
+      "tolerance": "relative 1e-9",
+      "errors": [],
+      "source": "EB cantilever point-load closed form; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A04",
+      "title": "悬臂梁全跨均布载荷",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "L=3 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; q_y=-4000 N/m; fixed i; three 1 m elements",
+      "expected": "Ry=12000 N; reaction Mz=18000 N*m; theta(3)=-0.01125 rad; v(3)=-0.0253125 m; V(x)=4000(3-x) N; M(x)=-2000(3-x)^2 N*m; V=dM/dx",
+      "tolerance": "nodal relative 1e-8; field key points relative 1e-6",
+      "errors": [],
+      "source": "EB cantilever UDL closed form; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A05",
+      "title": "集中力矩与多载荷叠加",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "cantilever L=2 m; E=200 GPa; A=0.01 m^2; I=8e-6 m^4; free-end P_y=-6000 N and Mz=+4000 N*m; fixed i",
+      "expected": "Ry=6000 N; reaction Mz=8000 N*m; theta=-0.0025 rad; v=-0.005 m; P-only theta=-0.0075,v=-0.01; M-only theta=+0.005,v=+0.005; total equals component-wise sum",
+      "tolerance": "relative 1e-9",
+      "errors": [],
+      "source": "linear superposition of two EB closed forms; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-A06",
+      "title": "梁轴向自由度、轴力与端力",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "horizontal single beam L=2 m; E=200 GPa; A=0.001 m^2; I=8e-6 m^4; i fixed; j free; Fx_j=+100000 N",
+      "expected": "u_j=+0.001 m; v_j=theta_j=0; N=+100000 N tension; sigma=+100 MPa; Rix=-100000 N; Riy=Mzi=0; local element-on-node end force=[+100000,0,0,-100000,0,0]; recovered i+ and j- N=+100000 N",
+      "tolerance": "displacement/axial force/stress relative 1e-10; zeros use common absolute tolerance",
+      "errors": [],
+      "source": "1D bar delta=FL/(EA), N=EA*delta/L; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-C01",
+      "title": "网格收敛",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "reuse A02; n=[1,2,4]",
+      "expected": "reference v_mid=-0.0208333333333 m, reactions=[20000,20000] N, recovered Mmax=20000 N*m at 2 m; Hermite-only v_mid=[-0.0166666666667,-0.0208333333333,-0.0208333333333] m; absolute errors=[0.00416666666667,0,0] m; error must not increase; n=2,4 pass reference; recovered moment for all meshes passes A02",
+      "tolerance": "sequence absolute 1e-9 m; force 1e-3 N",
+      "errors": [],
+      "source": "A02 closed form and shape-function substitution; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-N01",
+      "title": "约束不足/机构",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "one beam element E=200 GPa,A=0.01 m^2,I=8e-6 m^4,L=4 m; all u,v,theta free; Fy_j=-1 N",
+      "expected": "reject before or during factorization; no displacement/reaction/success result",
+      "tolerance": "error code/message/field exact",
+      "errors": [{"code":"P2_SINGULAR_STIFFNESS","field":"constraints","message":"整体刚度矩阵奇异：存在刚体位移或约束不足"}],
+      "source": "E01 rank=2<4; 2026-07-19"
+    },
+    {
+      "id": "P2-BEAM-N02",
+      "title": "非法材料/几何/零长度",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "independent variants: E=0,-1 Pa,NaN; A=0,-1 m^2,+Infinity; I=0,-1 m^4,+Infinity; coincident nodes L=0; other values from E03",
+      "expected": "do not enter assembly/solve; Chinese message includes field name and illegal value",
+      "tolerance": "error code and field exact",
+      "errors": [
+        {"when":"E/A/I is NaN or +/-Infinity","code":"P2_NONFINITE_INPUT","fields":["elements[0].E","elements[0].A","elements[0].I"]},
+        {"when":"E/A/I <= 0","code":"P2_NONPOSITIVE_PROPERTY","fields":["elements[0].E","elements[0].A","elements[0].I"]},
+        {"when":"L=0","code":"P2_ZERO_LENGTH_ELEMENT","field":"elements[0].nodeJ"}
+      ],
+      "source": "input domain 0<E,A,I,L<Infinity; 2026-07-19"
+    }
+  ]
+}

@@ -122,6 +122,81 @@
   padding: 30px clamp(22px, 4vw, 58px) 52px;
 }
 
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.module-card {
+  min-width: 0;
+  min-height: 156px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto 1fr;
+  gap: 7px 12px;
+  align-content: start;
+  padding: 20px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-medium);
+  color: var(--color-ink);
+  background: rgb(255 255 255 / 78%);
+  box-shadow: 0 8px 24px rgb(18 52 59 / 6%);
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.module-card:hover {
+  border-color: #8bbabe;
+  box-shadow: 0 12px 28px rgb(18 52 59 / 11%);
+  transform: translateY(-2px);
+}
+
+.module-card:focus-visible {
+  outline: 3px solid rgb(37 132 142 / 24%);
+  outline-offset: 2px;
+}
+
+.module-card.is-active {
+  border-color: var(--color-brand);
+  background: linear-gradient(145deg, #ffffff, var(--color-brand-soft));
+  box-shadow: inset 0 0 0 1px var(--color-brand), 0 12px 30px rgb(18 87 94 / 12%);
+}
+
+.module-index {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--color-brand-deep);
+  background: var(--color-brand-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.module-phase {
+  color: var(--color-brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.module-card strong {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.module-card small {
+  grid-column: 1 / -1;
+  align-self: end;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .workspace-intro {
   display: flex;
   justify-content: space-between;
@@ -359,9 +434,24 @@
   .workspace {
     padding-top: 22px;
   }
+
+  .module-grid {
+    grid-template-columns: repeat(3, minmax(210px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
 }
 
 @media (max-width: 680px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .module-card {
+    min-height: 132px;
+  }
+
   .topbar {
     align-items: flex-start;
   }

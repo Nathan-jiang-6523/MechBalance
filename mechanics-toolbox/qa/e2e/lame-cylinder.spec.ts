@@ -6,7 +6,9 @@ const releaseUrl = pathToFileURL(resolve('dist/index.html')).href
 
 test.beforeEach(async ({ page }) => {
   await page.goto(releaseUrl)
-  await page.getByRole('button', { name: /厚壁圆筒/ }).click()
+  await page.getByRole('button', { name: /板壳力学计算/ }).click()
+  await page.getByRole('navigation', { name: '当前模块计算器' })
+    .getByRole('button', { name: /厚壁圆筒/ }).click()
   await expect(page.getByRole('heading', { name: '厚壁圆筒 Lamé 解', exact: true })).toBeVisible()
 })
 

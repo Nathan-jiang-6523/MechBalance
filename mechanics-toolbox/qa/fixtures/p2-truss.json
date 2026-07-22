@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0.0",
+  "fixtureVersion": "P2-TRUSS-FIXTURES-v1",
+  "source": "ai/memory-bank/p2-acceptance-cases-form.md",
+  "sourceSection": "四、平面桁架",
+  "frozenAt": "2026-07-19",
+  "truthPolicy": "independent frozen truth; no project output backfill",
+  "common": {
+    "dimension": "2D",
+    "dofs": "[ux,uy] per node",
+    "memberForce": "N>0 tension",
+    "strainLaw": "N=EA[(u_j^l-u_i^l)/L-(alpha*DeltaT+epsilon_0)]",
+    "selfWeight": "rho*A*L*g along global -y, half concentrated at each end; no transverse member-force recovery"
+  },
+  "cases": [
+    {
+      "id": "P2-TRUSS-E01",
+      "title": "单杆坐标转换",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "i=(0,0) m; j=(4,3) m; E=200 GPa; A=0.001 m^2; L=5; c=0.8; s=0.6; dofs=[uxi,uyi,uxj,uyj]",
+      "expected": "EA/L=40000000 N/m; K=1e6*[[25.6,19.2,-25.6,-19.2],[19.2,14.4,-19.2,-14.4],[-25.6,-19.2,25.6,19.2],[-19.2,-14.4,19.2,14.4]] N/m; delta=(-c,-s,c,s)*u; N=EA*delta/L",
+      "tolerance": "relative 1e-12; rigid-mode residual absolute 1e-8 N",
+      "errors": [],
+      "source": "DSM coordinate-transform closed form; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-A01",
+      "title": "三角桁架",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "nodes 1=(0,0),2=(4,0),3=(2,3) m; members 1-3,2-3,1-2; E=200 GPa; A=0.001 m^2; node1 ux=uy=0; node2 uy=0; node3 Fy=-100000 N",
+      "expected": "R1x=0; R1y=R2y=50000 N; N13=N23=-60092.5212577 N compression; N12=+33333.3333333 N tension; stresses=-60.0925212577,-60.0925212577,+33.3333333333 MPa; u2x=+0.000666666666667 m; u3x=+0.000333333333333 m; u3y=-0.00152422684947 m; symmetry is relative deformation, not u3x=0",
+      "tolerance": "relative 1e-7; symmetric zeros use common absolute tolerance",
+      "errors": [],
+      "source": "joint method plus virtual work; u3y=-P[13sqrt(13)/18+4/9]/EA; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-A02",
+      "title": "对称桁架",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "nodes 1=(0,0),2=(4,0),3=(8,0),4=(4,3) m; members 1-2,2-3,1-4,3-4,2-4; E=200 GPa; A=0.001 m^2; node1 pin; node3 vertical roller; node4 Fy=-120000 N",
+      "expected": "R1x=0; R1y=R3y=60000 N; N14=N34=-100000 N; N12=N23=+80000 N; N24=0 N; u2=(+0.0016,-0.0063) m; u3=(+0.0032,0) m; u4=(+0.0016,-0.0063) m; u4x is not zero",
+      "tolerance": "nonzero relative 1e-7; zero member absolute 1e-6 N",
+      "errors": [],
+      "source": "joint method and virtual work; u4y=-P*[2*(5/6)^2*5+2*(2/3)^2*4]/EA; compatibility for other displacements; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-T01",
+      "title": "均匀温升自由伸长",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "horizontal bar 1=(0,0),2=(2,0) m; E=200 GPa; A=0.001 m^2; alpha=12e-6/K; DeltaT=+50 K; node1 ux,uy fixed; node2 uy fixed; no mechanical load",
+      "expected": "epsilon_T=+0.0006; node2 ux=+0.0012 m; other displacements zero; N=0 N; all reactions zero; local equivalent initial-strain load EA*epsilon_T[-1,+1]=[-120000,+120000] N cancels elastic displacement force and is not a reaction",
+      "tolerance": "displacement relative 1e-10; zero force absolute 1e-6 N",
+      "errors": [],
+      "source": "uniform thermal free strain and bar constitutive law; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-IS01",
+      "title": "完全约束初应变",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "reuse T01 geometry/E/A; DeltaT=0; epsilon_0=+500e-6; both nodes ux,uy fixed; no mechanical load",
+      "expected": "all displacements zero; N=-100000 N compression; sigma=-100 MPa; member-on-node local axial end forces=[-100000,+100000] N; reactions node1 Rx=+100000 N,node2 Rx=-100000 N; vertical reactions zero; resultant zero",
+      "tolerance": "axial force/reaction/stress relative 1e-10; zeros use common absolute tolerance",
+      "errors": [],
+      "source": "initial-strain bar law N=EA(epsilon-epsilon_0); 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-SW01",
+      "title": "桁架杆件自重等效节点荷载",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "horizontal bar length 2 m; A=0.001 m^2; rho=7850 kg/m^3; g=9.80665 m/s^2; node1 ux,uy fixed; node2 uy fixed and ux free",
+      "expected": "mass=15.7 kg; W=153.964405 N; end nodal loads Fy=-76.9822025 N each; vertical reactions +76.9822025 N each; N=0 N; axial displacement zero; do not output transverse member shear/moment",
+      "tolerance": "weight/reaction absolute 1e-9 N; zero axial force uses common absolute tolerance",
+      "errors": [],
+      "source": "m=rho*A*L, W=m*g, confirmed half-at-each-end rule; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-N01",
+      "title": "桁架机构",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "nodes 1=(0,0),2=(4,0); one member 1-2; node1 ux,uy fixed; node2 ux,uy free; node2 Fy=-1 N",
+      "expected": "horizontal member has no transverse stiffness; no success result",
+      "tolerance": "error code/message/field exact",
+      "errors": [{"code":"P2_SINGULAR_STIFFNESS","field":"constraints","message":"桁架存在机构：节点 2 的 y 向自由度无刚度"}],
+      "source": "TRUSS-E01 with c=1,s=0 gives K_uyuy=0; 2026-07-19"
+    },
+    {
+      "id": "P2-TRUSS-X01",
+      "title": "独立程序对照",
+      "status": "confirmed-three-independent-reviews",
+      "inputs": "LibreOffice Calc 24.2 fixed DSM worksheet logic with explicit TRUSS-E01 assembly; model A01",
+      "expected": "reactions, three member forces, u3x/u3y/u2x equal A01; formulas are listed in A01; no project output input",
+      "tolerance": "nonzero relative difference <=1e-8; zero absolute difference uses common tolerance",
+      "errors": [],
+      "source": "LibreOffice Calc 24.2 independent DSM worksheet; 2026-07-19"
+    }
+  ]
+}

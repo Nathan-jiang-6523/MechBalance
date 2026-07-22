@@ -19,6 +19,11 @@ export type QuantityId =
   | 'angle'
   | 'power'
   | 'rotationalSpeed'
+  | 'acceleration'
+  | 'strain'
+  | 'thermalExpansionCoefficient'
+  | 'dimensionless'
+  | 'flexibility'
 
 export type UnitId =
   | 'mm'
@@ -66,6 +71,14 @@ export type UnitId =
   | 'kW'
   | 'r_per_s'
   | 'r_per_min'
+  | 'mm_per_s2'
+  | 'm_per_s2'
+  | 'microstrain'
+  | 'one'
+  | 'per_degC'
+  | 'per_K'
+  | 'mm_per_N'
+  | 'm_per_N'
 
 export interface UnitDefinition {
   readonly id: UnitId

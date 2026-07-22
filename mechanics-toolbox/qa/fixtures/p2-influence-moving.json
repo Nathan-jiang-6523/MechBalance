@@ -1,0 +1,17 @@
+{
+  "schemaVersion":"1.0.0",
+  "fixtureVersion":"P2-IL-ML-FIXTURES-v1",
+  "source":"ai/memory-bank/p2-acceptance-cases-form.md",
+  "sourceSection":"六、影响线与移动载荷",
+  "frozenAt":"2026-07-19",
+  "truthPolicy":"independent frozen truth; no project output backfill",
+  "moduleBoundary":"simply-supported beam only; one axle group, one direction, static envelope; no fixed-step extrema; shear left/right limits retained",
+  "cases":[
+    {"id":"P2-IL-A01","title":"简支梁左支反力影响线","status":"confirmed-three-independent-reviews","inputs":"L=10 m; downward unit moving load; z=[0,2.5,5,7.5,10] m","expected":"eta_RA(z)=1-z/L; ordinates=[1,0.75,0.5,0.25,0] dimensionless; zero outside endpoints","tolerance":"ordinate absolute 1e-12; position 1e-9 m","errors":[],"source":"IL/static equilibrium; 2026-07-19"},
+    {"id":"P2-IL-A02","title":"指定截面弯矩影响线","status":"confirmed-three-independent-reviews","inputs":"same beam; section a=4 m; z=[0,2,4,7,10] m","expected":"eta_M=z(L-a)/L for z<=a; eta_M=a(L-z)/L for z>=a; ordinates=[0,1.2,2.4,1.2,0] m; unique peak=2.4 m at z=4 m; continuous","tolerance":"absolute 1e-12 m; position 1e-9 m","errors":[],"source":"section statics; 2026-07-19"},
+    {"id":"P2-IL-A03","title":"指定截面剪力影响线","status":"confirmed-three-independent-reviews","inputs":"same beam; section a=4 m; report left-section positive-face shear","expected":"eta_V(a-)=-0.4; eta_V(a+)=+0.6; jump=+1.0; eta_V(0)=0 using right segment at left support; eta_V(10)=0; retain both limits","tolerance":"ordinate absolute 1e-12","errors":[],"source":"section equilibrium; 2026-07-19"},
+    {"id":"P2-ML-A01","title":"单轴组移动极值","status":"confirmed-three-independent-reviews","inputs":"L=10 m; left-to-right; front axle=100000 N, rear=60000 N, spacing=3 m, downward; dynamicFactor=1.0; target left reaction; partial group outside bridge allowed","expected":"RAmax=130000 N at rear z=0 m/front z=3 m; controlling axle rear entering bridge; RAmin=0 N when group fully off bridge; 60000+100000*0.7=130000","tolerance":"force absolute 1e-6 N; position 1e-9 m","errors":[],"source":"IL-A01 superposition; 2026-07-19"},
+    {"id":"P2-ML-A02","title":"反向行进或非对称轴组","status":"confirmed-three-independent-reviews","inputs":"same physical group right-to-left; along travel front=100000 N,rear=60000 N; z_rear=z_front+3 m; front enters right support first","expected":"RAmax=142000 N at front 100000 N z=0 m/rear 60000 N z=3 m; controlling axle front at left support; RAmin=0 N; must not reuse 130000 N","tolerance":"force absolute 1e-6 N; position 1e-9 m","errors":[],"source":"IL-A01 linear superposition; 2026-07-19"},
+    {"id":"P2-ML-A03","title":"动态系数统一放大","status":"confirmed-three-independent-reviews","inputs":"reuse ML-A01; dynamicFactor phi=1.2; P_eff=phi*P","expected":"same control location rear z=0/front z=3; RAmax=156000 N; RAmin=0; spacing/direction/controlling axle unchanged","tolerance":"force absolute 1e-6 N; position 1e-9 m; error code/field exact","errors":[{"when":"phi=0 or negative","code":"P2_NONPOSITIVE_PROPERTY","field":"movingLoad.dynamicFactor"},{"when":"phi=NaN or Infinity","code":"P2_NONFINITE_INPUT","field":"movingLoad.dynamicFactor"}],"source":"confirmed dynamic-factor rule plus IL-A01; 2026-07-19"}
+  ]
+}

@@ -25,6 +25,11 @@ describe('单位目录', () => {
       'angle',
       'power',
       'rotationalSpeed',
+      'acceleration',
+      'strain',
+      'thermalExpansionCoefficient',
+      'dimensionless',
+      'flexibility',
     ])
   })
 
@@ -48,6 +53,11 @@ describe('单位目录', () => {
     expect(unitIds('secondMomentOfArea')).toEqual(['mm4', 'cm4', 'm4'])
     expect(unitIds('mass')).toEqual(['t', 'kg', 'g'])
     expect(unitIds('density')).toEqual(['t_per_mm3', 'kg_per_m3', 'g_per_cm3'])
+    expect(unitIds('acceleration')).toEqual(['mm_per_s2', 'm_per_s2'])
+    expect(unitIds('strain')).toEqual(['microstrain', 'one'])
+    expect(unitIds('thermalExpansionCoefficient')).toEqual(['per_degC', 'per_K'])
+    expect(unitIds('dimensionless')).toEqual(['one'])
+    expect(unitIds('flexibility')).toEqual(['mm_per_N', 'm_per_N'])
   })
 
   it('工程预设排在 SI 前且 t 只登记为质量单位', () => {
@@ -57,5 +67,19 @@ describe('单位目录', () => {
     expect(UNIT_PRESETS[1]?.units.momentPerLength).toBe('N_m_per_m')
     expect(QUANTITY_CATALOG.force.units.some((unit) => unit.id === ('t' as never))).toBe(false)
     expect(QUANTITY_CATALOG.force.units.some((unit) => unit.symbol === 'tf')).toBe(false)
+    expect(UNIT_PRESETS[0]?.units).toMatchObject({
+      acceleration: 'mm_per_s2',
+      strain: 'microstrain',
+      thermalExpansionCoefficient: 'per_degC',
+      dimensionless: 'one',
+      flexibility: 'mm_per_N',
+    })
+    expect(UNIT_PRESETS[1]?.units).toMatchObject({
+      acceleration: 'm_per_s2',
+      strain: 'one',
+      thermalExpansionCoefficient: 'per_K',
+      dimensionless: 'one',
+      flexibility: 'm_per_N',
+    })
   })
 })
