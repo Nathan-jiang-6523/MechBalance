@@ -9,16 +9,76 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText('离线可用')).toBeVisible()
 })
 
-test('截面计算、材料覆盖和恢复可用', async ({ page }) => {
+test('截面计算与对应公式展示可用', async ({ page }) => {
   await page.locator('.section-workspace .field-grid input').first().fill('48*2')
   await page.getByRole('button', { name: '计算截面性质' }).click()
   await expect(page.getByText('已计算')).toBeVisible()
   await expect(page.getByText(/Jt =/)).toBeVisible()
 
-  await page.getByLabel('弹性模量 E').fill('35000*2')
-  await expect(page.getByText('已覆盖预设值')).toBeVisible()
-  await page.getByRole('button', { name: '恢复预设' }).click()
-  await expect(page.getByText('使用预设值')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '材料参数' })).toHaveCount(0)
+  const formulas = page.getByTestId('section-formula-details')
+  await expect(formulas).toContainText('矩形')
+  await formulas.locator('summary').click()
+  await expect(formulas.locator('[data-formula-id="P1-SEC-RECT-001"]')).toBeVisible()
+  await expect(formulas.locator('.katex').first()).toBeVisible()
+  await expect(formulas.locator('math').first()).toBeAttached()
+})
+
+test('手册扩展截面均可在工作台计算', async ({ page }) => {
+  const handbookShapes = [
+    '正六边形',
+    '正八边形',
+    '半圆',
+    '半圆环',
+    '圆扇形',
+    '圆弓形',
+    '圆环扇形',
+    '椭圆',
+    '空心椭圆',
+    '方形中心圆孔',
+    '圆形中央通槽',
+    '矩形中央横槽',
+  ]
+
+  for (const shape of handbookShapes) {
+    await page.getByRole('tab', { name: shape, exact: true }).click()
+    await expect(page.getByTestId('section-formula-details')).toContainText(shape)
+    await page.getByRole('button', { name: '计算截面性质' }).click()
+    await expect(page.getByText('已计算')).toBeVisible()
+    await expect(page.getByText('Jt = —', { exact: true })).toBeVisible()
+  }
+})
+
+test('正六边形与正八边形尺寸模式互斥且示意图为正多边形', async ({ page }) => {
+  for (const shape of ['正六边形', '正八边形']) {
+    await page.getByRole('tab', { name: shape, exact: true }).click()
+
+    const workspace = page.locator('.section-workspace')
+    await expect(workspace.locator('.field').filter({ hasText: '边长 s' })).toHaveCount(1)
+    await expect(workspace.locator('.field').filter({ hasText: '外接圆半径 R' })).toHaveCount(0)
+
+    await expect(workspace.locator('[data-circumcircle]')).toHaveCount(1)
+    await expect(workspace.locator('[data-radius-guide]')).toHaveCount(1)
+    await expect(workspace.locator('.radius-label')).toHaveText('R')
+
+    const sideLengths = await workspace.locator('[data-regular-polygon]').evaluate((polygon) => {
+      const points = (polygon.getAttribute('points') ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((pair) => pair.split(',').map(Number))
+      return points.map((point, index) => {
+        const next = points[(index + 1) % points.length]!
+        return Math.hypot(next![0]! - point![0]!, next![1]! - point![1]!)
+      })
+    })
+    expect(Math.max(...sideLengths) - Math.min(...sideLengths)).toBeLessThan(0.01)
+
+    await page.getByRole('button', { name: '输入外接圆半径 R' }).click()
+    await expect(workspace.locator('.field').filter({ hasText: '边长 s' })).toHaveCount(0)
+    await expect(workspace.locator('.field').filter({ hasText: '外接圆半径 R' })).toHaveCount(1)
+    await page.getByRole('button', { name: '计算截面性质' }).click()
+    await expect(page.getByText('已计算')).toBeVisible()
+  }
 })
 
 test('矩形高度标注不与 x 坐标轴遮挡', async ({ page }) => {

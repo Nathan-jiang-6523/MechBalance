@@ -4,6 +4,23 @@ export type SectionKind =
   | 'solidCircle'
   | 'circularTube'
 
+export type HandbookSectionKind =
+  | 'regularHexagon'
+  | 'regularOctagon'
+  | 'semicircle'
+  | 'semiAnnulus'
+  | 'circularSector'
+  | 'circularSegment'
+  | 'annularSector'
+  | 'ellipse'
+  | 'hollowEllipse'
+  | 'squareCircularHole'
+  | 'circleCrossSlot'
+  | 'rectangleCrossSlot'
+
+/** All shapes exposed by the standalone section-properties workbench. */
+export type SectionCalculatorKind = SectionKind | HandbookSectionKind
+
 export interface RectangleSection {
   kind: 'rectangle'
   widthM: number
@@ -29,11 +46,115 @@ export interface CircularTubeSection {
   innerDiameterM: number
 }
 
+export type RegularHexagonSection =
+  | {
+      kind: 'regularHexagon'
+      dimensionMode: 'sideLength'
+      sideLengthM: number
+    }
+  | {
+      kind: 'regularHexagon'
+      dimensionMode: 'circumradius'
+      circumradiusM: number
+    }
+
+export type RegularOctagonSection =
+  | {
+      kind: 'regularOctagon'
+      dimensionMode: 'sideLength'
+      sideLengthM: number
+    }
+  | {
+      kind: 'regularOctagon'
+      dimensionMode: 'circumradius'
+      circumradiusM: number
+    }
+
+export interface SemicircleSection {
+  kind: 'semicircle'
+  diameterM: number
+}
+
+export interface SemiAnnulusSection {
+  kind: 'semiAnnulus'
+  outerDiameterM: number
+  innerDiameterM: number
+}
+
+export interface CircularSectorSection {
+  kind: 'circularSector'
+  radiusM: number
+  angleRad: number
+}
+
+export interface CircularSegmentSection {
+  kind: 'circularSegment'
+  radiusM: number
+  angleRad: number
+}
+
+export interface AnnularSectorSection {
+  kind: 'annularSector'
+  outerRadiusM: number
+  innerRadiusM: number
+  angleRad: number
+}
+
+export interface EllipseSection {
+  kind: 'ellipse'
+  horizontalSemiAxisM: number
+  verticalSemiAxisM: number
+}
+
+export interface HollowEllipseSection {
+  kind: 'hollowEllipse'
+  outerHorizontalSemiAxisM: number
+  outerVerticalSemiAxisM: number
+  innerHorizontalSemiAxisM: number
+  innerVerticalSemiAxisM: number
+}
+
+export interface SquareCircularHoleSection {
+  kind: 'squareCircularHole'
+  sideM: number
+  holeDiameterM: number
+}
+
+/**
+ * Handbook subtraction model: a circular section minus a centred,
+ * full-diameter rectangular slot of width slotWidthM.
+ */
+export interface CircleCrossSlotSection {
+  kind: 'circleCrossSlot'
+  diameterM: number
+  slotWidthM: number
+}
+
+/** A rectangle minus a centred, full-width horizontal rectangular slot. */
+export interface RectangleCrossSlotSection {
+  kind: 'rectangleCrossSlot'
+  widthM: number
+  outerHeightM: number
+  slotHeightM: number
+}
+
 export type SectionInput =
   | RectangleSection
   | HollowRectangleSection
   | SolidCircleSection
   | CircularTubeSection
+  | RegularHexagonSection
+  | RegularOctagonSection
+  | SemicircleSection
+  | SemiAnnulusSection
+  | CircularSectorSection
+  | CircularSegmentSection
+  | AnnularSectorSection
+  | EllipseSection
+  | HollowEllipseSection
+  | SquareCircularHoleSection
+  | CircleCrossSlotSection
+  | RectangleCrossSlotSection
 
 export interface SectionValidationError {
   field: string
@@ -56,7 +177,11 @@ export interface PrincipalInertia {
 }
 
 export interface SectionProperties {
-  kind: SectionKind
+  kind: SectionCalculatorKind
+  /**
+   * Centroid from each shape's documented reference origin.
+   * Ix/Iy/Ixy and section moduli always use centroidal axes.
+   */
   areaM2: number
   centroidM: { x: number; y: number }
   ixM4: number
@@ -64,11 +189,13 @@ export interface SectionProperties {
   ixyM4: number
   sectionModuli: SectionModuli
   polarMomentM4: number
-  torsionConstantM4: number
+  /** Null when the handbook table does not provide a Saint-Venant torsion model. */
+  torsionConstantM4: number | null
   torsionModel:
     | 'rectangle-engineering-approximation'
     | 'thin-walled-closed-section-midline'
     | 'circular-exact'
+    | 'not-provided'
   principal: PrincipalInertia
 }
 

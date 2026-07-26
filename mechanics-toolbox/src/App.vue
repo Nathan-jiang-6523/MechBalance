@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import AxialCalculator from './features/axial/AxialCalculator.vue'
-import MaterialPresetEditor from './features/materials/MaterialPresetEditor.vue'
 import BeamCalculator from './features/beam/BeamCalculator.vue'
 import BucklingCalculator from './features/buckling/BucklingCalculator.vue'
 import SectionCalculator from './features/sections/SectionCalculator.vue'
@@ -217,10 +216,7 @@ function selectView(id: ViewId): void {
         <strong>默认单位：mm · N · MPa</strong>
       </div>
 
-      <div v-if="activeView === 'sections'" class="feature-stack">
-        <SectionCalculator />
-        <MaterialPresetEditor />
-      </div>
+      <SectionCalculator v-if="activeView === 'sections'" />
       <UnitConverter v-else-if="activeView === 'units'" />
       <BeamCalculator v-else-if="activeView === 'beam'" />
       <AxialCalculator v-else-if="activeView === 'axial'" />

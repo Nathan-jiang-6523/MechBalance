@@ -4,7 +4,7 @@ import { evaluateNumericExpression, formatEngineeringValue } from '../../core/nu
 import {
   calculateSectionProperties,
   type SectionInput,
-  type SectionKind,
+  type SectionCalculatorKind,
   type SectionProperties,
 } from '../../core/sections'
 import {
@@ -15,16 +15,19 @@ import {
   type UnitId,
 } from '../../core/units'
 import SectionDiagram from './SectionDiagram.vue'
+import SectionFormulaPanel from './SectionFormulaPanel.vue'
 
 interface ShapeField {
   key: string
   coreField: string
   label: string
   symbol: string
+  quantity: 'length' | 'angle'
+  defaultUnit: UnitId
 }
 
 interface ShapeOption {
-  kind: SectionKind
+  kind: SectionCalculatorKind
   label: string
   fields: readonly ShapeField[]
   defaults: Readonly<Record<string, string>>
@@ -42,8 +45,8 @@ const shapes: readonly ShapeOption[] = [
     kind: 'rectangle',
     label: '矩形',
     fields: [
-      { key: 'width', coreField: 'b', label: '宽度', symbol: 'b' },
-      { key: 'height', coreField: 'h', label: '高度', symbol: 'h' },
+      { key: 'width', coreField: 'b', label: '宽度', symbol: 'b', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'height', coreField: 'h', label: '高度', symbol: 'h', quantity: 'length', defaultUnit: 'mm' },
     ],
     defaults: { width: '80', height: '120' },
   },
@@ -51,36 +54,152 @@ const shapes: readonly ShapeOption[] = [
     kind: 'hollowRectangle',
     label: '空心矩形',
     fields: [
-      { key: 'outerWidth', coreField: 'B', label: '外宽', symbol: 'B' },
-      { key: 'outerHeight', coreField: 'H', label: '外高', symbol: 'H' },
-      { key: 'innerWidth', coreField: 'b', label: '内宽', symbol: 'b' },
-      { key: 'innerHeight', coreField: 'h', label: '内高', symbol: 'h' },
+      { key: 'outerWidth', coreField: 'B', label: '外宽', symbol: 'B', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'outerHeight', coreField: 'H', label: '外高', symbol: 'H', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerWidth', coreField: 'b', label: '内宽', symbol: 'b', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerHeight', coreField: 'h', label: '内高', symbol: 'h', quantity: 'length', defaultUnit: 'mm' },
     ],
     defaults: { outerWidth: '120', outerHeight: '80', innerWidth: '100', innerHeight: '60' },
   },
   {
     kind: 'solidCircle',
     label: '实心圆',
-    fields: [{ key: 'diameter', coreField: 'd', label: '直径', symbol: 'd' }],
+    fields: [{ key: 'diameter', coreField: 'd', label: '直径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' }],
     defaults: { diameter: '50' },
   },
   {
     kind: 'circularTube',
     label: '圆管',
     fields: [
-      { key: 'outerDiameter', coreField: 'D', label: '外径', symbol: 'D' },
-      { key: 'innerDiameter', coreField: 'd', label: '内径', symbol: 'd' },
+      { key: 'outerDiameter', coreField: 'D', label: '外径', symbol: 'D', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerDiameter', coreField: 'd', label: '内径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' },
     ],
     defaults: { outerDiameter: '60', innerDiameter: '40' },
+  },
+  {
+    kind: 'regularHexagon',
+    label: '正六边形',
+    fields: [
+      { key: 'sideLength', coreField: 's', label: '边长', symbol: 's', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'circumradius', coreField: 'R', label: '外接圆半径', symbol: 'R', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { sideLength: '50', circumradius: '50' },
+  },
+  {
+    kind: 'regularOctagon',
+    label: '正八边形',
+    fields: [
+      { key: 'sideLength', coreField: 's', label: '边长', symbol: 's', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'circumradius', coreField: 'R', label: '外接圆半径', symbol: 'R', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { sideLength: '38.26834324', circumradius: '50' },
+  },
+  {
+    kind: 'semicircle',
+    label: '半圆',
+    fields: [{ key: 'diameter', coreField: 'd', label: '直径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' }],
+    defaults: { diameter: '100' },
+  },
+  {
+    kind: 'semiAnnulus',
+    label: '半圆环',
+    fields: [
+      { key: 'outerDiameter', coreField: 'D', label: '外径', symbol: 'D', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerDiameter', coreField: 'd', label: '内径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { outerDiameter: '120', innerDiameter: '80' },
+  },
+  {
+    kind: 'circularSector',
+    label: '圆扇形',
+    fields: [
+      { key: 'radius', coreField: 'r', label: '半径', symbol: 'r', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'angle', coreField: 'angle', label: '夹角', symbol: 'α', quantity: 'angle', defaultUnit: 'deg' },
+    ],
+    defaults: { radius: '60', angle: '90' },
+  },
+  {
+    kind: 'circularSegment',
+    label: '圆弓形',
+    fields: [
+      { key: 'radius', coreField: 'r', label: '半径', symbol: 'r', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'angle', coreField: 'angle', label: '圆心夹角', symbol: 'α', quantity: 'angle', defaultUnit: 'deg' },
+    ],
+    defaults: { radius: '60', angle: '90' },
+  },
+  {
+    kind: 'annularSector',
+    label: '圆环扇形',
+    fields: [
+      { key: 'outerRadius', coreField: 'R', label: '外半径', symbol: 'R', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerRadius', coreField: 'r', label: '内半径', symbol: 'r', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'angle', coreField: 'angle', label: '夹角', symbol: 'α', quantity: 'angle', defaultUnit: 'deg' },
+    ],
+    defaults: { outerRadius: '60', innerRadius: '40', angle: '90' },
+  },
+  {
+    kind: 'ellipse',
+    label: '椭圆',
+    fields: [
+      { key: 'horizontalSemiAxis', coreField: 'a', label: '水平半轴', symbol: 'a', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'verticalSemiAxis', coreField: 'b', label: '竖直半轴', symbol: 'b', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { horizontalSemiAxis: '60', verticalSemiAxis: '40' },
+  },
+  {
+    kind: 'hollowEllipse',
+    label: '空心椭圆',
+    fields: [
+      { key: 'outerHorizontalSemiAxis', coreField: 'a', label: '外水平半轴', symbol: 'a', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'outerVerticalSemiAxis', coreField: 'b', label: '外竖直半轴', symbol: 'b', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerHorizontalSemiAxis', coreField: 'a1', label: '内水平半轴', symbol: 'a₁', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'innerVerticalSemiAxis', coreField: 'b1', label: '内竖直半轴', symbol: 'b₁', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: {
+      outerHorizontalSemiAxis: '60',
+      outerVerticalSemiAxis: '40',
+      innerHorizontalSemiAxis: '50',
+      innerVerticalSemiAxis: '30',
+    },
+  },
+  {
+    kind: 'squareCircularHole',
+    label: '方形中心圆孔',
+    fields: [
+      { key: 'side', coreField: 'a', label: '边长', symbol: 'a', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'holeDiameter', coreField: 'd', label: '圆孔直径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { side: '100', holeDiameter: '40' },
+  },
+  {
+    kind: 'circleCrossSlot',
+    label: '圆形中央通槽',
+    fields: [
+      { key: 'diameter', coreField: 'd', label: '圆直径', symbol: 'd', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'slotWidth', coreField: 'd1', label: '通槽宽度', symbol: 'd₁', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { diameter: '100', slotWidth: '10' },
+  },
+  {
+    kind: 'rectangleCrossSlot',
+    label: '矩形中央横槽',
+    fields: [
+      { key: 'width', coreField: 'b', label: '宽度', symbol: 'b', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'outerHeight', coreField: 'H', label: '外高', symbol: 'H', quantity: 'length', defaultUnit: 'mm' },
+      { key: 'slotHeight', coreField: 'h', label: '通槽高度', symbol: 'h', quantity: 'length', defaultUnit: 'mm' },
+    ],
+    defaults: { width: '80', outerHeight: '120', slotHeight: '20' },
   },
 ] as const
 
 const fallbackShape = shapes[0]!
 
-const selectedKind = ref<SectionKind>('rectangle')
+const selectedKind = ref<SectionCalculatorKind>('rectangle')
+type PolygonDimensionMode = 'sideLength' | 'circumradius'
+const polygonDimensionMode = ref<PolygonDimensionMode>('sideLength')
 const fieldValues = ref<Record<string, string>>({ ...fallbackShape.defaults })
 const fieldUnits = ref<Record<string, UnitId>>(
-  Object.fromEntries(fallbackShape.fields.map((field) => [field.key, 'mm'])),
+  Object.fromEntries(fallbackShape.fields.map((field) => [field.key, field.defaultUnit])),
 )
 const errors = ref<Readonly<Record<string, string>>>({})
 const properties = ref<SectionProperties | null>(null)
@@ -90,6 +209,16 @@ let debounceTimer: ReturnType<typeof setTimeout> | undefined
 const selectedShape = computed(
   () => shapes.find((shape) => shape.kind === selectedKind.value) ?? fallbackShape,
 )
+
+const isRegularPolygon = computed(
+  () => selectedKind.value === 'regularHexagon' || selectedKind.value === 'regularOctagon',
+)
+
+const activeFields = computed(() => {
+  if (!isRegularPolygon.value) return selectedShape.value.fields
+  const activeKey = polygonDimensionMode.value === 'sideLength' ? 'sideLength' : 'circumradius'
+  return selectedShape.value.fields.filter((field) => field.key === activeKey)
+})
 
 const errorSummary = computed(() => [...new Set(Object.values(errors.value))])
 
@@ -101,6 +230,8 @@ const modelLabel = computed(() => {
       return '等壁厚薄壁闭口截面中线模型；不适用于厚壁或不等壁厚输入。'
     case 'circular-exact':
       return '圆截面精确关系；该截面 Jp = Jt。'
+    case 'not-provided':
+      return '手册仅给出截面几何性质，未提供 Saint-Venant 扭转常数 Jt；不得用 Jp 代替。'
     default:
       return ''
   }
@@ -122,7 +253,11 @@ const resultRows = computed<DisplayRow[]>(() => {
     display('y 正侧截面模量', 'Wy+', value.sectionModuli.yPositiveM3, 'sectionModulus', 'mm3', 'mm³'),
     display('y 负侧截面模量', 'Wy−', value.sectionModuli.yNegativeM3, 'sectionModulus', 'mm3', 'mm³'),
     display('极惯性矩', 'Jp', value.polarMomentM4, 'secondMomentOfArea', 'mm4', 'mm⁴'),
-    display('扭转常数', 'Jt', value.torsionConstantM4, 'secondMomentOfArea', 'mm4', 'mm⁴'),
+    display('x 轴惯性半径', 'ix', Math.sqrt(value.ixM4 / value.areaM2), 'length', 'mm', 'mm'),
+    display('y 轴惯性半径', 'iy', Math.sqrt(value.iyM4 / value.areaM2), 'length', 'mm', 'mm'),
+    value.torsionConstantM4 === null
+      ? { label: '扭转常数', symbol: 'Jt', value: '—', unit: '手册未提供' }
+      : display('扭转常数', 'Jt', value.torsionConstantM4, 'secondMomentOfArea', 'mm4', 'mm⁴'),
   ]
 })
 
@@ -142,7 +277,7 @@ function display(
   }
 }
 
-function lengthToSI(key: string): number {
+function fieldToSI(key: string, quantity: 'length' | 'angle' = 'length'): number {
   const raw = fieldValues.value[key]
   if (raw === undefined) throw new InputFieldError(key, '请输入数值或算式')
   let parsed: number
@@ -151,7 +286,11 @@ function lengthToSI(key: string): number {
   } catch (error) {
     throw new InputFieldError(key, error instanceof Error ? error.message : '请输入数值或算式')
   }
-  return normalizeToSI(parsed, 'length', fieldUnits.value[key] ?? 'mm')
+  return normalizeToSI(
+    parsed,
+    quantity,
+    fieldUnits.value[key] ?? (quantity === 'angle' ? 'deg' : 'mm'),
+  )
 }
 
 class InputFieldError extends Error {
@@ -167,22 +306,106 @@ class InputFieldError extends Error {
 function buildInput(): SectionInput {
   switch (selectedKind.value) {
     case 'rectangle':
-      return { kind: 'rectangle', widthM: lengthToSI('width'), heightM: lengthToSI('height') }
+      return { kind: 'rectangle', widthM: fieldToSI('width'), heightM: fieldToSI('height') }
     case 'hollowRectangle':
       return {
         kind: 'hollowRectangle',
-        outerWidthM: lengthToSI('outerWidth'),
-        outerHeightM: lengthToSI('outerHeight'),
-        innerWidthM: lengthToSI('innerWidth'),
-        innerHeightM: lengthToSI('innerHeight'),
+        outerWidthM: fieldToSI('outerWidth'),
+        outerHeightM: fieldToSI('outerHeight'),
+        innerWidthM: fieldToSI('innerWidth'),
+        innerHeightM: fieldToSI('innerHeight'),
       }
     case 'solidCircle':
-      return { kind: 'solidCircle', diameterM: lengthToSI('diameter') }
+      return { kind: 'solidCircle', diameterM: fieldToSI('diameter') }
     case 'circularTube':
       return {
         kind: 'circularTube',
-        outerDiameterM: lengthToSI('outerDiameter'),
-        innerDiameterM: lengthToSI('innerDiameter'),
+        outerDiameterM: fieldToSI('outerDiameter'),
+        innerDiameterM: fieldToSI('innerDiameter'),
+      }
+    case 'regularHexagon':
+      return polygonDimensionMode.value === 'sideLength'
+        ? {
+            kind: 'regularHexagon',
+            dimensionMode: 'sideLength',
+            sideLengthM: fieldToSI('sideLength'),
+          }
+        : {
+            kind: 'regularHexagon',
+            dimensionMode: 'circumradius',
+            circumradiusM: fieldToSI('circumradius'),
+          }
+    case 'regularOctagon':
+      return polygonDimensionMode.value === 'sideLength'
+        ? {
+            kind: 'regularOctagon',
+            dimensionMode: 'sideLength',
+            sideLengthM: fieldToSI('sideLength'),
+          }
+        : {
+            kind: 'regularOctagon',
+            dimensionMode: 'circumradius',
+            circumradiusM: fieldToSI('circumradius'),
+          }
+    case 'semicircle':
+      return { kind: 'semicircle', diameterM: fieldToSI('diameter') }
+    case 'semiAnnulus':
+      return {
+        kind: 'semiAnnulus',
+        outerDiameterM: fieldToSI('outerDiameter'),
+        innerDiameterM: fieldToSI('innerDiameter'),
+      }
+    case 'circularSector':
+      return {
+        kind: 'circularSector',
+        radiusM: fieldToSI('radius'),
+        angleRad: fieldToSI('angle', 'angle'),
+      }
+    case 'circularSegment':
+      return {
+        kind: 'circularSegment',
+        radiusM: fieldToSI('radius'),
+        angleRad: fieldToSI('angle', 'angle'),
+      }
+    case 'annularSector':
+      return {
+        kind: 'annularSector',
+        outerRadiusM: fieldToSI('outerRadius'),
+        innerRadiusM: fieldToSI('innerRadius'),
+        angleRad: fieldToSI('angle', 'angle'),
+      }
+    case 'ellipse':
+      return {
+        kind: 'ellipse',
+        horizontalSemiAxisM: fieldToSI('horizontalSemiAxis'),
+        verticalSemiAxisM: fieldToSI('verticalSemiAxis'),
+      }
+    case 'hollowEllipse':
+      return {
+        kind: 'hollowEllipse',
+        outerHorizontalSemiAxisM: fieldToSI('outerHorizontalSemiAxis'),
+        outerVerticalSemiAxisM: fieldToSI('outerVerticalSemiAxis'),
+        innerHorizontalSemiAxisM: fieldToSI('innerHorizontalSemiAxis'),
+        innerVerticalSemiAxisM: fieldToSI('innerVerticalSemiAxis'),
+      }
+    case 'squareCircularHole':
+      return {
+        kind: 'squareCircularHole',
+        sideM: fieldToSI('side'),
+        holeDiameterM: fieldToSI('holeDiameter'),
+      }
+    case 'circleCrossSlot':
+      return {
+        kind: 'circleCrossSlot',
+        diameterM: fieldToSI('diameter'),
+        slotWidthM: fieldToSI('slotWidth'),
+      }
+    case 'rectangleCrossSlot':
+      return {
+        kind: 'rectangleCrossSlot',
+        widthM: fieldToSI('width'),
+        outerHeightM: fieldToSI('outerHeight'),
+        slotHeightM: fieldToSI('slotHeight'),
       }
   }
 }
@@ -217,8 +440,21 @@ function calculate(): void {
 
 function selectShape(shape: ShapeOption): void {
   selectedKind.value = shape.kind
+  if (shape.kind === 'regularHexagon' || shape.kind === 'regularOctagon') {
+    polygonDimensionMode.value = 'sideLength'
+  }
   fieldValues.value = { ...shape.defaults }
-  fieldUnits.value = Object.fromEntries(shape.fields.map((field) => [field.key, 'mm']))
+  fieldUnits.value = Object.fromEntries(
+    shape.fields.map((field) => [field.key, field.defaultUnit]),
+  )
+  errors.value = {}
+  properties.value = null
+  hasCalculated.value = false
+}
+
+function selectPolygonDimensionMode(mode: PolygonDimensionMode): void {
+  if (polygonDimensionMode.value === mode) return
+  polygonDimensionMode.value = mode
   errors.value = {}
   properties.value = null
   hasCalculated.value = false
@@ -275,8 +511,33 @@ onBeforeUnmount(() => clearTimeout(debounceTimer))
           <p>示意图仅说明尺寸与坐标，不按输入比例绘制。</p>
         </div>
 
+        <div
+          v-if="isRegularPolygon"
+          class="dimension-mode"
+          role="group"
+          aria-label="多边形尺寸输入方式"
+        >
+          <span>尺寸输入方式</span>
+          <button
+            type="button"
+            :aria-pressed="polygonDimensionMode === 'sideLength'"
+            :class="{ 'is-active': polygonDimensionMode === 'sideLength' }"
+            @click="selectPolygonDimensionMode('sideLength')"
+          >
+            输入边长 s
+          </button>
+          <button
+            type="button"
+            :aria-pressed="polygonDimensionMode === 'circumradius'"
+            :class="{ 'is-active': polygonDimensionMode === 'circumradius' }"
+            @click="selectPolygonDimensionMode('circumradius')"
+          >
+            输入外接圆半径 R
+          </button>
+        </div>
+
         <div class="field-grid">
-          <label v-for="field in selectedShape.fields" :key="field.key" class="field">
+          <label v-for="field in activeFields" :key="field.key" class="field">
             <span>{{ field.label }} {{ field.symbol }}</span>
             <div class="input-with-unit" :class="{ 'has-error': errors[field.key] }">
               <input
@@ -292,7 +553,7 @@ onBeforeUnmount(() => clearTimeout(debounceTimer))
                 @change="clearFieldAfterUnitChange(field.key)"
               >
                 <option
-                  v-for="unit in QUANTITY_CATALOG.length.units"
+                  v-for="unit in QUANTITY_CATALOG[field.quantity].units"
                   :key="unit.id"
                   :value="unit.id"
                 >
@@ -347,6 +608,8 @@ onBeforeUnmount(() => clearTimeout(debounceTimer))
         </div>
       </div>
     </div>
+
+    <SectionFormulaPanel :kind="selectedKind" />
   </section>
 </template>
 
@@ -415,6 +678,41 @@ onBeforeUnmount(() => clearTimeout(debounceTimer))
 }
 
 .shape-tabs button.is-active {
+  border-color: var(--color-brand);
+  color: #fff;
+  background: var(--color-brand);
+}
+
+.dimension-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 9px;
+  background: #f5f8f8;
+}
+
+.dimension-mode > span {
+  margin-right: 2px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dimension-mode button {
+  padding: 7px 10px;
+  border: 1px solid #cad5da;
+  border-radius: 7px;
+  color: #53636e;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dimension-mode button.is-active {
   border-color: var(--color-brand);
   color: #fff;
   background: var(--color-brand);
